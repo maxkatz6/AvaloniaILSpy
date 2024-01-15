@@ -24,6 +24,7 @@ using System.Reflection.Metadata.Ecma335;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Disassembler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.TreeNodes;
@@ -32,12 +33,14 @@ namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class TypeDefTableTreeNode : MetadataTableTreeNode
 	{
-		public TypeDefTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.TypeDefinition, metadataFile)
+		public TypeDefTableTreeNode(PEFile module)
+			: base(HandleKind.TypeDefinition, module)
 		{
 		}
 
-		public override object Text => $"02 TypeDef ({metadataFile.Metadata.GetTableRowCount(TableIndex.TypeDef)})";
+		public override object Text => $"02 TypeDef ({module.Metadata.GetTableRowCount(TableIndex.TypeDef)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -45,14 +48,14 @@ namespace ICSharpCode.ILSpy.Metadata
 			tabPage.SupportsLanguageSwitching = false;
 
 			var view = Helpers.PrepareDataGrid(tabPage, this);
-			var metadata = metadataFile.Metadata;
+			var metadata = module.Metadata;
 
 			var list = new List<TypeDefEntry>();
 			TypeDefEntry scrollTargetEntry = default;
 
 			foreach (var row in metadata.TypeDefinitions)
 			{
-				TypeDefEntry entry = new TypeDefEntry(metadataFile, row);
+				TypeDefEntry entry = new TypeDefEntry(module, row);
 				if (entry.RID == this.scrollTarget)
 				{
 					scrollTargetEntry = entry;
@@ -74,7 +77,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		struct TypeDefEntry : IMemberTreeNode
 		{
-			readonly MetadataFile metadataFile;
+			readonly int metadataOffset;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly TypeDefinitionHandle handle;
 			readonly TypeDefinition typeDef;
 
@@ -82,9 +87,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public int Token => MetadataTokens.GetToken(handle);
 
-			public int Offset => metadataFile.MetadataOffset
-				+ metadataFile.Metadata.GetTableMetadataOffset(TableIndex.TypeDef)
-				+ metadataFile.Metadata.GetTableRowSize(TableIndex.TypeDef) * (RID - 1);
+			public int Offset => metadataOffset
+				+ metadata.GetTableMetadataOffset(TableIndex.TypeDef)
+				+ metadata.GetTableRowSize(TableIndex.TypeDef) * (RID - 1);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Other)]
 			public TypeAttributes Attributes => typeDef.Attributes;
@@ -102,36 +107,36 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public string NameTooltip => $"{MetadataTokens.GetHeapOffset(typeDef.Name):X} \"{Name}\"";
 
-			public string Name => metadataFile.Metadata.GetString(typeDef.Name);
+			public string Name => metadata.GetString(typeDef.Name);
 
 			public string NamespaceTooltip => $"{MetadataTokens.GetHeapOffset(typeDef.Namespace):X} \"{Namespace}\"";
 
-			public string Namespace => metadataFile.Metadata.GetString(typeDef.Namespace);
+			public string Namespace => metadata.GetString(typeDef.Namespace);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Token)]
 			public int BaseType => MetadataTokens.GetToken(typeDef.BaseType);
 
 			public void OnBaseTypeClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, typeDef.BaseType, protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, typeDef.BaseType, protocol: "metadata"));
 			}
 
 			public string BaseTypeTooltip {
 				get {
 					var output = new PlainTextOutput();
-					var provider = new DisassemblerSignatureTypeProvider(metadataFile, output);
+					var provider = new DisassemblerSignatureTypeProvider(module, output);
 					if (typeDef.BaseType.IsNil)
 						return null;
 					switch (typeDef.BaseType.Kind)
 					{
 						case HandleKind.TypeDefinition:
-							provider.GetTypeFromDefinition(metadataFile.Metadata, (TypeDefinitionHandle)typeDef.BaseType, 0)(ILNameSyntax.Signature);
+							provider.GetTypeFromDefinition(module.Metadata, (TypeDefinitionHandle)typeDef.BaseType, 0)(ILNameSyntax.Signature);
 							return output.ToString();
 						case HandleKind.TypeReference:
-							provider.GetTypeFromReference(metadataFile.Metadata, (TypeReferenceHandle)typeDef.BaseType, 0)(ILNameSyntax.Signature);
+							provider.GetTypeFromReference(module.Metadata, (TypeReferenceHandle)typeDef.BaseType, 0)(ILNameSyntax.Signature);
 							return output.ToString();
 						case HandleKind.TypeSpecification:
-							provider.GetTypeFromSpecification(metadataFile.Metadata, new Decompiler.Metadata.MetadataGenericContext(default(TypeDefinitionHandle), metadataFile.Metadata), (TypeSpecificationHandle)typeDef.BaseType, 0)(ILNameSyntax.Signature);
+							provider.GetTypeFromSpecification(module.Metadata, new Decompiler.Metadata.MetadataGenericContext(default(TypeDefinitionHandle), module), (TypeSpecificationHandle)typeDef.BaseType, 0)(ILNameSyntax.Signature);
 							return output.ToString();
 						default:
 							return null;
@@ -144,7 +149,7 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public void OnFieldListClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, typeDef.GetFields().FirstOrDefault(), protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, typeDef.GetFields().FirstOrDefault(), protocol: "metadata"));
 			}
 
 			string fieldListTooltip;
@@ -153,7 +158,7 @@ namespace ICSharpCode.ILSpy.Metadata
 					var field = typeDef.GetFields().FirstOrDefault();
 					if (field.IsNil)
 						return null;
-					return GenerateTooltip(ref fieldListTooltip, metadataFile, field);
+					return GenerateTooltip(ref fieldListTooltip, module, field);
 				}
 			}
 
@@ -162,7 +167,7 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public void OnMethodListClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, typeDef.GetMethods().FirstOrDefault(), protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, typeDef.GetMethods().FirstOrDefault(), protocol: "metadata"));
 			}
 
 			string methodListTooltip;
@@ -171,17 +176,19 @@ namespace ICSharpCode.ILSpy.Metadata
 					var method = typeDef.GetMethods().FirstOrDefault();
 					if (method.IsNil)
 						return null;
-					return GenerateTooltip(ref methodListTooltip, metadataFile, method);
+					return GenerateTooltip(ref methodListTooltip, module, method);
 				}
 			}
 
-			IEntity IMemberTreeNode.Member => ((MetadataModule)metadataFile.GetTypeSystemWithCurrentOptionsOrNull()?.MainModule).GetDefinition(handle);
+			IEntity IMemberTreeNode.Member => ((MetadataModule)module.GetTypeSystemWithCurrentOptionsOrNull()?.MainModule).GetDefinition(handle);
 
-			public TypeDefEntry(MetadataFile metadataFile, TypeDefinitionHandle handle)
+			public TypeDefEntry(PEFile module, TypeDefinitionHandle handle)
 			{
-				this.metadataFile = metadataFile;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.handle = handle;
-				this.typeDef = metadataFile.Metadata.GetTypeDefinition(handle);
+				this.typeDef = metadata.GetTypeDefinition(handle);
 				this.methodListTooltip = null;
 				this.fieldListTooltip = null;
 			}

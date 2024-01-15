@@ -16,10 +16,13 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using System.Collections.Generic;
+using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
+using ICSharpCode.ILSpy.Options;
 using ICSharpCode.ILSpy.TreeNodes;
 using ICSharpCode.ILSpy.ViewModels;
 
@@ -27,38 +30,42 @@ namespace ICSharpCode.ILSpy.Metadata
 {
 	class DebugMetadataTablesTreeNode : ILSpyTreeNode
 	{
-		private MetadataFile metadataFile;
+		private PEFile module;
+		private bool isEmbedded;
+		private MetadataReader provider;
 
-		public DebugMetadataTablesTreeNode(MetadataFile metadataFile)
+		public DebugMetadataTablesTreeNode(PEFile module, bool isEmbedded, MetadataReader provider)
 		{
-			this.metadataFile = metadataFile;
+			this.module = module;
+			this.isEmbedded = isEmbedded;
+			this.provider = provider;
 			this.LazyLoading = true;
 		}
 
 		public override object Text => "Tables";
 
-		public override object Icon => Images.MetadataTableGroup;
+		public override object Icon => Images.Literal;
 
 		protected override void LoadChildren()
 		{
 			if (ShowTable(TableIndex.Document))
-				this.Children.Add(new DocumentTableTreeNode(metadataFile));
+				this.Children.Add(new DocumentTableTreeNode(this.module, this.provider, isEmbedded));
 			if (ShowTable(TableIndex.MethodDebugInformation))
-				this.Children.Add(new MethodDebugInformationTableTreeNode(metadataFile));
+				this.Children.Add(new MethodDebugInformationTableTreeNode(this.module, this.provider, isEmbedded));
 			if (ShowTable(TableIndex.LocalScope))
-				this.Children.Add(new LocalScopeTableTreeNode(metadataFile));
+				this.Children.Add(new LocalScopeTableTreeNode(this.module, this.provider, isEmbedded));
 			if (ShowTable(TableIndex.LocalVariable))
-				this.Children.Add(new LocalVariableTableTreeNode(metadataFile));
+				this.Children.Add(new LocalVariableTableTreeNode(this.module, this.provider, isEmbedded));
 			if (ShowTable(TableIndex.LocalConstant))
-				this.Children.Add(new LocalConstantTableTreeNode(metadataFile));
+				this.Children.Add(new LocalConstantTableTreeNode(this.module, this.provider, isEmbedded));
 			if (ShowTable(TableIndex.ImportScope))
-				this.Children.Add(new ImportScopeTableTreeNode(metadataFile));
+				this.Children.Add(new ImportScopeTableTreeNode(this.module, this.provider, isEmbedded));
 			if (ShowTable(TableIndex.StateMachineMethod))
-				this.Children.Add(new StateMachineMethodTableTreeNode(metadataFile));
+				this.Children.Add(new StateMachineMethodTableTreeNode(this.module, this.provider, isEmbedded));
 			if (ShowTable(TableIndex.CustomDebugInformation))
-				this.Children.Add(new CustomDebugInformationTableTreeNode(metadataFile));
+				this.Children.Add(new CustomDebugInformationTableTreeNode(this.module, this.provider, isEmbedded));
 
-			bool ShowTable(TableIndex table) => !MainWindow.Instance.CurrentDisplaySettings.HideEmptyMetadataTables || metadataFile.Metadata.GetTableRowCount(table) > 0;
+			bool ShowTable(TableIndex table) => !MainWindow.Instance.CurrentDisplaySettings.HideEmptyMetadataTables || this.provider.GetTableRowCount(table) > 0;
 		}
 
 		public override bool View(TabPageModel tabPage)

@@ -22,18 +22,22 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
 using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.Disassembler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 
 namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class MethodSemanticsTableTreeNode : MetadataTableTreeNode
 	{
-		public MethodSemanticsTableTreeNode(MetadataFile metadataFile)
-			: base((HandleKind)0x18, metadataFile)
+		public MethodSemanticsTableTreeNode(PEFile module)
+			: base((HandleKind)0x18, module)
 		{
 		}
 
-		public override object Text => $"18 MethodSemantics ({metadataFile.Metadata.GetTableRowCount(TableIndex.MethodSemantics)})";
+		public override object Text => $"18 MethodSemantics ({module.Metadata.GetTableRowCount(TableIndex.MethodSemantics)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -41,13 +45,14 @@ namespace ICSharpCode.ILSpy.Metadata
 			tabPage.SupportsLanguageSwitching = false;
 
 			var view = Helpers.PrepareDataGrid(tabPage, this);
+			var metadata = module.Metadata;
 
 			var list = new List<MethodSemanticsEntry>();
 			MethodSemanticsEntry scrollTargetEntry = default;
 
-			foreach (var row in metadataFile.Metadata.GetMethodSemantics())
+			foreach (var row in metadata.GetMethodSemantics())
 			{
-				MethodSemanticsEntry entry = new MethodSemanticsEntry(metadataFile, row.Handle, row.Semantics, row.Method, row.Association);
+				MethodSemanticsEntry entry = new MethodSemanticsEntry(module, row.Handle, row.Semantics, row.Method, row.Association);
 				if (entry.RID == this.scrollTarget)
 				{
 					scrollTargetEntry = entry;
@@ -69,7 +74,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		struct MethodSemanticsEntry
 		{
-			readonly MetadataFile metadataFile;
+			readonly int metadataOffset;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly Handle handle;
 			readonly MethodSemanticsAttributes semantics;
 			readonly MethodDefinitionHandle method;
@@ -79,9 +86,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public int Token => MetadataTokens.GetToken(handle);
 
-			public int Offset => metadataFile.MetadataOffset
-				+ metadataFile.Metadata.GetTableMetadataOffset(TableIndex.MethodDef)
-				+ metadataFile.Metadata.GetTableRowSize(TableIndex.MethodDef) * (RID - 1);
+			public int Offset => metadataOffset
+				+ metadata.GetTableMetadataOffset(TableIndex.MethodDef)
+				+ metadata.GetTableRowSize(TableIndex.MethodDef) * (RID - 1);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Other)]
 			public MethodSemanticsAttributes Semantics => semantics;
@@ -93,26 +100,28 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public void OnMethodClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, method, protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, method, protocol: "metadata"));
 			}
 
 			string methodTooltip;
-			public string MethodTooltip => GenerateTooltip(ref methodTooltip, metadataFile, method);
+			public string MethodTooltip => GenerateTooltip(ref methodTooltip, module, method);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Token)]
 			public int Association => MetadataTokens.GetToken(association);
 
 			public void OnAssociationClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, association, protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, association, protocol: "metadata"));
 			}
 
 			string associationTooltip;
-			public string AssociationTooltip => GenerateTooltip(ref associationTooltip, metadataFile, association);
+			public string AssociationTooltip => GenerateTooltip(ref associationTooltip, module, association);
 
-			public MethodSemanticsEntry(MetadataFile metadataFile, Handle handle, MethodSemanticsAttributes semantics, MethodDefinitionHandle method, EntityHandle association)
+			public MethodSemanticsEntry(PEFile module, Handle handle, MethodSemanticsAttributes semantics, MethodDefinitionHandle method, EntityHandle association)
 			{
-				this.metadataFile = metadataFile;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.handle = handle;
 				this.semantics = semantics;
 				this.method = method;

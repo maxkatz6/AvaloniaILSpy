@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -28,12 +29,14 @@ namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class AssemblyTableTreeNode : MetadataTableTreeNode
 	{
-		public AssemblyTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.AssemblyDefinition, metadataFile)
+		public AssemblyTableTreeNode(PEFile module)
+			: base(HandleKind.AssemblyDefinition, module)
 		{
 		}
 
-		public override object Text => $"20 Assembly ({metadataFile.Metadata.GetTableRowCount(TableIndex.Assembly)})";
+		public override object Text => $"20 Assembly ({module.Metadata.GetTableRowCount(TableIndex.Assembly)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -41,9 +44,9 @@ namespace ICSharpCode.ILSpy.Metadata
 			tabPage.SupportsLanguageSwitching = false;
 
 			var view = Helpers.PrepareDataGrid(tabPage, this);
-			if (metadataFile.Metadata.IsAssembly)
+			if (module.IsAssembly)
 			{
-				view.ItemsSource = new[] { new AssemblyEntry(metadataFile.Metadata, metadataFile.MetadataOffset) };
+				view.ItemsSource = new[] { new AssemblyEntry(module) };
 			}
 			else
 			{
@@ -54,9 +57,10 @@ namespace ICSharpCode.ILSpy.Metadata
 			return true;
 		}
 
-		readonly struct AssemblyEntry
+		struct AssemblyEntry
 		{
 			readonly int metadataOffset;
+			readonly PEFile module;
 			readonly MetadataReader metadata;
 			readonly AssemblyDefinition assembly;
 
@@ -92,10 +96,11 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public string Culture => metadata.GetString(assembly.Culture);
 
-			public AssemblyEntry(MetadataReader metadata, int metadataOffset)
+			public AssemblyEntry(PEFile module)
 			{
-				this.metadata = metadata;
-				this.metadataOffset = metadataOffset;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.assembly = metadata.GetAssemblyDefinition();
 			}
 		}

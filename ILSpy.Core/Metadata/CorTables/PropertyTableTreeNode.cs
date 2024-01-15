@@ -22,6 +22,8 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
 using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.Disassembler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.TreeNodes;
@@ -30,12 +32,14 @@ namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class PropertyTableTreeNode : MetadataTableTreeNode
 	{
-		public PropertyTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.PropertyDefinition, metadataFile)
+		public PropertyTableTreeNode(PEFile module)
+			: base(HandleKind.PropertyDefinition, module)
 		{
 		}
 
-		public override object Text => $"17 Property ({metadataFile.Metadata.GetTableRowCount(TableIndex.Property)})";
+		public override object Text => $"17 Property ({module.Metadata.GetTableRowCount(TableIndex.Property)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -43,14 +47,14 @@ namespace ICSharpCode.ILSpy.Metadata
 			tabPage.SupportsLanguageSwitching = false;
 
 			var view = Helpers.PrepareDataGrid(tabPage, this);
-			var metadata = metadataFile.Metadata;
+			var metadata = module.Metadata;
 
 			var list = new List<PropertyDefEntry>();
 			PropertyDefEntry scrollTargetEntry = default;
 
 			foreach (var row in metadata.PropertyDefinitions)
 			{
-				PropertyDefEntry entry = new PropertyDefEntry(metadataFile, row);
+				PropertyDefEntry entry = new PropertyDefEntry(module, row);
 				if (entry.RID == this.scrollTarget)
 				{
 					scrollTargetEntry = entry;
@@ -72,7 +76,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		struct PropertyDefEntry : IMemberTreeNode
 		{
-			readonly MetadataFile metadataFile;
+			readonly int metadataOffset;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly PropertyDefinitionHandle handle;
 			readonly PropertyDefinition propertyDef;
 
@@ -80,9 +86,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public int Token => MetadataTokens.GetToken(handle);
 
-			public int Offset => metadataFile.MetadataOffset
-				+ metadataFile.Metadata.GetTableMetadataOffset(TableIndex.Property)
-				+ metadataFile.Metadata.GetTableRowSize(TableIndex.Property) * (RID - 1);
+			public int Offset => metadataOffset
+				+ metadata.GetTableMetadataOffset(TableIndex.Property)
+				+ metadata.GetTableRowSize(TableIndex.Property) * (RID - 1);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Other)]
 			public PropertyAttributes Attributes => propertyDef.Attributes;
@@ -91,23 +97,25 @@ namespace ICSharpCode.ILSpy.Metadata
 				FlagGroup.CreateMultipleChoiceGroup(typeof(PropertyAttributes), selectedValue: (int)propertyDef.Attributes, includeAll: false),
 			};
 
-			public string Name => metadataFile.Metadata.GetString(propertyDef.Name);
+			public string Name => metadata.GetString(propertyDef.Name);
 
 			public string NameTooltip => $"{MetadataTokens.GetHeapOffset(propertyDef.Name):X} \"{Name}\"";
 
-			IEntity IMemberTreeNode.Member => ((MetadataModule)metadataFile.GetTypeSystemWithCurrentOptionsOrNull()?.MainModule).GetDefinition(handle);
+			IEntity IMemberTreeNode.Member => ((MetadataModule)module.GetTypeSystemWithCurrentOptionsOrNull()?.MainModule).GetDefinition(handle);
 
 			[ColumnInfo("X8", Kind = ColumnKind.HeapOffset)]
 			public int Signature => MetadataTokens.GetHeapOffset(propertyDef.Signature);
 
 			string signatureTooltip;
-			public string SignatureTooltip => GenerateTooltip(ref signatureTooltip, metadataFile, handle);
+			public string SignatureTooltip => GenerateTooltip(ref signatureTooltip, module, handle);
 
-			public PropertyDefEntry(MetadataFile metadataFile, PropertyDefinitionHandle handle)
+			public PropertyDefEntry(PEFile module, PropertyDefinitionHandle handle)
 			{
-				this.metadataFile = metadataFile;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.handle = handle;
-				this.propertyDef = metadataFile.Metadata.GetPropertyDefinition(handle);
+				this.propertyDef = metadata.GetPropertyDefinition(handle);
 				this.signatureTooltip = null;
 			}
 		}

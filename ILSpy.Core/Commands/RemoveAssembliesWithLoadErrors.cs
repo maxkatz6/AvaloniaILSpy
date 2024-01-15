@@ -16,6 +16,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using ICSharpCode.ILSpy.Properties;
@@ -40,20 +42,6 @@ namespace ICSharpCode.ILSpy
 				if (node != null && node.CanDelete())
 					node.Delete();
 			}
-		}
-	}
-
-	[ExportMainMenuCommand(ParentMenuID = nameof(Resources._File), Header = nameof(Resources.ClearAssemblyList), MenuCategory = nameof(Resources.Remove), MenuOrder = 2.6)]
-	class ClearAssemblyList : SimpleCommand
-	{
-		public override bool CanExecute(object parameter)
-		{
-			return MainWindow.Instance.CurrentAssemblyList?.Count > 0;
-		}
-
-		public override void Execute(object parameter)
-		{
-			MainWindow.Instance.CurrentAssemblyList?.Clear();
 		}
 	}
 }

@@ -23,18 +23,22 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
 using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.Disassembler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 
 namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class FieldLayoutTableTreeNode : MetadataTableTreeNode
 	{
-		public FieldLayoutTableTreeNode(MetadataFile metadataFile)
-			: base((HandleKind)0x10, metadataFile)
+		public FieldLayoutTableTreeNode(PEFile module)
+			: base((HandleKind)0x10, module)
 		{
 		}
 
-		public override object Text => $"10 FieldLayout ({metadataFile.Metadata.GetTableRowCount(TableIndex.FieldLayout)})";
+		public override object Text => $"10 FieldLayout ({module.Metadata.GetTableRowCount(TableIndex.FieldLayout)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -42,16 +46,17 @@ namespace ICSharpCode.ILSpy.Metadata
 			tabPage.SupportsLanguageSwitching = false;
 
 			var view = Helpers.PrepareDataGrid(tabPage, this);
-			var metadata = metadataFile.Metadata;
+			var metadata = module.Metadata;
 
 			var list = new List<FieldLayoutEntry>();
 			FieldLayoutEntry scrollTargetEntry = default;
 
 			var length = metadata.GetTableRowCount(TableIndex.FieldLayout);
 			ReadOnlySpan<byte> ptr = metadata.AsReadOnlySpan();
+			int metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
 			for (int rid = 1; rid <= length; rid++)
 			{
-				FieldLayoutEntry entry = new FieldLayoutEntry(metadataFile, ptr, rid);
+				FieldLayoutEntry entry = new FieldLayoutEntry(module, ptr, metadataOffset, rid);
 				if (entry.RID == this.scrollTarget)
 				{
 					scrollTargetEntry = entry;
@@ -85,7 +90,8 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		struct FieldLayoutEntry
 		{
-			readonly MetadataFile metadataFile;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly FieldLayout fieldLayout;
 
 			public int RID { get; }
@@ -99,23 +105,24 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public void OnFieldClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, fieldLayout.Field, protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, fieldLayout.Field, protocol: "metadata"));
 			}
 
 			string fieldTooltip;
-			public string FieldTooltip => GenerateTooltip(ref fieldTooltip, metadataFile, fieldLayout.Field);
+			public string FieldTooltip => GenerateTooltip(ref fieldTooltip, module, fieldLayout.Field);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Other)]
 			public int FieldOffset => fieldLayout.Offset;
 
-			public FieldLayoutEntry(MetadataFile metadataFile, ReadOnlySpan<byte> ptr, int row)
+			public FieldLayoutEntry(PEFile module, ReadOnlySpan<byte> ptr, int metadataOffset, int row)
 			{
-				this.metadataFile = metadataFile;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.RID = row;
-				var rowOffset = metadataFile.Metadata.GetTableMetadataOffset(TableIndex.FieldLayout)
-					+ metadataFile.Metadata.GetTableRowSize(TableIndex.FieldLayout) * (row - 1);
-				this.Offset = metadataFile.MetadataOffset + rowOffset;
-				int fieldDefSize = metadataFile.Metadata.GetTableRowCount(TableIndex.Field) < ushort.MaxValue ? 2 : 4;
+				var rowOffset = metadata.GetTableMetadataOffset(TableIndex.FieldLayout)
+					+ metadata.GetTableRowSize(TableIndex.FieldLayout) * (row - 1);
+				this.Offset = metadataOffset + rowOffset;
+				int fieldDefSize = metadata.GetTableRowCount(TableIndex.Field) < ushort.MaxValue ? 2 : 4;
 				this.fieldLayout = new FieldLayout(ptr.Slice(rowOffset), fieldDefSize);
 				this.fieldTooltip = null;
 			}

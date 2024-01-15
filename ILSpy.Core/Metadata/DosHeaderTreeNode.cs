@@ -17,6 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.Collections.Generic;
+using System.Windows.Controls;
+using System.Windows.Data;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
@@ -36,7 +38,7 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		public override object Text => "DOS Header";
 
-		public override object Icon => Images.Header;
+		public override object Icon => Images.Literal;
 
 		public override bool View(TabPageModel tabPage)
 		{

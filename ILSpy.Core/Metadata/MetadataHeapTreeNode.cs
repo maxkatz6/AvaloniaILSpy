@@ -16,34 +16,44 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using System;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
 using ICSharpCode.Decompiler.Metadata;
+using ICSharpCode.ILSpy.TextView;
 using ICSharpCode.ILSpy.TreeNodes;
+using ICSharpCode.ILSpy.ViewModels;
+using ICSharpCode.TreeView;
 
 namespace ICSharpCode.ILSpy.Metadata
 {
 	internal abstract class MetadataHeapTreeNode : ILSpyTreeNode
 	{
-		protected MetadataFile metadataFile;
+		protected PEFile module;
+		protected MetadataReader metadata;
 		protected int scrollTarget;
 
 		public HandleKind Kind { get; }
 
-		public override object Icon => Images.Heap;
-
-		public MetadataHeapTreeNode(HandleKind kind, MetadataFile metadataFile)
+		public MetadataHeapTreeNode(HandleKind kind, PEFile module, MetadataReader metadata)
 		{
+			this.module = module;
 			this.Kind = kind;
-			this.metadataFile = metadataFile;
+			this.metadata = metadata;
+		}
+
+		internal void ScrollTo(Handle handle)
+		{
+			//this.scrollTarget = MetadataTokens.GetHeapOffset((EntityHandle)handle);
 		}
 
 		protected void ScrollItemIntoView(DataGrid view, object item)
 		{
 			view.Loaded += View_Loaded;
-			view.Dispatcher.BeginInvoke(() => view.SelectItem(item), DispatcherPriority.Background);
+			view.Dispatcher.BeginInvoke((Action)(() => view.SelectItem(item)), DispatcherPriority.Background);
 		}
 
 		private void View_Loaded(object sender, System.Windows.RoutedEventArgs e)

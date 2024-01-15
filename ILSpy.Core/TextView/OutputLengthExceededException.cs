@@ -17,13 +17,14 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Runtime.Serialization;
 
 namespace ICSharpCode.ILSpy.TextView
 {
 	/// <summary>
 	/// This exception gets used when the text output is longer than the specified limit.
 	/// </summary>
-	class OutputLengthExceededException : Exception
+	class OutputLengthExceededException : Exception, ISerializable
 	{
 		public OutputLengthExceededException()
 		{
@@ -34,6 +35,11 @@ namespace ICSharpCode.ILSpy.TextView
 		}
 
 		public OutputLengthExceededException(string message, Exception innerException) : base(message, innerException)
+		{
+		}
+
+		// This constructor is needed for serialization.
+		protected OutputLengthExceededException(SerializationInfo info, StreamingContext context) : base(info, context)
 		{
 		}
 	}

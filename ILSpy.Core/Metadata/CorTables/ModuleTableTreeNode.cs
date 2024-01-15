@@ -27,12 +27,14 @@ namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class ModuleTableTreeNode : MetadataTableTreeNode
 	{
-		public ModuleTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.ModuleDefinition, metadataFile)
+		public ModuleTableTreeNode(PEFile module)
+			: base(HandleKind.ModuleDefinition, module)
 		{
 		}
 
-		public override object Text => $"00 Module ({metadataFile.Metadata.GetTableRowCount(TableIndex.Module)})";
+		public override object Text => $"00 Module ({module.Metadata.GetTableRowCount(TableIndex.Module)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -44,7 +46,7 @@ namespace ICSharpCode.ILSpy.Metadata
 			var list = new List<ModuleEntry>();
 			ModuleEntry scrollTargetEntry = default;
 
-			list.Add(new ModuleEntry(metadataFile, EntityHandle.ModuleDefinition));
+			list.Add(new ModuleEntry(module, EntityHandle.ModuleDefinition));
 
 			view.ItemsSource = list;
 
@@ -60,7 +62,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		struct ModuleEntry
 		{
-			readonly MetadataFile metadataFile;
+			readonly int metadataOffset;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly ModuleDefinitionHandle handle;
 			readonly ModuleDefinition moduleDef;
 
@@ -68,36 +72,38 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public int Token => MetadataTokens.GetToken(handle);
 
-			public int Offset => metadataFile.MetadataOffset
-				+ metadataFile.Metadata.GetTableMetadataOffset(TableIndex.Module)
-				+ metadataFile.Metadata.GetTableRowSize(TableIndex.Module) * (RID - 1);
+			public int Offset => metadataOffset
+				+ metadata.GetTableMetadataOffset(TableIndex.Module)
+				+ metadata.GetTableRowSize(TableIndex.Module) * (RID - 1);
 
 			public int Generation => moduleDef.Generation;
 
-			public string Name => metadataFile.Metadata.GetString(moduleDef.Name);
+			public string Name => metadata.GetString(moduleDef.Name);
 
 			public string NameTooltip => $"{MetadataTokens.GetHeapOffset(moduleDef.Name):X} \"{Name}\"";
 
 			[ColumnInfo("X8", Kind = ColumnKind.HeapOffset)]
 			public int Mvid => MetadataTokens.GetHeapOffset(moduleDef.Mvid);
 
-			public string MvidTooltip => metadataFile.Metadata.GetGuid(moduleDef.Mvid).ToString();
+			public string MvidTooltip => metadata.GetGuid(moduleDef.Mvid).ToString();
 
 			[ColumnInfo("X8", Kind = ColumnKind.HeapOffset)]
 			public int GenerationId => MetadataTokens.GetHeapOffset(moduleDef.GenerationId);
 
-			public string GenerationIdTooltip => moduleDef.GenerationId.IsNil ? null : metadataFile.Metadata.GetGuid(moduleDef.GenerationId).ToString();
+			public string GenerationIdTooltip => moduleDef.GenerationId.IsNil ? null : metadata.GetGuid(moduleDef.GenerationId).ToString();
 
 			[ColumnInfo("X8", Kind = ColumnKind.HeapOffset)]
 			public int BaseGenerationId => MetadataTokens.GetHeapOffset(moduleDef.BaseGenerationId);
 
-			public string BaseGenerationIdTooltip => moduleDef.BaseGenerationId.IsNil ? null : metadataFile.Metadata.GetGuid(moduleDef.BaseGenerationId).ToString();
+			public string BaseGenerationIdTooltip => moduleDef.BaseGenerationId.IsNil ? null : metadata.GetGuid(moduleDef.BaseGenerationId).ToString();
 
-			public ModuleEntry(MetadataFile metadataFile, ModuleDefinitionHandle handle)
+			public ModuleEntry(PEFile module, ModuleDefinitionHandle handle)
 			{
-				this.metadataFile = metadataFile;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.handle = handle;
-				this.moduleDef = metadataFile.Metadata.GetModuleDefinition();
+				this.moduleDef = metadata.GetModuleDefinition();
 			}
 		}
 

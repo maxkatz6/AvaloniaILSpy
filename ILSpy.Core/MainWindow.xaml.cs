@@ -29,7 +29,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -300,12 +299,6 @@ namespace ICSharpCode.ILSpy
 							}
 
 							menuItem.IsEnabled = entry.Metadata.IsEnabled;
-							if (entry.Value is ToggleableCommand toggle)
-							{
-								menuItem.IsCheckable = true;
-								menuItem.SetBinding(MenuItem.IsCheckedProperty, new Binding("IsChecked") { Source = entry.Value, Mode = BindingMode.OneWay });
-							}
-
 							menuItem.InputGestureText = entry.Metadata.InputGestureText;
 							parentMenuItem.Items.Add(menuItem);
 						}
@@ -1314,7 +1307,7 @@ namespace ICSharpCode.ILSpy
 					break;
 				case EntityReference unresolvedEntity:
 					string protocol = unresolvedEntity.Protocol ?? "decompile";
-					PEFile file = unresolvedEntity.ResolveAssembly(assemblyList) as PEFile;
+					PEFile file = unresolvedEntity.ResolveAssembly(assemblyList);
 					if (file == null)
 					{
 						break;
@@ -1385,7 +1378,7 @@ namespace ICSharpCode.ILSpy
 		{
 			e.Handled = true;
 			OpenFileDialog dlg = new OpenFileDialog();
-			dlg.Filter = ".NET assemblies|*.dll;*.exe;*.winmd|Nuget Packages (*.nupkg)|*.nupkg|Portable Program Database (*.pdb)|*.pdb|All files|*.*";
+			dlg.Filter = ".NET assemblies|*.dll;*.exe;*.winmd|Nuget Packages (*.nupkg)|*.nupkg|All files|*.*";
 			dlg.Multiselect = true;
 			dlg.RestoreDirectory = true;
 			if (dlg.ShowDialog() == true)

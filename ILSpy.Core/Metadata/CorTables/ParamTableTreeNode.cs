@@ -28,12 +28,14 @@ namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class ParamTableTreeNode : MetadataTableTreeNode
 	{
-		public ParamTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.Parameter, metadataFile)
+		public ParamTableTreeNode(PEFile module)
+			: base(HandleKind.Parameter, module)
 		{
 		}
 
-		public override object Text => $"08 Param ({metadataFile.Metadata.GetTableRowCount(TableIndex.Param)})";
+		public override object Text => $"08 Param ({module.Metadata.GetTableRowCount(TableIndex.Param)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -45,9 +47,9 @@ namespace ICSharpCode.ILSpy.Metadata
 			var list = new List<ParamEntry>();
 			ParamEntry scrollTargetEntry = default;
 
-			for (int row = 1; row <= metadataFile.Metadata.GetTableRowCount(TableIndex.Param); row++)
+			for (int row = 1; row <= module.Metadata.GetTableRowCount(TableIndex.Param); row++)
 			{
-				ParamEntry entry = new ParamEntry(metadataFile, MetadataTokens.ParameterHandle(row));
+				ParamEntry entry = new ParamEntry(module, MetadataTokens.ParameterHandle(row));
 				if (entry.RID == this.scrollTarget)
 				{
 					scrollTargetEntry = entry;
@@ -69,7 +71,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		struct ParamEntry
 		{
-			readonly MetadataFile metadataFile;
+			readonly int metadataOffset;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly ParameterHandle handle;
 			readonly Parameter param;
 
@@ -77,9 +81,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public int Token => MetadataTokens.GetToken(handle);
 
-			public int Offset => metadataFile.MetadataOffset
-				+ metadataFile.Metadata.GetTableMetadataOffset(TableIndex.Param)
-				+ metadataFile.Metadata.GetTableRowSize(TableIndex.Param) * (RID - 1);
+			public int Offset => metadataOffset
+				+ metadata.GetTableMetadataOffset(TableIndex.Param)
+				+ metadata.GetTableRowSize(TableIndex.Param) * (RID - 1);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Other)]
 			public ParameterAttributes Attributes => param.Attributes;
@@ -88,17 +92,19 @@ namespace ICSharpCode.ILSpy.Metadata
 				FlagGroup.CreateMultipleChoiceGroup(typeof(ParameterAttributes), selectedValue: (int)param.Attributes, includeAll: false)
 			};
 
-			public string Name => metadataFile.Metadata.GetString(param.Name);
+			public string Name => metadata.GetString(param.Name);
 
 			public string NameTooltip => $"{MetadataTokens.GetHeapOffset(param.Name):X} \"{Name}\"";
 
 			public int Sequence => param.SequenceNumber;
 
-			public ParamEntry(MetadataFile metadataFile, ParameterHandle handle)
+			public ParamEntry(PEFile module, ParameterHandle handle)
 			{
-				this.metadataFile = metadataFile;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.handle = handle;
-				this.param = metadataFile.Metadata.GetParameter(handle);
+				this.param = metadata.GetParameter(handle);
 			}
 		}
 

@@ -28,12 +28,14 @@ namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class TypeSpecTableTreeNode : MetadataTableTreeNode
 	{
-		public TypeSpecTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.TypeSpecification, metadataFile)
+		public TypeSpecTableTreeNode(PEFile module)
+			: base(HandleKind.TypeSpecification, module)
 		{
 		}
 
-		public override object Text => $"1B TypeSpec ({metadataFile.Metadata.GetTableRowCount(TableIndex.TypeSpec)})";
+		public override object Text => $"1B TypeSpec ({module.Metadata.GetTableRowCount(TableIndex.TypeSpec)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -41,14 +43,14 @@ namespace ICSharpCode.ILSpy.Metadata
 			tabPage.SupportsLanguageSwitching = false;
 
 			var view = Helpers.PrepareDataGrid(tabPage, this);
-			var metadata = metadataFile.Metadata;
+			var metadata = module.Metadata;
 
 			var list = new List<TypeSpecEntry>();
 			TypeSpecEntry scrollTargetEntry = default;
 
 			foreach (var row in metadata.GetTypeSpecifications())
 			{
-				TypeSpecEntry entry = new TypeSpecEntry(metadataFile, row);
+				TypeSpecEntry entry = new TypeSpecEntry(module, row);
 				if (scrollTarget.Equals(row))
 				{
 					scrollTargetEntry = entry;
@@ -71,7 +73,7 @@ namespace ICSharpCode.ILSpy.Metadata
 		struct TypeSpecEntry
 		{
 			readonly int metadataOffset;
-			readonly MetadataFile module;
+			readonly PEFile module;
 			readonly MetadataReader metadata;
 			readonly TypeSpecificationHandle handle;
 			readonly TypeSpecification typeSpec;
@@ -95,11 +97,11 @@ namespace ICSharpCode.ILSpy.Metadata
 				}
 			}
 
-			public TypeSpecEntry(MetadataFile metadataFile, TypeSpecificationHandle handle)
+			public TypeSpecEntry(PEFile module, TypeSpecificationHandle handle)
 			{
-				this.module = metadataFile;
-				this.metadataOffset = metadataFile.MetadataOffset;
-				this.metadata = metadataFile.Metadata;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.handle = handle;
 				this.typeSpec = metadata.GetTypeSpecification(handle);
 			}

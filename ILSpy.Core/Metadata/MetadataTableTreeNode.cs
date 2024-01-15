@@ -23,30 +23,28 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.ILSpy.TreeNodes;
 
 namespace ICSharpCode.ILSpy.Metadata
 {
 	internal abstract class MetadataTableTreeNode : ILSpyTreeNode
 	{
-		protected readonly MetadataFile metadataFile;
+		protected PEFile module;
 		protected int scrollTarget;
 
 		public HandleKind Kind { get; }
 
-		public override object Icon => Images.MetadataTable;
-
-		public MetadataTableTreeNode(HandleKind kind, MetadataFile metadataFile)
+		public MetadataTableTreeNode(HandleKind kind, PEFile module)
 		{
+			this.module = module;
 			this.Kind = kind;
-			this.metadataFile = metadataFile;
 		}
 
 		internal void ScrollTo(Handle handle)
 		{
-			this.scrollTarget = metadataFile.Metadata.GetRowNumber((EntityHandle)handle);
+			this.scrollTarget = module.Metadata.GetRowNumber((EntityHandle)handle);
 		}
 
 		protected void ScrollItemIntoView(DataGrid view, object item)
@@ -64,7 +62,7 @@ namespace ICSharpCode.ILSpy.Metadata
 			this.scrollTarget = default;
 		}
 
-		protected static string GenerateTooltip(ref string tooltip, MetadataFile module, EntityHandle handle)
+		protected static string GenerateTooltip(ref string tooltip, PEFile module, EntityHandle handle)
 		{
 			if (tooltip == null)
 			{
@@ -73,7 +71,7 @@ namespace ICSharpCode.ILSpy.Metadata
 					return null;
 				}
 				ITextOutput output = new PlainTextOutput();
-				var context = new MetadataGenericContext(default(TypeDefinitionHandle), module.Metadata);
+				var context = new MetadataGenericContext(default(TypeDefinitionHandle), module);
 				var metadata = module.Metadata;
 				switch (handle.Kind)
 				{
@@ -86,7 +84,7 @@ namespace ICSharpCode.ILSpy.Metadata
 						output.Write(metadata.GetString(moduleReference.Name));
 						break;
 					case HandleKind.AssemblyReference:
-						var asmRef = new Decompiler.Metadata.AssemblyReference(metadata, (AssemblyReferenceHandle)handle);
+						var asmRef = new Decompiler.Metadata.AssemblyReference(module, (AssemblyReferenceHandle)handle);
 						output.Write(asmRef.ToString());
 						break;
 					case HandleKind.Parameter:
@@ -134,9 +132,12 @@ namespace ICSharpCode.ILSpy.Metadata
 
 	internal abstract class DebugMetadataTableTreeNode : MetadataTableTreeNode
 	{
-		public DebugMetadataTableTreeNode(HandleKind kind, MetadataFile metadataFile)
-			: base(kind, metadataFile)
+		protected MetadataReader metadata;
+
+		public DebugMetadataTableTreeNode(HandleKind kind, PEFile module, MetadataReader metadata)
+			: base(kind, module)
 		{
+			this.metadata = metadata;
 		}
 	}
 }

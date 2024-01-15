@@ -19,13 +19,17 @@
 #nullable enable
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
+using ICSharpCode.Decompiler.Util;
+using ICSharpCode.ILSpy.Options;
 using ICSharpCode.ILSpyX;
 
 namespace ICSharpCode.ILSpy
@@ -72,7 +76,7 @@ namespace ICSharpCode.ILSpy
 			return result;
 		}
 
-		public static ICompilation? GetTypeSystemWithCurrentOptionsOrNull(this MetadataFile file)
+		public static ICompilation? GetTypeSystemWithCurrentOptionsOrNull(this PEFile file)
 		{
 			return LoadedAssemblyExtensions.GetLoadedAssembly(file)
 				.GetTypeSystemOrNull(DecompilerTypeSystem.GetOptions(MainWindow.Instance.CurrentDecompilerSettings));

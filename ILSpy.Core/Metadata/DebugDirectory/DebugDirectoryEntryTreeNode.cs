@@ -23,6 +23,7 @@ using System.Reflection.PortableExecutable;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.TreeNodes;
+using ICSharpCode.ILSpy.ViewModels;
 
 namespace ICSharpCode.ILSpy.Metadata
 {
@@ -38,9 +39,9 @@ namespace ICSharpCode.ILSpy.Metadata
 			this.entry = entry;
 		}
 
-		override public object Text => entry.Type.ToString();
+		override public object Text => $"{entry.Type}";
 
-		public override object Icon => Images.MetadataTable;
+		public override object Icon => Images.Literal;
 
 		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
 		{

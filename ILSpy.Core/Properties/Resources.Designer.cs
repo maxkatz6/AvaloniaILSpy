@@ -496,15 +496,6 @@ namespace ICSharpCode.ILSpy.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Clear assembly list.
-        /// </summary>
-        public static string ClearAssemblyList {
-            get {
-                return ResourceManager.GetString("ClearAssemblyList", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
         public static string Close {
@@ -771,15 +762,6 @@ namespace ICSharpCode.ILSpy.Properties {
         public static string DecompilerSettings_AsyncEnumerator {
             get {
                 return ResourceManager.GetString("DecompilerSettings.AsyncEnumerator", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Automatically load assembly references.
-        /// </summary>
-        public static string DecompilerSettings_AutoLoadAssemblyReferences {
-            get {
-                return ResourceManager.GetString("DecompilerSettings.AutoLoadAssemblyReferences", resourceCulture);
             }
         }
         

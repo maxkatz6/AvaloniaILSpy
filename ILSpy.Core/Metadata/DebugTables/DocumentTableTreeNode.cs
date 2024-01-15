@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
@@ -29,12 +30,17 @@ namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class DocumentTableTreeNode : DebugMetadataTableTreeNode
 	{
-		public DocumentTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.Document, metadataFile)
+		private readonly bool isEmbedded;
+
+		public DocumentTableTreeNode(PEFile module, MetadataReader metadata, bool isEmbedded)
+			: base(HandleKind.Document, module, metadata)
 		{
+			this.isEmbedded = isEmbedded;
 		}
 
-		public override object Text => $"30 Document ({metadataFile.Metadata.GetTableRowCount(TableIndex.Document)})";
+		public override object Text => $"30 Document ({metadata.GetTableRowCount(TableIndex.Document)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -45,9 +51,9 @@ namespace ICSharpCode.ILSpy.Metadata
 			var list = new List<DocumentEntry>();
 			DocumentEntry scrollTargetEntry = default;
 
-			foreach (var row in metadataFile.Metadata.Documents)
+			foreach (var row in metadata.Documents)
 			{
-				DocumentEntry entry = new DocumentEntry(metadataFile, row);
+				DocumentEntry entry = new DocumentEntry(metadata, isEmbedded, row);
 				if (entry.RID == scrollTarget)
 				{
 					scrollTargetEntry = entry;
@@ -67,10 +73,10 @@ namespace ICSharpCode.ILSpy.Metadata
 			return true;
 		}
 
-		readonly struct DocumentEntry
+		struct DocumentEntry
 		{
 			readonly int? offset;
-			readonly MetadataFile metadataFile;
+			readonly MetadataReader metadata;
 			readonly DocumentHandle handle;
 			readonly Document document;
 
@@ -78,9 +84,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public int Token => MetadataTokens.GetToken(handle);
 
-			public object Offset => offset == null ? "n/a" : offset;
+			public object Offset => offset == null ? "n/a" : (object)offset;
 
-			public string Name => metadataFile.Metadata.GetString(document.Name);
+			public string Name => metadata.GetString(document.Name);
 
 			public string NameTooltip => $"{MetadataTokens.GetHeapOffset(document.Name):X} \"{Name}\"";
 
@@ -91,7 +97,7 @@ namespace ICSharpCode.ILSpy.Metadata
 				get {
 					if (document.HashAlgorithm.IsNil)
 						return null;
-					Guid guid = metadataFile.Metadata.GetGuid(document.HashAlgorithm);
+					Guid guid = metadata.GetGuid(document.HashAlgorithm);
 					if (guid == KnownGuids.HashAlgorithmSHA1)
 						return "SHA1 [ff1816ec-aa5e-4d10-87f7-6f4963833460]";
 					if (guid == KnownGuids.HashAlgorithmSHA256)
@@ -107,7 +113,7 @@ namespace ICSharpCode.ILSpy.Metadata
 				get {
 					if (document.Hash.IsNil)
 						return null;
-					System.Collections.Immutable.ImmutableArray<byte> token = metadataFile.Metadata.GetBlobContent(document.Hash);
+					System.Collections.Immutable.ImmutableArray<byte> token = metadata.GetBlobContent(document.Hash);
 					return token.ToHexString(token.Length);
 				}
 			}
@@ -119,7 +125,7 @@ namespace ICSharpCode.ILSpy.Metadata
 				get {
 					if (document.Language.IsNil)
 						return null;
-					Guid guid = metadataFile.Metadata.GetGuid(document.Language);
+					Guid guid = metadata.GetGuid(document.Language);
 					if (guid == KnownGuids.CSharpLanguageGuid)
 						return "Visual C# [3f5162f8-07c6-11d3-9053-00c04fa302a1]";
 					if (guid == KnownGuids.VBLanguageGuid)
@@ -130,13 +136,13 @@ namespace ICSharpCode.ILSpy.Metadata
 				}
 			}
 
-			public DocumentEntry(MetadataFile metadataFile, DocumentHandle handle)
+			public DocumentEntry(MetadataReader metadata, bool isEmbedded, DocumentHandle handle)
 			{
-				this.metadataFile = metadataFile;
-				this.offset = metadataFile.IsEmbedded ? null : (int?)metadataFile.Metadata.GetTableMetadataOffset(TableIndex.Document)
-					+ metadataFile.Metadata.GetTableRowSize(TableIndex.Document) * (MetadataTokens.GetRowNumber(handle) - 1);
+				this.offset = isEmbedded ? null : (int?)metadata.GetTableMetadataOffset(TableIndex.Document)
+					+ metadata.GetTableRowSize(TableIndex.Document) * (MetadataTokens.GetRowNumber(handle) - 1);
+				this.metadata = metadata;
 				this.handle = handle;
-				this.document = metadataFile.Metadata.GetDocument(handle);
+				this.document = metadata.GetDocument(handle);
 			}
 		}
 

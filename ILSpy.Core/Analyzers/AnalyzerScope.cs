@@ -54,7 +54,16 @@ namespace ICSharpCode.ILSpy.Analyzers
 			AssemblyList = assemblyList;
 			assemblyListSnapshot = assemblyList.GetSnapshot();
 			AnalyzedSymbol = entity;
-			DetermineEffectiveAccessibility(entity, out typeScope, out effectiveAccessibility);
+			if (entity is ITypeDefinition type)
+			{
+				typeScope = type;
+				effectiveAccessibility = DetermineEffectiveAccessibility(ref typeScope, Accessibility.Public);
+			}
+			else
+			{
+				typeScope = entity.DeclaringTypeDefinition;
+				effectiveAccessibility = DetermineEffectiveAccessibility(ref typeScope, entity.Accessibility);
+			}
 			IsLocal = effectiveAccessibility.LessThanOrEqual(Accessibility.Private);
 		}
 
@@ -103,31 +112,20 @@ namespace ICSharpCode.ILSpy.Analyzers
 			}
 		}
 
-		static void DetermineEffectiveAccessibility(IEntity input, out ITypeDefinition typeScope, out Accessibility accessibility)
+		static Accessibility DetermineEffectiveAccessibility(ref ITypeDefinition typeScope, Accessibility memberAccessibility)
 		{
-			if (input is ITypeDefinition td)
+			Accessibility accessibility = memberAccessibility;
+			var ts = typeScope;
+			while (ts != null && !accessibility.LessThanOrEqual(Accessibility.Private))
 			{
-				accessibility = Accessibility.Public;
-				typeScope = td;
-			}
-			else
-			{
-				accessibility = input.Accessibility;
-				typeScope = input.DeclaringTypeDefinition;
+				accessibility = accessibility.Intersect(ts.Accessibility);
+				typeScope = ts;
+				ts = ts.DeclaringTypeDefinition;
 			}
 			// Once we reach a private entity, we leave the loop with typeScope set to the class that
 			// contains the private entity = the scope that needs to be searched.
 			// Otherwise (if we don't find a private entity) we return the top-level class.
-			var prevTypeScope = typeScope;
-			while (typeScope != null && !accessibility.LessThanOrEqual(Accessibility.Private))
-			{
-				accessibility = accessibility.Intersect(typeScope.Accessibility);
-				typeScope = prevTypeScope.DeclaringTypeDefinition;
-			}
-			if (typeScope == null)
-			{
-				typeScope = prevTypeScope;
-			}
+			return accessibility;
 		}
 
 		#region Find modules

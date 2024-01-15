@@ -21,18 +21,21 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
 using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 
 namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class TypeRefTableTreeNode : MetadataTableTreeNode
 	{
-		public TypeRefTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.TypeReference, metadataFile)
+		public TypeRefTableTreeNode(PEFile module)
+			: base(HandleKind.TypeReference, module)
 		{
 		}
 
-		public override object Text => $"01 TypeRef ({metadataFile.Metadata.GetTableRowCount(TableIndex.TypeRef)})";
+		public override object Text => $"01 TypeRef ({module.Metadata.GetTableRowCount(TableIndex.TypeRef)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -40,14 +43,14 @@ namespace ICSharpCode.ILSpy.Metadata
 			tabPage.SupportsLanguageSwitching = false;
 
 			var view = Helpers.PrepareDataGrid(tabPage, this);
-			var metadata = metadataFile.Metadata;
+			var metadata = module.Metadata;
 
 			var list = new List<TypeRefEntry>();
 			TypeRefEntry scrollTargetEntry = default;
 
 			foreach (var row in metadata.TypeReferences)
 			{
-				TypeRefEntry entry = new TypeRefEntry(metadataFile, row);
+				TypeRefEntry entry = new TypeRefEntry(module, row);
 				if (entry.RID == this.scrollTarget)
 				{
 					scrollTargetEntry = entry;
@@ -69,7 +72,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		struct TypeRefEntry
 		{
-			readonly MetadataFile metadataFile;
+			readonly int metadataOffset;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly TypeReferenceHandle handle;
 			readonly TypeReference typeRef;
 
@@ -77,34 +82,36 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public int Token => MetadataTokens.GetToken(handle);
 
-			public int Offset => metadataFile.MetadataOffset
-				+ metadataFile.Metadata.GetTableMetadataOffset(TableIndex.TypeRef)
-				+ metadataFile.Metadata.GetTableRowSize(TableIndex.TypeRef) * (RID - 1);
+			public int Offset => metadataOffset
+				+ metadata.GetTableMetadataOffset(TableIndex.TypeRef)
+				+ metadata.GetTableRowSize(TableIndex.TypeRef) * (RID - 1);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Token)]
 			public int ResolutionScope => MetadataTokens.GetToken(typeRef.ResolutionScope);
 
 			public void OnResolutionScopeClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, typeRef.ResolutionScope, protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, typeRef.ResolutionScope, protocol: "metadata"));
 			}
 
 			string resolutionScopeTooltip;
-			public string ResolutionScopeTooltip => GenerateTooltip(ref resolutionScopeTooltip, metadataFile, typeRef.ResolutionScope);
+			public string ResolutionScopeTooltip => GenerateTooltip(ref resolutionScopeTooltip, module, typeRef.ResolutionScope);
 
 			public string NameTooltip => $"{MetadataTokens.GetHeapOffset(typeRef.Name):X} \"{Name}\"";
 
-			public string Name => metadataFile.Metadata.GetString(typeRef.Name);
+			public string Name => metadata.GetString(typeRef.Name);
 
 			public string NamespaceTooltip => $"{MetadataTokens.GetHeapOffset(typeRef.Namespace):X} \"{Namespace}\"";
 
-			public string Namespace => metadataFile.Metadata.GetString(typeRef.Namespace);
+			public string Namespace => metadata.GetString(typeRef.Namespace);
 
-			public TypeRefEntry(MetadataFile metadataFile, TypeReferenceHandle handle)
+			public TypeRefEntry(PEFile module, TypeReferenceHandle handle)
 			{
-				this.metadataFile = metadataFile;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.handle = handle;
-				this.typeRef = metadataFile.Metadata.GetTypeReference(handle);
+				this.typeRef = metadata.GetTypeReference(handle);
 				this.resolutionScopeTooltip = null;
 			}
 		}

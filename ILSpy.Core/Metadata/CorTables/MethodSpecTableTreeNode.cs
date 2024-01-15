@@ -22,18 +22,21 @@ using System.Reflection.Metadata.Ecma335;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Disassembler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 
 namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class MethodSpecTableTreeNode : MetadataTableTreeNode
 	{
-		public MethodSpecTableTreeNode(MetadataFile metadataFile)
-			: base(HandleKind.MethodSpecification, metadataFile)
+		public MethodSpecTableTreeNode(PEFile module)
+			: base(HandleKind.MethodSpecification, module)
 		{
 		}
 
-		public override object Text => $"2B MethodSpec ({metadataFile.Metadata.GetTableRowCount(TableIndex.MethodSpec)})";
+		public override object Text => $"2B MethodSpec ({module.Metadata.GetTableRowCount(TableIndex.MethodSpec)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -41,14 +44,14 @@ namespace ICSharpCode.ILSpy.Metadata
 			tabPage.SupportsLanguageSwitching = false;
 
 			var view = Helpers.PrepareDataGrid(tabPage, this);
-			var metadata = metadataFile.Metadata;
+			var metadata = module.Metadata;
 
 			var list = new List<MethodSpecEntry>();
 			MethodSpecEntry scrollTargetEntry = default;
 
 			foreach (var row in metadata.GetMethodSpecifications())
 			{
-				MethodSpecEntry entry = new MethodSpecEntry(metadataFile, row);
+				MethodSpecEntry entry = new MethodSpecEntry(module, row);
 				if (entry.RID == this.scrollTarget)
 				{
 					scrollTargetEntry = entry;
@@ -70,7 +73,9 @@ namespace ICSharpCode.ILSpy.Metadata
 
 		struct MethodSpecEntry
 		{
-			readonly MetadataFile metadataFile;
+			readonly int metadataOffset;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly MethodSpecificationHandle handle;
 			readonly MethodSpecification methodSpec;
 
@@ -78,20 +83,20 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public int Token => MetadataTokens.GetToken(handle);
 
-			public int Offset => metadataFile.MetadataOffset
-				+ metadataFile.Metadata.GetTableMetadataOffset(TableIndex.MethodSpec)
-				+ metadataFile.Metadata.GetTableRowSize(TableIndex.MethodSpec) * (RID - 1);
+			public int Offset => metadataOffset
+				+ metadata.GetTableMetadataOffset(TableIndex.MethodSpec)
+				+ metadata.GetTableRowSize(TableIndex.MethodSpec) * (RID - 1);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Token)]
 			public int Method => MetadataTokens.GetToken(methodSpec.Method);
 
 			public void OnMethodClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, methodSpec.Method, protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, methodSpec.Method, protocol: "metadata"));
 			}
 
 			string methodTooltip;
-			public string MethodTooltip => GenerateTooltip(ref methodTooltip, metadataFile, methodSpec.Method);
+			public string MethodTooltip => GenerateTooltip(ref methodTooltip, module, methodSpec.Method);
 
 			[ColumnInfo("X8", Kind = ColumnKind.HeapOffset)]
 			public int Signature => MetadataTokens.GetHeapOffset(methodSpec.Signature);
@@ -99,7 +104,7 @@ namespace ICSharpCode.ILSpy.Metadata
 			public string SignatureTooltip {
 				get {
 					ITextOutput output = new PlainTextOutput();
-					var signature = methodSpec.DecodeSignature(new DisassemblerSignatureTypeProvider(metadataFile, output), default);
+					var signature = methodSpec.DecodeSignature(new DisassemblerSignatureTypeProvider(module, output), default);
 					bool first = true;
 					foreach (var type in signature)
 					{
@@ -113,11 +118,13 @@ namespace ICSharpCode.ILSpy.Metadata
 				}
 			}
 
-			public MethodSpecEntry(MetadataFile metadataFile, MethodSpecificationHandle handle)
+			public MethodSpecEntry(PEFile module, MethodSpecificationHandle handle)
 			{
-				this.metadataFile = metadataFile;
+				this.metadataOffset = module.Reader.PEHeaders.MetadataStartOffset;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.handle = handle;
-				this.methodSpec = metadataFile.Metadata.GetMethodSpecification(handle);
+				this.methodSpec = metadata.GetMethodSpecification(handle);
 				this.methodTooltip = null;
 			}
 		}

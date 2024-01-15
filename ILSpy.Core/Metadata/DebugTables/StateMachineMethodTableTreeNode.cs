@@ -16,23 +16,33 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
+using System.Text;
 
 using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.Disassembler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 
 namespace ICSharpCode.ILSpy.Metadata
 {
 	internal class StateMachineMethodTableTreeNode : DebugMetadataTableTreeNode
 	{
-		public StateMachineMethodTableTreeNode(MetadataFile metadataFile)
-			: base((HandleKind)0x36, metadataFile)
+		readonly bool isEmbedded;
+
+		public StateMachineMethodTableTreeNode(PEFile module, MetadataReader metadata, bool isEmbedded)
+			: base((HandleKind)0x36, module, metadata)
 		{
+			this.isEmbedded = isEmbedded;
 		}
 
-		public override object Text => $"36 StateMachineMethod ({metadataFile.Metadata.GetTableRowCount(TableIndex.StateMachineMethod)})";
+		public override object Text => $"36 StateMachineMethod ({metadata.GetTableRowCount(TableIndex.StateMachineMethod)})";
+
+		public override object Icon => Images.Literal;
 
 		public override bool View(ViewModels.TabPageModel tabPage)
 		{
@@ -42,13 +52,13 @@ namespace ICSharpCode.ILSpy.Metadata
 			var view = Helpers.PrepareDataGrid(tabPage, this);
 			var list = new List<StateMachineMethodEntry>();
 			StateMachineMethodEntry scrollTargetEntry = default;
-			var length = metadataFile.Metadata.GetTableRowCount(TableIndex.StateMachineMethod);
-			var reader = metadataFile.Metadata.AsBlobReader();
-			reader.Offset = metadataFile.Metadata.GetTableMetadataOffset(TableIndex.StateMachineMethod);
+			var length = metadata.GetTableRowCount(TableIndex.StateMachineMethod);
+			var reader = metadata.AsBlobReader();
+			reader.Offset = metadata.GetTableMetadataOffset(TableIndex.StateMachineMethod);
 
 			for (int rid = 1; rid <= length; rid++)
 			{
-				StateMachineMethodEntry entry = new StateMachineMethodEntry(metadataFile, ref reader, rid);
+				StateMachineMethodEntry entry = new StateMachineMethodEntry(module, ref reader, isEmbedded, rid);
 				if (scrollTarget == rid)
 				{
 					scrollTargetEntry = entry;
@@ -71,7 +81,8 @@ namespace ICSharpCode.ILSpy.Metadata
 		struct StateMachineMethodEntry
 		{
 			readonly int? offset;
-			readonly MetadataFile metadataFile;
+			readonly PEFile module;
+			readonly MetadataReader metadata;
 			readonly MethodDefinitionHandle moveNextMethod;
 			readonly MethodDefinitionHandle kickoffMethod;
 
@@ -86,32 +97,33 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			public void OnMoveNextMethodClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, moveNextMethod, protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, moveNextMethod, protocol: "metadata"));
 			}
 
 			string moveNextMethodTooltip;
-			public string MoveNextMethodTooltip => GenerateTooltip(ref moveNextMethodTooltip, metadataFile, moveNextMethod);
+			public string MoveNextMethodTooltip => GenerateTooltip(ref moveNextMethodTooltip, module, moveNextMethod);
 
 			[ColumnInfo("X8", Kind = ColumnKind.Token)]
 			public int KickoffMethod => MetadataTokens.GetToken(kickoffMethod);
 
 			public void OnKickofMethodClick()
 			{
-				MainWindow.Instance.JumpToReference(new EntityReference(metadataFile, kickoffMethod, protocol: "metadata"));
+				MainWindow.Instance.JumpToReference(new EntityReference(module, kickoffMethod, protocol: "metadata"));
 			}
 
 			string kickoffMethodTooltip;
-			public string KickoffMethodTooltip => GenerateTooltip(ref kickoffMethodTooltip, metadataFile, kickoffMethod);
+			public string KickoffMethodTooltip => GenerateTooltip(ref kickoffMethodTooltip, module, kickoffMethod);
 
-			public StateMachineMethodEntry(MetadataFile metadataFile, ref BlobReader reader, int row)
+			public StateMachineMethodEntry(PEFile module, ref BlobReader reader, bool isEmbedded, int row)
 			{
-				this.metadataFile = metadataFile;
+				this.module = module;
+				this.metadata = module.Metadata;
 				this.RID = row;
-				int rowOffset = metadataFile.Metadata.GetTableMetadataOffset(TableIndex.StateMachineMethod)
-					+ metadataFile.Metadata.GetTableRowSize(TableIndex.StateMachineMethod) * (row - 1);
-				this.offset = metadataFile.IsEmbedded ? null : (int?)rowOffset;
+				int rowOffset = metadata.GetTableMetadataOffset(TableIndex.StateMachineMethod)
+					+ metadata.GetTableRowSize(TableIndex.StateMachineMethod) * (row - 1);
+				this.offset = isEmbedded ? null : (int?)rowOffset;
 
-				int methodDefSize = metadataFile.Metadata.GetTableRowCount(TableIndex.MethodDef) < ushort.MaxValue ? 2 : 4;
+				int methodDefSize = metadata.GetTableRowCount(TableIndex.MethodDef) < ushort.MaxValue ? 2 : 4;
 				this.moveNextMethod = MetadataTokens.MethodDefinitionHandle(methodDefSize == 2 ? reader.ReadInt16() : reader.ReadInt32());
 				this.kickoffMethod = MetadataTokens.MethodDefinitionHandle(methodDefSize == 2 ? reader.ReadInt16() : reader.ReadInt32());
 				this.kickoffMethodTooltip = null;
