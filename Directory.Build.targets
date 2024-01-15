@@ -1,9 +1,0 @@
-<Project>
-
-    <ItemGroup>
-        <PackageReference Update="Avalonia" Version="$(AvaloniaVersion)" />
-        <PackageReference Update="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
-        <PackageReference Update="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
-    </ItemGroup>
-
-</Project>

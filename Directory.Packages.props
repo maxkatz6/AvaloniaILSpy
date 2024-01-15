@@ -42,5 +42,7 @@
     <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
     <PackageVersion Include="TomsToolbox.Wpf.Styles" Version="2.12.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
+	<PackageVersion Include="ICSharpCode.ILSpyX" Version="8.2.0.7535" />
+	<PackageVersion Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
   </ItemGroup>
 </Project>
