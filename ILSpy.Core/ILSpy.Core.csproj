@@ -83,8 +83,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ICSharpCode.ILSpyX\ICSharpCode.ILSpyX.csproj" />
-    <ProjectReference Include="..\ICSharpCode.Decompiler\ICSharpCode.Decompiler.csproj" />
+    <PackageReference Include="ICSharpCode.ILSpyX" Version="8.2.0.7535" />
+    <PackageReference Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
     <ProjectReference Include="..\SharpTreeView\ICSharpCode.TreeView.csproj" />
   </ItemGroup>
 
