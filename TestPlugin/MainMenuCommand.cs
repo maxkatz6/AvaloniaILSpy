@@ -10,17 +10,18 @@ namespace TestPlugin
 	// Header: text on the menu item
 	// MenuCategory: optional, used for grouping related menu items together. A separator is added between different groups.
 	// MenuOrder: controls the order in which the items appear (items are sorted by this value)
-	[ExportMainMenuCommand(Menu = "_File", MenuIcon = "TestPlugin.Clear.png", Header = "_Clear List", MenuCategory = "Open", MenuOrder = 1.5)]
+	[ExportMainMenuCommand(ParentMenuID = "_File", MenuIcon = "Clear.png", Header = "_Clear List", MenuCategory = "Open", MenuOrder = 1.5)]
 	// ToolTip: the tool tip
 	// ToolbarIcon: The icon. Must be embedded as "Resource" (WPF-style resource) in the same assembly as the command type.
 	// ToolbarCategory: optional, used for grouping related toolbar items together. A separator is added between different groups.
 	// ToolbarOrder: controls the order in which the items appear (items are sorted by this value)
-	[ExportToolbarCommand(ToolTip = "Clears the current assembly list", ToolbarIcon = "TestPlugin.Clear.png", ToolbarCategory = "Open", ToolbarOrder = 1.5)]
+	[ExportToolbarCommand(ToolTip = "Clears the current assembly list", ToolbarIcon = "Clear.png", ToolbarCategory = "Open", ToolbarOrder = 1.5)]
 	public class UnloadAllAssembliesCommand : SimpleCommand
 	{
 		public override void Execute(object parameter)
 		{
-			foreach (var loadedAssembly in MainWindow.Instance.CurrentAssemblyList.GetAssemblies()) {
+			foreach (var loadedAssembly in MainWindow.Instance.CurrentAssemblyList.GetAssemblies())
+			{
 				loadedAssembly.AssemblyList.Unload(loadedAssembly);
 			}
 		}

@@ -2,10 +2,10 @@
 // This code is distributed under MIT X11 license (for details please see \doc\license.txt)
 
 using System.ComponentModel.Composition;
-using Avalonia;
-using Avalonia.Media;
+using System.Windows;
+using System.Windows.Media;
 
-using AvaloniaEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.ILSpy;
 
 namespace TestPlugin
@@ -21,7 +21,7 @@ namespace TestPlugin
 			textOutput.WriteLine();
 			textOutput.BeginSpan(new HighlightingColor {
 				Background = new SimpleHighlightingBrush(Colors.Black),
-				FontStyle = FontStyle.Italic,
+				FontStyle = FontStyles.Italic,
 				Foreground = new SimpleHighlightingBrush(Colors.Aquamarine)
 			});
 			textOutput.Write("DO NOT PRESS THIS BUTTON --> ");

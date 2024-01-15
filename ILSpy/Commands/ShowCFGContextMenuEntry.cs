@@ -7,7 +7,7 @@ using ICSharpCode.Decompiler.IL.ControlFlow;
 
 namespace ICSharpCode.ILSpy.Commands
 {
-#if DEBUG
+#if DEBUG_DISABLED
 	[ExportContextMenuEntry(Header = "DEBUG -- Show CFG")]
 	internal class ShowCFGContextMenuEntry : IContextMenuEntry
 	{

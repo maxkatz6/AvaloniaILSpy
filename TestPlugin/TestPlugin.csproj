@@ -1,13 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <AssemblyName>Test.Plugin</AssemblyName>
-
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-
-    <EnableDefaultItems>False</EnableDefaultItems>
+    <UseWpf>true</UseWpf>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -21,38 +18,15 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <LangVersion>7.2</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>7.2</LangVersion>
-  </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="*.cs" />
+    <ProjectReference Include="..\ILSpy\ILSpy.csproj" />
+    <PackageReference Include="ICSharpCode.Decompiler" />
+    <ProjectReference Include="..\SharpTreeView\ICSharpCode.TreeView.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="**\*.xaml.cs">
-      <DependentUpon>%(Filename)</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <EmbeddedResource Include="**\*.xaml">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Clear.png" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <Resource Include="Clear.png" />
     <None Include="Readme.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ILSpy.Core\ILSpy.Core.csproj" />
   </ItemGroup>
 
 </Project>
