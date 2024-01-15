@@ -16,17 +16,18 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using Avalonia.Input;
+using System.Windows.Input;
+
 using ICSharpCode.ILSpy.Properties;
 
 namespace ICSharpCode.ILSpy
 {
-    [ExportToolbarCommand(ToolTip = nameof(Resources.RefreshCommand_ReloadAssemblies), ToolbarIcon = "Images/Refresh.png", ToolbarCategory = nameof(Resources.Open), ToolbarOrder = 2)]
-    [ExportMainMenuCommand(Menu = nameof(Resources._File), Header = nameof(Resources._Reload), MenuIcon = "Images/Refresh.png", MenuCategory = nameof(Resources.Open), MenuOrder = 2)]
-    sealed class RefreshCommand : CommandWrapper
+	[ExportToolbarCommand(ToolTip = nameof(Resources.RefreshCommand_ReloadAssemblies), ToolbarIcon = "Images/Refresh", ToolbarCategory = nameof(Resources.Open), ToolbarOrder = 2)]
+	[ExportMainMenuCommand(ParentMenuID = nameof(Resources._File), Header = nameof(Resources._Reload), MenuIcon = "Images/Refresh", MenuCategory = nameof(Resources.Open), MenuOrder = 2)]
+	sealed class RefreshCommand : CommandWrapper
 	{
 		public RefreshCommand()
-			: base(ApplicationCommands.Refresh)
+			: base(NavigationCommands.Refresh)
 		{
 		}
 	}

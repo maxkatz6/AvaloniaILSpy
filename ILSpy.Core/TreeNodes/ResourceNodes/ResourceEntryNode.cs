@@ -18,10 +18,12 @@
 
 using System;
 using System.IO;
-using System.Threading.Tasks;
-using Avalonia.Controls;
+
 using ICSharpCode.Decompiler;
-using ICSharpCode.ILSpy.TextView;
+using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
+using ICSharpCode.Decompiler.Metadata;
+using ICSharpCode.ILSpyX.Abstractions;
+
 using Microsoft.Win32;
 
 namespace ICSharpCode.ILSpy.TreeNodes
@@ -32,65 +34,59 @@ namespace ICSharpCode.ILSpy.TreeNodes
 	public class ResourceEntryNode : ILSpyTreeNode
 	{
 		private readonly string key;
-		private readonly Stream data;
+		private readonly Func<Stream> openStream;
 
-		public override object Text
+		public override object Text => Language.EscapeName(key);
+
+		public override object Icon => Images.Resource;
+
+		protected Stream OpenStream()
 		{
-			get { return this.key; }
+			return openStream();
 		}
 
-		public override object Icon
-		{
-			get { return Images.Resource; }
-		}
-
-		protected Stream Data
-		{
-			get { return data; }
-		}
-
-
-		public ResourceEntryNode(string key, Stream data)
+		public ResourceEntryNode(string key, Func<Stream> openStream)
 		{
 			if (key == null)
 				throw new ArgumentNullException(nameof(key));
-			if (data == null)
-				throw new ArgumentNullException(nameof(data));
+			if (openStream == null)
+				throw new ArgumentNullException(nameof(openStream));
 			this.key = key;
-			this.data = data;
+			this.openStream = openStream;
 		}
 
-		public static ILSpyTreeNode Create(string key, object data)
+		public static ILSpyTreeNode Create(Resource resource)
 		{
 			ILSpyTreeNode result = null;
-			foreach (var factory in App.ExportProvider.GetExportedValues<IResourceNodeFactory>()) {
-				result = factory.CreateNode(key, data);
+			foreach (var factory in App.ExportProvider.GetExportedValues<IResourceNodeFactory>())
+			{
+				result = factory.CreateNode(resource) as ILSpyTreeNode;
 				if (result != null)
-					return result;
+					break;
 			}
-			var streamData = data as Stream;
-			if(streamData !=null)
-				result =  new ResourceEntryNode(key, data as Stream);
+			return result ?? new ResourceTreeNode(resource);
+		}
 
-			return result;
+		public static ILSpyTreeNode Create(string name, byte[] data)
+		{
+			return Create(new ByteArrayResource(name, data));
 		}
 
 		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
 		{
+			using var data = OpenStream();
 			language.WriteCommentLine(output, string.Format("{0} = {1}", key, data));
 		}
 
-		public override async Task<bool> Save(DecompilerTextView textView)
+		public override bool Save(ViewModels.TabPageModel tabPage)
 		{
 			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.Title = "Save file";
-			dlg.InitialFileName = Path.GetFileName(DecompilerTextView.CleanUpName(key));
-			var filename = await dlg.ShowAsync(App.Current.GetMainWindow());
-			if (!string.IsNullOrEmpty(filename)) {
-				data.Position = 0;
-				using (var fs = File.OpenWrite(filename)) {
-					data.CopyTo(fs);
-				}
+			dlg.FileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(key));
+			if (dlg.ShowDialog() == true)
+			{
+				using var data = OpenStream();
+				using var fs = dlg.OpenFile();
+				data.CopyTo(fs);
 			}
 			return true;
 		}

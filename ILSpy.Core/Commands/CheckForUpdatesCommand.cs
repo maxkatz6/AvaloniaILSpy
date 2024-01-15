@@ -18,15 +18,21 @@
 
 
 using ICSharpCode.ILSpy.Properties;
+using ICSharpCode.ILSpyX.Settings;
 
 namespace ICSharpCode.ILSpy
 {
-    [ExportMainMenuCommand(Menu = nameof(Resources._Help), Header = nameof(Resources._CheckUpdates), MenuOrder = 5000)]
-    sealed class CheckForUpdatesCommand : SimpleCommand
+	[ExportMainMenuCommand(ParentMenuID = nameof(Resources._Help), Header = nameof(Resources._CheckUpdates), MenuOrder = 5000)]
+	sealed class CheckForUpdatesCommand : SimpleCommand
 	{
-		public override void Execute(object parameter)
+		public override bool CanExecute(object parameter)
 		{
-			MainWindow.Instance.ShowMessageIfUpdatesAvailableAsync(ILSpySettings.Load(), forceCheck: true);
+			return base.CanExecute(parameter);
+		}
+
+		public override async void Execute(object parameter)
+		{
+			await MainWindow.Instance.ShowMessageIfUpdatesAvailableAsync(ILSpySettings.Load(), forceCheck: true);
 		}
 	}
 }

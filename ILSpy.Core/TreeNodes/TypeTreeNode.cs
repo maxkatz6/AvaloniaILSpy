@@ -18,15 +18,17 @@
 
 using System;
 using System.Linq;
-using System.Reflection;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
+using System.Windows.Media;
+
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.TypeSystem;
+
 using SRM = System.Reflection.Metadata;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
+	using ICSharpCode.Decompiler.TypeSystem;
+	using ICSharpCode.ILSpyX;
+
 	public sealed class TypeTreeNode : ILSpyTreeNode, IMemberTreeNode
 	{
 		public TypeTreeNode(ITypeDefinition typeDefinition, AssemblyTreeNode parentAssemblyNode)
@@ -40,12 +42,21 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public AssemblyTreeNode ParentAssemblyNode { get; }
 
-		public override object Text => this.Language.TypeToString(TypeDefinition, includeNamespace: false)
-			+ TypeDefinition.MetadataToken.ToSuffixString();
+		public override object Text => this.Language.TypeToString(GetTypeDefinition(), includeNamespace: false)
+			+ GetSuffixString(TypeDefinition.MetadataToken);
+
+		private ITypeDefinition GetTypeDefinition()
+		{
+			return ((MetadataModule)ParentAssemblyNode.LoadedAssembly
+				.GetPEFileOrNull()
+				?.GetTypeSystemWithCurrentOptionsOrNull()
+				?.MainModule).GetDefinition((SRM.TypeDefinitionHandle)TypeDefinition.MetadataToken);
+		}
 
 		public override bool IsPublicAPI {
 			get {
-				switch (TypeDefinition.Accessibility) {
+				switch (GetTypeDefinition().Accessibility)
+				{
 					case Accessibility.Public:
 					case Accessibility.Protected:
 					case Accessibility.ProtectedOrInternal:
@@ -55,49 +66,61 @@ namespace ICSharpCode.ILSpy.TreeNodes
 				}
 			}
 		}
-		
+
 		public override FilterResult Filter(FilterSettings settings)
-        {
-            if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
-                return FilterResult.Hidden;
+		{
+			if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
+				return FilterResult.Hidden;
 			if (settings.SearchTermMatches(TypeDefinition.Name))
-            {
-                if (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(TypeDefinition))
-                    return FilterResult.Match;
+			{
+				if (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(TypeDefinition))
+					return FilterResult.Match;
 				else
 					return FilterResult.Hidden;
-			} else {
+			}
+			else
+			{
 				return FilterResult.Recurse;
 			}
 		}
-		
+
 		protected override void LoadChildren()
 		{
 			if (TypeDefinition.DirectBaseTypes.Any())
 				this.Children.Add(new BaseTypesTreeNode(ParentAssemblyNode.LoadedAssembly.GetPEFileOrNull(), TypeDefinition));
 			if (!TypeDefinition.IsSealed)
 				this.Children.Add(new DerivedTypesTreeNode(ParentAssemblyNode.AssemblyList, TypeDefinition));
-			foreach (var nestedType in TypeDefinition.NestedTypes.OrderBy(t => t.Name, NaturalStringComparer.Instance)) {
+			foreach (var nestedType in TypeDefinition.NestedTypes.OrderBy(t => t.Name, NaturalStringComparer.Instance))
+			{
 				this.Children.Add(new TypeTreeNode(nestedType, ParentAssemblyNode));
 			}
-            if (TypeDefinition.Kind == TypeKind.Enum) {
-                // if the type is an enum, it's better to not sort by field name.
-                foreach (var field in TypeDefinition.Fields) {
-                    this.Children.Add(new FieldTreeNode(field));
-                }
-            } else {
-    			foreach (var field in TypeDefinition.Fields.OrderBy(f => f.Name, NaturalStringComparer.Instance)) {
-    				this.Children.Add(new FieldTreeNode(field));
-    			}
+			if (TypeDefinition.Kind == TypeKind.Enum)
+			{
+				// if the type is an enum, it's better to not sort by field name.
+				foreach (var field in TypeDefinition.Fields)
+				{
+					this.Children.Add(new FieldTreeNode(field));
+				}
 			}
-			foreach (var property in TypeDefinition.Properties.OrderBy(p => p.Name, NaturalStringComparer.Instance)) {
+			else
+			{
+				foreach (var field in TypeDefinition.Fields.OrderBy(f => f.Name, NaturalStringComparer.Instance))
+				{
+					this.Children.Add(new FieldTreeNode(field));
+				}
+			}
+			foreach (var property in TypeDefinition.Properties.OrderBy(p => p.Name, NaturalStringComparer.Instance))
+			{
 				this.Children.Add(new PropertyTreeNode(property));
 			}
-			foreach (var ev in TypeDefinition.Events.OrderBy(e => e.Name, NaturalStringComparer.Instance)) {
+			foreach (var ev in TypeDefinition.Events.OrderBy(e => e.Name, NaturalStringComparer.Instance))
+			{
 				this.Children.Add(new EventTreeNode(ev));
 			}
-			foreach (var method in TypeDefinition.Methods.OrderBy(m => m.Name, NaturalStringComparer.Instance)) {
-				if (method.MetadataToken.IsNil) continue;
+			foreach (var method in TypeDefinition.Methods.OrderBy(m => m.Name, NaturalStringComparer.Instance))
+			{
+				if (method.MetadataToken.IsNil)
+					continue;
 				this.Children.Add(new MethodTreeNode(method));
 			}
 		}
@@ -106,37 +129,40 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
 		{
-			language.DecompileType(TypeDefinition, output, options);
+			language.DecompileType(GetTypeDefinition(), output, options);
 		}
 
 		public override object Icon => GetIcon(TypeDefinition);
 
-		public static IBitmap GetIcon(ITypeDefinition type)
+		public static ImageSource GetIcon(ITypeDefinition type)
 		{
-			return Images.GetIcon(GetTypeIcon(type), GetOverlayIcon(type));
+			return Images.GetIcon(GetTypeIcon(type, out bool isStatic), GetOverlayIcon(type), isStatic);
 		}
 
-		internal static TypeIcon GetTypeIcon(IType type)
+		internal static TypeIcon GetTypeIcon(IType type, out bool isStatic)
 		{
-			switch (type.Kind) {
+			isStatic = false;
+			switch (type.Kind)
+			{
 				case TypeKind.Interface:
 					return TypeIcon.Interface;
 				case TypeKind.Struct:
+				case TypeKind.Void:
 					return TypeIcon.Struct;
 				case TypeKind.Delegate:
 					return TypeIcon.Delegate;
 				case TypeKind.Enum:
 					return TypeIcon.Enum;
 				default:
-					if (type.GetDefinition()?.IsStatic == true)
-						return TypeIcon.StaticClass;
+					isStatic = type.GetDefinition()?.IsStatic == true;
 					return TypeIcon.Class;
 			}
 		}
 
 		static AccessOverlayIcon GetOverlayIcon(ITypeDefinition type)
 		{
-			switch (type.Accessibility) {
+			switch (type.Accessibility)
+			{
 				case Accessibility.Public:
 					return AccessOverlayIcon.Public;
 				case Accessibility.Internal:
@@ -154,5 +180,10 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		}
 
 		IEntity IMemberTreeNode.Member => TypeDefinition;
+
+		public override string ToString()
+		{
+			return TypeDefinition.ReflectionName;
+		}
 	}
 }

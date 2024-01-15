@@ -18,8 +18,9 @@
 
 using System;
 using System.Linq;
+using System.Windows;
+
 using ICSharpCode.Decompiler.TypeSystem;
-using ICSharpCode.ILSpy.TreeNodes;
 
 namespace ICSharpCode.ILSpy.Analyzers.TreeNodes
 {
@@ -40,12 +41,25 @@ namespace ICSharpCode.ILSpy.Analyzers.TreeNodes
 		protected override void LoadChildren()
 		{
 			var analyzers = App.ExportProvider.GetExports<IAnalyzer, IAnalyzerMetadata>("Analyzer");
-			foreach (var lazy in analyzers.OrderBy(item => item.Metadata.Order)) {
+			foreach (var lazy in analyzers.OrderBy(item => item.Metadata.Order))
+			{
 				var analyzer = lazy.Value;
-				if (analyzer.Show(analyzedModule)) {
+				if (analyzer.Show(analyzedModule))
+				{
 					this.Children.Add(new AnalyzerSearchTreeNode(analyzedModule, analyzer, lazy.Metadata.Header));
 				}
 			}
+		}
+
+		public override void ActivateItem(RoutedEventArgs e)
+		{
+			e.Handled = true;
+			if (analyzedModule.PEFile == null)
+			{
+				MessageBox.Show(Properties.Resources.CannotAnalyzeMissingRef, "ILSpy");
+				return;
+			}
+			MainWindow.Instance.JumpToReference(analyzedModule.PEFile);
 		}
 
 		public override IEntity Member => null;

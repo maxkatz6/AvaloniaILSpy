@@ -18,7 +18,7 @@
 
 using System;
 using System.Reflection.Metadata;
-using Avalonia.Interactivity;
+
 using ICSharpCode.Decompiler;
 
 namespace ICSharpCode.ILSpy.TreeNodes
@@ -36,7 +36,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		readonly AssemblyFile file;
 		readonly string moduleName;
 		readonly bool containsMetadata;
-		
+
 		public ModuleReferenceTreeNode(AssemblyTreeNode parentAssembly, ModuleReferenceHandle r, MetadataReader module)
 		{
 			this.parentAssembly = parentAssembly ?? throw new ArgumentNullException(nameof(parentAssembly));
@@ -45,11 +45,13 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			this.metadata = module;
 			this.handle = r;
 			this.reference = module.GetModuleReference(r);
-			this.moduleName = metadata.GetString(reference.Name);
+			this.moduleName = Language.EscapeName(metadata.GetString(reference.Name));
 
-			foreach (var h in module.AssemblyFiles) {
+			foreach (var h in module.AssemblyFiles)
+			{
 				var file = module.GetAssemblyFile(h);
-				if (module.StringComparer.Equals(file.Name, moduleName)) {
+				if (module.StringComparer.Equals(file.Name, moduleName))
+				{
 					this.file = file;
 					this.fileHandle = h;
 					this.containsMetadata = file.ContainsMetadata;
@@ -57,19 +59,25 @@ namespace ICSharpCode.ILSpy.TreeNodes
 				}
 			}
 		}
-		
+
 		public override object Text {
-			get { return moduleName + ((EntityHandle)handle).ToSuffixString(); }
+			get { return moduleName + GetSuffixString(handle); }
 		}
 
 		public override object Icon => Images.Library;
 
-		public override void ActivateItem(RoutedEventArgs e)
+		public override void ActivateItem(System.Windows.RoutedEventArgs e)
 		{
 			var assemblyListNode = parentAssembly.Parent as AssemblyListTreeNode;
-			if (assemblyListNode != null && containsMetadata) {
-				assemblyListNode.Select(assemblyListNode.FindAssemblyNode(parentAssembly.LoadedAssembly.LookupReferencedModule(parentAssembly.LoadedAssembly.GetPEFileOrNull(), metadata.GetString(reference.Name))));
-				e.Handled = true;
+			if (assemblyListNode != null && containsMetadata)
+			{
+				var resolver = parentAssembly.LoadedAssembly.GetAssemblyResolver();
+				var mainModule = parentAssembly.LoadedAssembly.GetPEFileOrNull();
+				if (mainModule != null)
+				{
+					assemblyListNode.Select(assemblyListNode.FindAssemblyNode(resolver.ResolveModule(mainModule, metadata.GetString(reference.Name))));
+					e.Handled = true;
+				}
 			}
 		}
 

@@ -18,10 +18,12 @@
 
 using System;
 using System.Linq;
-using Avalonia.Threading;
+using System.Windows.Threading;
+
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Properties;
+using ICSharpCode.ILSpyX.Abstractions;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
@@ -31,31 +33,25 @@ namespace ICSharpCode.ILSpy.TreeNodes
 	sealed class ResourceListTreeNode : ILSpyTreeNode
 	{
 		readonly PEFile module;
-		
+
 		public ResourceListTreeNode(PEFile module)
 		{
 			this.LazyLoading = true;
 			this.module = module;
 		}
-		
-		public override object Text {
-            get { return Resources._Resources; }
-        }
 
-        public override object Icon {
-			get { return Images.FolderClosed; }
-		}
+		public override object Text => Resources._Resources;
 
-		public override object ExpandedIcon {
-			get { return Images.FolderOpen; }
-		}
-		
+		public override object Icon => Images.FolderClosed;
+
+		public override object ExpandedIcon => Images.FolderOpen;
+
 		protected override void LoadChildren()
 		{
 			foreach (Resource r in module.Resources.OrderBy(m => m.Name, NaturalStringComparer.Instance))
 				this.Children.Add(ResourceTreeNode.Create(r));
 		}
-		
+
 		public override FilterResult Filter(FilterSettings settings)
 		{
 			if (string.IsNullOrEmpty(settings.SearchTerm))
@@ -63,11 +59,12 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			else
 				return FilterResult.Recurse;
 		}
-		
+
 		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
 		{
-			EnsureLazyChildren();
-            foreach (ILSpyTreeNode child in this.Children) {
+			App.Current.Dispatcher.Invoke(DispatcherPriority.Normal, new Action(EnsureLazyChildren));
+			foreach (ILSpyTreeNode child in this.Children)
+			{
 				child.Decompile(language, output, options);
 				output.WriteLine();
 			}

@@ -4,6 +4,10 @@
       "commandName": "Executable",
       "executablePath": ".\\ILSpy.exe",
       "commandLineArgs": "/separate"
+    },
+    "ILSpy single-instance": {
+      "commandName": "Executable",
+      "executablePath": ".\\ILSpy.exe"
     }
   }
 }

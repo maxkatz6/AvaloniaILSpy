@@ -20,9 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.Analyzers.TreeNodes;
 using ICSharpCode.ILSpy.TreeNodes;
+using ICSharpCode.ILSpyX;
 
 namespace ICSharpCode.ILSpy.Analyzers
 {
@@ -41,7 +43,8 @@ namespace ICSharpCode.ILSpy.Analyzers
 			this.analyzerHeader = analyzerHeader;
 		}
 
-		public override object Text => analyzerHeader + (Children.Count > 0 ? " (" + Children.Count + ")" : "");
+		public override object Text => analyzerHeader
+			+ (Children.Count > 0 && !threading.IsRunning ? " (" + Children.Count + " in " + threading.EllapsedMilliseconds + "ms)" : "");
 
 		public override object Icon => Images.Search;
 
@@ -52,27 +55,35 @@ namespace ICSharpCode.ILSpy.Analyzers
 
 		protected IEnumerable<AnalyzerTreeNode> FetchChildren(CancellationToken ct)
 		{
-			if (symbol is IEntity) {
+			if (symbol is IEntity)
+			{
 				var context = new AnalyzerContext() {
 					CancellationToken = ct,
 					Language = Language,
 					AssemblyList = MainWindow.Instance.CurrentAssemblyList
 				};
-				foreach (var result in analyzer.Analyze(symbol, context)) {
-					yield return SymbolTreeNodeFactory(result);
+				var results = analyzer.Analyze(symbol, context).Select(SymbolTreeNodeFactory);
+				if (context.SortResults)
+				{
+					results = results.OrderBy(tn => tn.Text?.ToString(), NaturalStringComparer.Instance);
 				}
-			} else {
+				return results;
+			}
+			else
+			{
 				throw new NotSupportedException("Currently symbols that are not entities are not supported!");
 			}
 		}
 
 		AnalyzerTreeNode SymbolTreeNodeFactory(ISymbol symbol)
 		{
-			if (symbol == null) {
+			if (symbol == null)
+			{
 				throw new ArgumentNullException(nameof(symbol));
 			}
 
-			switch (symbol) {
+			switch (symbol)
+			{
 				case IModule module:
 					return new AnalyzedModuleTreeNode(module) {
 						Language = this.Language
@@ -105,10 +116,12 @@ namespace ICSharpCode.ILSpy.Analyzers
 		protected override void OnIsVisibleChanged()
 		{
 			base.OnIsVisibleChanged();
-			if (!this.IsVisible && threading.IsRunning) {
+			if (!this.IsVisible && threading.IsRunning)
+			{
 				this.LazyLoading = true;
 				threading.Cancel();
 				this.Children.Clear();
+				RaisePropertyChanged(nameof(Text));
 			}
 		}
 
@@ -116,14 +129,17 @@ namespace ICSharpCode.ILSpy.Analyzers
 		{
 			// only cancel a running analysis if user has manually added/removed assemblies
 			bool manualAdd = false;
-			foreach (var asm in addedAssemblies) {
+			foreach (var asm in addedAssemblies)
+			{
 				if (!asm.IsAutoLoaded)
 					manualAdd = true;
 			}
-			if (removedAssemblies.Count > 0 || manualAdd) {
+			if (removedAssemblies.Count > 0 || manualAdd)
+			{
 				this.LazyLoading = true;
 				threading.Cancel();
 				this.Children.Clear();
+				RaisePropertyChanged(nameof(Text));
 			}
 			return true;
 		}

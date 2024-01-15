@@ -18,34 +18,49 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+
 using ICSharpCode.ILSpy.TextView;
+using ICSharpCode.ILSpy.ViewModels;
 using ICSharpCode.TreeView;
 
 namespace ICSharpCode.ILSpy
 {
+	[DebuggerDisplay("Nodes = {treeNodes.Count}, State = [{ViewState}]")]
 	public class NavigationState : IEquatable<NavigationState>
 	{
 		private readonly HashSet<SharpTreeNode> treeNodes;
 
-		public IEnumerable<SharpTreeNode> TreeNodes { get { return treeNodes; } }
-		public DecompilerTextViewState ViewState { get; private set; }
+		public IEnumerable<SharpTreeNode> TreeNodes => treeNodes;
+		public ViewState ViewState { get; private set; }
+		public TabPageModel TabPage { get; private set; }
 
-		public NavigationState(DecompilerTextViewState viewState)
+		public NavigationState(TabPageModel tabPage, ViewState viewState)
 		{
-			this.treeNodes = new HashSet<SharpTreeNode>(viewState.DecompiledNodes);
+			this.TabPage = tabPage;
+			this.treeNodes = new HashSet<SharpTreeNode>((IEnumerable<SharpTreeNode>)viewState.DecompiledNodes ?? Array.Empty<SharpTreeNode>());
 			ViewState = viewState;
 		}
 
-		public NavigationState(IEnumerable<SharpTreeNode> treeNodes)
+		public NavigationState(TabPageModel tabPage, IEnumerable<SharpTreeNode> treeNodes)
 		{
+			this.TabPage = tabPage;
 			this.treeNodes = new HashSet<SharpTreeNode>(treeNodes);
 		}
 
 
 		public bool Equals(NavigationState other)
 		{
-			// TODO: should this care about the view state as well?
-			return this.treeNodes.SetEquals(other.treeNodes);
+			if (!this.treeNodes.SetEquals(other.treeNodes))
+				return false;
+
+			if (object.ReferenceEquals(this.ViewState, other.ViewState))
+				return true;
+
+			if (this.ViewState == null)
+				return false;
+
+			return this.ViewState.Equals(other.ViewState);
 		}
 	}
 }

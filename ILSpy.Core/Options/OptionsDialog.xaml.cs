@@ -19,113 +19,118 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
-using Avalonia;
-using Avalonia.Controls;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
 using System.Xml.Linq;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using System.Collections.Generic;
-using ICSharpCode.ILSpy.Controls;
+
 using ICSharpCode.ILSpy.Properties;
+using ICSharpCode.ILSpyX.Settings;
 
 namespace ICSharpCode.ILSpy.Options
 {
+	public class TabItemViewModel
+	{
+		public TabItemViewModel(string header, UIElement content)
+		{
+			Header = header;
+			Content = content;
+		}
+
+		public string Header { get; }
+		public UIElement Content { get; }
+	}
+
 	/// <summary>
 	/// Interaction logic for OptionsDialog.xaml
 	/// </summary>
-	public partial class OptionsDialog : DialogWindow
+	public partial class OptionsDialog : Window
 	{
-		
-		readonly Lazy<IControl, IOptionsMetadata>[] optionPages;
 
-		internal TabControl tabControl;
+		readonly Lazy<UIElement, IOptionsMetadata>[] optionPages;
 
 		public OptionsDialog()
 		{
 			InitializeComponent();
-#if DEBUG
-			this.AttachDevTools();
-#endif
 			// These used to have [ImportMany(..., RequiredCreationPolicy = CreationPolicy.NonShared)], so they use their own
 			// ExportProvider instance.
 			// FIXME: Ideally, the export provider should be disposed when it's no longer needed.
 			var ep = App.ExportProviderFactory.CreateExportProvider();
-			this.optionPages = ep.GetExports<IControl, IOptionsMetadata>("OptionPages").ToArray();
+			this.optionPages = ep.GetExports<UIElement, IOptionsMetadata>("OptionPages").ToArray();
 			ILSpySettings settings = ILSpySettings.Load();
-			var tabItems = new List<TabItem>();
-			foreach (var optionPage in optionPages.OrderBy(p => p.Metadata.Order)) {
-				TabItem tabItem = new TabItem();
-                tabItem.Header = MainWindow.GetResourceString(optionPage.Metadata.Title);
-				tabItem.Content = optionPage.Value;
-				tabItems.Add(tabItem);
-				
+			foreach (var optionPage in optionPages.OrderBy(p => p.Metadata.Order))
+			{
+				var tabItem = new TabItemViewModel(MainWindow.GetResourceString(optionPage.Metadata.Title), optionPage.Value);
+
+				tabControl.Items.Add(tabItem);
+
 				IOptionPage page = optionPage.Value as IOptionPage;
 				if (page != null)
 					page.Load(settings);
 			}
-			tabControl.Items = tabItems;
 		}
-
-		private void InitializeComponent()
-		{
-			AvaloniaXamlLoader.Load(this);
-			tabControl = this.FindControl<TabControl>("tabControl");
-			this.FindControl<Button>("okButton").Click += OKButton_Click;
-			this.FindControl<Button>("cancelButton").Click += CancelButton_Click;;
-		}
-
-        void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close(false);
-        }
 
 		void OKButton_Click(object sender, RoutedEventArgs e)
 		{
 			ILSpySettings.Update(
 				delegate (XElement root) {
-					foreach (var optionPage in optionPages) {
+					foreach (var optionPage in optionPages)
+					{
 						IOptionPage page = optionPage.Value as IOptionPage;
 						if (page != null)
 							page.Save(root);
 					}
 				});
-			//this.DialogResult = true;
-			Close(true);
+			this.DialogResult = true;
+			Close();
+		}
+
+		private void DefaultsButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (MessageBox.Show(Properties.Resources.ResetToDefaultsConfirmationMessage, "ILSpy", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			{
+				var page = tabControl.SelectedValue as IOptionPage;
+				if (page != null)
+					page.LoadDefaults();
+			}
 		}
 	}
-	
+
 	public interface IOptionsMetadata
 	{
 		string Title { get; }
 		int Order { get; }
 	}
-	
+
 	public interface IOptionPage
 	{
 		void Load(ILSpySettings settings);
 		void Save(XElement root);
+		void LoadDefaults();
 	}
-	
+
 	[MetadataAttribute]
-	[AttributeUsage(AttributeTargets.Class, AllowMultiple=false)]
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 	public class ExportOptionPageAttribute : ExportAttribute
 	{
-		public ExportOptionPageAttribute() : base("OptionPages", typeof(IControl))
+		public ExportOptionPageAttribute() : base("OptionPages", typeof(UIElement))
 		{ }
-		
+
 		public string Title { get; set; }
-		
+
 		public int Order { get; set; }
 	}
 
-    [ExportMainMenuCommand(Menu = nameof(Resources._View), Header = nameof(Resources._Options), MenuCategory = nameof(Resources.Options), MenuOrder = 999)]
-    sealed class ShowOptionsCommand : SimpleCommand
+	[ExportMainMenuCommand(ParentMenuID = nameof(Resources._View), Header = nameof(Resources._Options), MenuCategory = nameof(Resources.Options), MenuOrder = 999)]
+	sealed class ShowOptionsCommand : SimpleCommand
 	{
-		public override async void Execute(object parameter)
+		public override void Execute(object parameter)
 		{
 			OptionsDialog dlg = new OptionsDialog();
-			dlg.Title = "Options";
-			if (await dlg.ShowDialog<bool>(MainWindow.Instance) == true) {
+			dlg.Owner = MainWindow.Instance;
+			if (dlg.ShowDialog() == true)
+			{
 				new RefreshCommand().Execute(parameter);
 			}
 		}

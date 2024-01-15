@@ -2,14 +2,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <EnableDefaultItems>false</EnableDefaultItems>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
+    <UseWpf>true</UseWpf>
+    <RootNamespace>ICSharpCode.ILSpy</RootNamespace>
+
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+
+    <ApplicationIcon>Images\ILSpy-Large.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\ICSharpCode.Decompiler\ICSharpCode.Decompiler.snk</AssemblyOriginatorKeyFile>
-    <RootNamespace>ICSharpCode.ILSpy</RootNamespace>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-   </PropertyGroup>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Switch.System.Windows.Media.EnableHardwareAccelerationInRdp" Value="true" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <DebugType>full</DebugType>
@@ -27,45 +43,92 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="ICSharpCode.Decompiler" Version="8.0.0.7345" />
-    <PackageReference Include="Microsoft.DiaSymReader" Version="1.4.0" />
-    <PackageReference Include="Microsoft.DiaSymReader.Converter.Xml" Version="1.1.0-beta2-22164-02" />
-    <PackageReference Include="Microsoft.VisualStudio.Composition" Version="17.1.20" />
-    <PackageReference Include="NuGet.Client" Version="4.2.0" />
-    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.AvaloniaEdit" Version="$(AvaloniaEditVersion)" />
-    <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
+    <PackageReference Include="AvalonEdit" />
+    <PackageReference Include="Dirkster.AvalonDock.Themes.VS2013" />
+    <PackageReference Include="Microsoft.VisualStudio.Composition" />
+    <PackageReference Include="DataGridExtensions" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" />
+    <PackageReference Include="TomsToolbox.Wpf.Styles" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="**\*.cs" Exclude="obj\**" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Update="**\*.xaml.cs" DependentUpon="%(Filename)" />
-    <AvaloniaResource Include="**\*.xaml" Exclude="Themes\*" SubType="Designer" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Images\*.png;Themes\*" CopyToOutputDirectory="PreserveNewest" />
-    <AvaloniaResource Include="Images\ILSpy.png;Images\PrivateInternal.png;Images\ShowAll.png;Images\Search.png;Images\ClearSearch.png;" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <EmbeddedResource Include="README.txt" />
-    <EmbeddedResource Include="..\doc\*.txt" />
-    <EmbeddedResource Include="Themes\ILAsm-Mode.xshd;Themes\CSharp-Mode.xshd" />
-    <EmbeddedResource Include="**\*.resx;Assets\*;**\*.paml" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+    <EmbeddedResource Include="..\doc\ILSpyAboutPage.txt" />
+    <EmbeddedResource Include="..\doc\ILSpyAboutPage_zh_Hans.txt" />
+    <EmbeddedResource Include="..\doc\third-party-notices.txt" />
+    <EmbeddedResource Include="..\doc\license.txt">
+      <Link>license.txt</Link>
+    </EmbeddedResource>
+    <Resource Include="Images\NuGet.png" />
+    <Resource Include="Images\ILSpy.ico" />
+    <EmbeddedResource Include="TextView\CSharp-Mode.xshd" />
+    <EmbeddedResource Include="TextView\ILAsm-Mode.xshd" />
+    <EmbeddedResource Include="TextView\Asm-Mode.xshd" />
+    <EmbeddedResource Include="TextView\XML-Mode.xshd" />
+    <None Remove="Properties\launchSettings.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SharpTreeView\SharpTreeView.csproj" />
-    <ProjectReference Include="..\ICSharpCode.Decompiler.PdbProvider.Cecil\ICSharpCode.Decompiler.PdbProvider.Cecil.csproj" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ICSharpCode.ILSpyX\ICSharpCode.ILSpyX.csproj" />
+    <ProjectReference Include="..\ICSharpCode.Decompiler\ICSharpCode.Decompiler.csproj" />
+    <ProjectReference Include="..\SharpTreeView\ICSharpCode.TreeView.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageReference Include="Microsoft.DiaSymReader.Converter.Xml" />
+	<PackageReference Include="Microsoft.DiaSymReader" />
+	<PackageReference Include="Microsoft.DiaSymReader.Native" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <VCToolsVersionPropsFileNameDefault>Microsoft.VCToolsVersion.default.props</VCToolsVersionPropsFileNameDefault>
+    <VCBasePath>$(MSBuildToolsPath)\..\..\..\VC\</VCBasePath>
+    <!-- In VS 2022 there is an extra directory level that's why we need to add one more '..'  -->
+    <VCBasePath Condition="!Exists('$(VCBasePath)Auxiliary\Build\$(VCToolsVersionPropsFileNameDefault)')">$(MSBuildToolsPath)\..\..\..\..\VC\</VCBasePath>
+    <VCToolsVersionPropsFile>$(VCBasePath)Auxiliary\Build\$(VCToolsVersionPropsFileNameDefault)</VCToolsVersionPropsFile>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;CA1001;CA2213</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;CA1001;CA2213</NoWarn>
+  </PropertyGroup>
+
+  <Import Project="$(VCToolsVersionPropsFile)" Condition="Exists('$(VCToolsVersionPropsFile)')" />
+
+  <ItemGroup>
+    <SortResXInput Include="Properties\*.resx" />
+    <SortResXInput Include="..\ILSpy.AddIn\*.resx" />
+    <SortResXInput Include="..\ILSpy.ReadyToRun\Properties\*.resx" />
+    <SortResXStamp Include="obj\sort-resx.stamp" />
+  </ItemGroup>
+
+  <Target Name="SortResX" BeforeTargets="BeforeBuild" Inputs="@(SortResXInput)" Outputs="@(SortResXStamp)" Condition="'$(GITHUB_ACTIONS)' != 'true'">
+    <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+      <SortResX>powershell -NoProfile -ExecutionPolicy Bypass -File BuildTools/sort-resx.ps1</SortResX>
+    </PropertyGroup>
+    <Exec WorkingDirectory=".." Command="$(SortResX)" Timeout="60000" />
+    <Touch Files="@(SortResXStamp)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="ApplyStackExtension" AfterTargets="PostBuildEvent" Condition="'$(VCToolsVersion)'!=''">
+    <Exec Command="&quot;$(VCBasePath)Tools\MSVC\$(VCToolsVersion)\bin\Hostx64\x64\editbin.exe&quot; /stack:16777216 &quot;$(TargetDir)$(TargetName).exe&quot;&#xD;&#xA;EXIT 0" />
+  </Target>
 </Project>

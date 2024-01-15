@@ -16,11 +16,20 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
+using System.Windows;
+using System.Windows.Threading;
+
 using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.TypeSystem;
+using ICSharpCode.ILSpy.Options;
+using ICSharpCode.ILSpyX.Abstractions;
 using ICSharpCode.TreeView;
 
 namespace ICSharpCode.ILSpy.TreeNodes
@@ -28,25 +37,23 @@ namespace ICSharpCode.ILSpy.TreeNodes
 	/// <summary>
 	/// Base class of all ILSpy tree nodes.
 	/// </summary>
-	public abstract class ILSpyTreeNode : SharpTreeNode
+	public abstract class ILSpyTreeNode : SharpTreeNode, ITreeNode
 	{
 		FilterSettings filterSettings;
 		bool childrenNeedFiltering;
 
-		public FilterSettings FilterSettings
-		{
+		public FilterSettings FilterSettings {
 			get { return filterSettings; }
-			set
-			{
-				if (filterSettings != value) {
+			set {
+				if (filterSettings != value)
+				{
 					filterSettings = value;
 					OnFilterSettingsChanged();
 				}
 			}
 		}
 
-		public Language Language
-		{
+		public Language Language {
 			get { return filterSettings != null ? filterSettings.Language : Languages.AllLanguages[0]; }
 		}
 
@@ -65,9 +72,15 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		/// This method is called on the main thread when only a single item is selected.
 		/// If it returns false, normal decompilation is used to view the item.
 		/// </summary>
-		public virtual bool View(TextView.DecompilerTextView textView)
+		public virtual bool View(ViewModels.TabPageModel tabPage)
 		{
 			return false;
+		}
+
+		public override void ActivateItemSecondary(RoutedEventArgs e)
+		{
+			MainWindow.Instance.SelectNode(this, inNewTabPage: true);
+			MainWindow.Instance.Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)MainWindow.Instance.RefreshDecompiledView);
 		}
 
 		/// <summary>
@@ -75,18 +88,22 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		/// This method is called on the main thread when only a single item is selected.
 		/// If it returns false, normal decompilation is used to save the item.
 		/// </summary>
-		public virtual Task<bool> Save(TextView.DecompilerTextView textView)
+		public virtual bool Save(ViewModels.TabPageModel tabPage)
 		{
-            return Task.FromResult(false);
+			return false;
 		}
 
 		protected override void OnChildrenChanged(NotifyCollectionChangedEventArgs e)
 		{
-			if (e.NewItems != null) {
-				if (IsVisible) {
+			if (e.NewItems != null)
+			{
+				if (IsVisible)
+				{
 					foreach (ILSpyTreeNode node in e.NewItems)
 						ApplyFilterToChild(node);
-				} else {
+				}
+				else
+				{
 					childrenNeedFiltering = true;
 				}
 			}
@@ -100,7 +117,8 @@ namespace ICSharpCode.ILSpy.TreeNodes
 				r = FilterResult.Match;
 			else
 				r = child.Filter(this.FilterSettings);
-			switch (r) {
+			switch (r)
+			{
 				case FilterResult.Hidden:
 					child.IsHidden = true;
 					break;
@@ -127,7 +145,8 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		{
 			if (filterSettings == null)
 				return null;
-			if (!string.IsNullOrEmpty(filterSettings.SearchTerm)) {
+			if (!string.IsNullOrEmpty(filterSettings.SearchTerm))
+			{
 				filterSettings = filterSettings.Clone();
 				filterSettings.SearchTerm = null;
 			}
@@ -136,11 +155,14 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		protected virtual void OnFilterSettingsChanged()
 		{
-			RaisePropertyChanged("Text");
-			if (IsVisible) {
+			RaisePropertyChanged(nameof(Text));
+			if (IsVisible)
+			{
 				foreach (ILSpyTreeNode node in this.Children.OfType<ILSpyTreeNode>())
 					ApplyFilterToChild(node);
-			} else {
+			}
+			else
+			{
 				childrenNeedFiltering = true;
 			}
 		}
@@ -154,35 +176,35 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		internal void EnsureChildrenFiltered()
 		{
 			EnsureLazyChildren();
-			if (childrenNeedFiltering) {
+			if (childrenNeedFiltering)
+			{
 				childrenNeedFiltering = false;
 				foreach (ILSpyTreeNode node in this.Children.OfType<ILSpyTreeNode>())
 					ApplyFilterToChild(node);
 			}
 		}
-		
+
+		protected string GetSuffixString(IMember member) => GetSuffixString(member.MetadataToken);
+
+		protected string GetSuffixString(EntityHandle handle)
+		{
+			if (!MainWindow.Instance.CurrentDisplaySettings.ShowMetadataTokens)
+				return string.Empty;
+
+			int token = MetadataTokens.GetToken(handle);
+			if (MainWindow.Instance.CurrentDisplaySettings.ShowMetadataTokensInBase10)
+				return " @" + token;
+			return " @" + token.ToString("x8");
+		}
+
 		public virtual bool IsPublicAPI {
 			get { return true; }
 		}
 
-		public virtual bool IsAutoLoaded
-		{
+		public virtual bool IsAutoLoaded {
 			get { return false; }
 		}
-		
-		public override Avalonia.Media.IBrush Foreground {
-			get {
-				if (IsPublicAPI)
-					if (IsAutoLoaded) {
-						// HACK: should not be hard coded?
-						return Avalonia.Media.Brushes.SteelBlue;
-					}
-					else {
-						return base.Foreground;
-					}
-				else
-					return Avalonia.SystemColors.GrayTextBrush;
-			}
-		}
+
+		IEnumerable<ITreeNode> ITreeNode.Children => this.Children.OfType<ILSpyTreeNode>();
 	}
 }

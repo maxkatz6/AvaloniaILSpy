@@ -20,7 +20,7 @@ using System.Linq;
 
 namespace ICSharpCode.ILSpy.Analyzers
 {
-	[ExportContextMenuEntry(Header = "Remove", Icon = "Images/Delete.png", Category = "Analyze", Order = 200)]
+	[ExportContextMenuEntry(Header = "Remove", Icon = "images/Delete", Category = "Analyze", Order = 200)]
 	internal sealed class RemoveAnalyzeContextMenuEntry : IContextMenuEntry
 	{
 		public bool IsVisible(TextViewContext context)
@@ -37,8 +37,10 @@ namespace ICSharpCode.ILSpy.Analyzers
 
 		public void Execute(TextViewContext context)
 		{
-			if (context.SelectedTreeNodes != null) {
-				foreach (var node in context.SelectedTreeNodes) {
+			if (context.SelectedTreeNodes != null)
+			{
+				foreach (var node in context.SelectedTreeNodes)
+				{
 					node.Parent.Children.Remove(node);
 				}
 			}

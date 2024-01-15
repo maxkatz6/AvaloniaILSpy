@@ -17,13 +17,16 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
+using System.Reflection.Metadata;
+using System.Windows.Media;
+
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.TypeSystem;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
+	using ICSharpCode.Decompiler.TypeSystem;
+	using ICSharpCode.ILSpyX;
+
 	/// <summary>
 	/// Represents an event in the TreeView.
 	/// </summary>
@@ -44,38 +47,46 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public IEvent EventDefinition { get; }
 
-		public override object Text => GetText(EventDefinition, this.Language) + EventDefinition.MetadataToken.ToSuffixString();
+		public override object Text => GetText(GetEventDefinition(), this.Language) + GetSuffixString(EventDefinition);
+
+		private IEvent GetEventDefinition()
+		{
+			return ((MetadataModule)EventDefinition.ParentModule.PEFile
+				?.GetTypeSystemWithCurrentOptionsOrNull()
+				?.MainModule)?.GetDefinition((EventDefinitionHandle)EventDefinition.MetadataToken) ?? EventDefinition;
+		}
 
 		public static object GetText(IEvent ev, Language language)
 		{
 			return language.EventToString(ev, false, false, false);
 		}
 
-		public override object Icon => GetIcon(EventDefinition);
+		public override object Icon => GetIcon(GetEventDefinition());
 
-		public static IBitmap GetIcon(IEvent @event)
+		public static ImageSource GetIcon(IEvent @event)
 		{
 			return Images.GetIcon(MemberIcon.Event, MethodTreeNode.GetOverlayIcon(@event.Accessibility), @event.IsStatic);
 		}
 
 		public override FilterResult Filter(FilterSettings settings)
-        {
-            if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
-                return FilterResult.Hidden;
-            if (settings.SearchTermMatches(EventDefinition.Name) && (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(EventDefinition)))
-                return FilterResult.Match;
+		{
+			if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
+				return FilterResult.Hidden;
+			if (settings.SearchTermMatches(EventDefinition.Name) && (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(EventDefinition)))
+				return FilterResult.Match;
 			else
 				return FilterResult.Hidden;
 		}
-		
+
 		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
 		{
 			language.DecompileEvent(EventDefinition, output, options);
 		}
-		
+
 		public override bool IsPublicAPI {
 			get {
-				switch (EventDefinition.Accessibility) {
+				switch (GetEventDefinition().Accessibility)
+				{
 					case Accessibility.Public:
 					case Accessibility.ProtectedOrInternal:
 					case Accessibility.Protected:
@@ -87,5 +98,10 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		}
 
 		IEntity IMemberTreeNode.Member => EventDefinition;
+
+		public override string ToString()
+		{
+			return EventDefinition.Name;
+		}
 	}
 }

@@ -19,12 +19,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Avalonia.Interactivity;
+
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.TypeSystem;
+using ICSharpCode.ILSpyX;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
+	using ICSharpCode.Decompiler.TypeSystem;
+
 	class DerivedTypesEntryNode : ILSpyTreeNode, IMemberTreeNode
 	{
 		readonly AssemblyList list;
@@ -41,29 +43,31 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override bool ShowExpander => !type.IsSealed && base.ShowExpander;
 
-		public override object Text
-		{
-			get { return Language.TypeToString(type, includeNamespace: true) + type.MetadataToken.ToSuffixString(); }
+		public override object Text {
+			get { return Language.TypeToString(type, includeNamespace: true) + GetSuffixString(type.MetadataToken); }
 		}
 
 		public override object Icon => TypeTreeNode.GetIcon(type);
 
 		public override FilterResult Filter(FilterSettings settings)
 		{
-            if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
-                    return FilterResult.Hidden;
-			if (settings.SearchTermMatches(type.Name)) {
-                if (type.DeclaringType != null && (settings.ShowApiLevel != ApiVisibility.All || !settings.Language.ShowMember(type)))
-                        return FilterResult.Hidden;
+			if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
+				return FilterResult.Hidden;
+			if (settings.SearchTermMatches(type.Name))
+			{
+				if (type.DeclaringType != null && (settings.ShowApiLevel != ApiVisibility.All || !settings.Language.ShowMember(type)))
+					return FilterResult.Hidden;
 				else
 					return FilterResult.Match;
-			} else
+			}
+			else
 				return FilterResult.Recurse;
 		}
-		
+
 		public override bool IsPublicAPI {
 			get {
-				switch (type.Accessibility) {
+				switch (type.Accessibility)
+				{
 					case Accessibility.Public:
 					case Accessibility.Internal:
 					case Accessibility.ProtectedOrInternal:
@@ -82,11 +86,10 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		IEnumerable<ILSpyTreeNode> FetchChildren(CancellationToken ct)
 		{
 			// FetchChildren() runs on the main thread; but the enumerator will be consumed on a background thread
-			var assemblies = list.GetAssemblies().Select(node => node.GetPEFileOrNull()).Where(asm => asm != null).ToArray();
-			return DerivedTypesTreeNode.FindDerivedTypes(list, type, assemblies, ct);
+			return DerivedTypesTreeNode.FindDerivedTypes(list, type, ct);
 		}
 
-		public override void ActivateItem(RoutedEventArgs e)
+		public override void ActivateItem(System.Windows.RoutedEventArgs e)
 		{
 			e.Handled = BaseTypesEntryNode.ActivateItem(this, type);
 		}

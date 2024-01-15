@@ -1,43 +1,29 @@
-﻿<Application xmlns="https://github.com/avaloniaui"
+﻿<Application x:Class="ICSharpCode.ILSpy.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="ICSharpCode.ILSpy.App"
-			 Name="ILSpy">
-	<Application.Styles>
-		<StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>
-		<StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"/>
-		<StyleInclude Source="avares://AvaloniaEdit/AvaloniaEdit.xaml" />
-        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Default.xaml"/>
-		<StyleInclude Source="avares://SharpTreeView/Themes/TreeView.xaml" />
-        <StyleInclude Source="/Controls/DockedPane.xaml" />
-        <StyleInclude Source="/Controls/SearchBox.xaml" />
-
-		<Style Selector="Window.DialogWindow" >
+             xmlns:styles="urn:TomsToolbox.Wpf.Styles"
+             xmlns:toms="urn:TomsToolbox"
+             xmlns:ilSpy="clr-namespace:ICSharpCode.ILSpy"
+             xmlns:themes="clr-namespace:ICSharpCode.ILSpy.Themes"
+             StartupUri="MainWindow.xaml">
+	<Application.Resources>
+		<Style x:Key="DialogWindow" TargetType="{x:Type Window}">
 			<Setter Property="ShowInTaskbar" Value="False"/>
 			<Setter Property="UseLayoutRounding" Value="True"/>
+			<Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+			<Setter Property="toms:StyleBindings.Behaviors">
+				<Setter.Value>
+					<toms:BehaviorCollection>
+						<themes:WindowStyleManagerBehavior />
+					</toms:BehaviorCollection>
+				</Setter.Value>
+			</Setter>
 		</Style>
-		
-		<Style Selector="Button" >
+
+		<Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static styles:ResourceKeys.ButtonStyle}}">
 			<Setter Property="MinWidth" Value="73" />
 			<Setter Property="Padding" Value="9,1,9,1" />
 		</Style>
-		
-		<Style Selector="Button.ToolBarItem" >
-			<Setter Property="Background" Value="Transparent" />
-			<Setter Property="BorderThickness" Value="1" />
-			<Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="Width" Value="20" />
-            <Setter Property="Height" Value="20" />
-            <Setter Property="MinWidth" Value="20" />
-            <Setter Property="MinHeight" Value="20" />
-		</Style>
-		
-		<Style Selector="Button.ToolBarItem:pointover /template/ ContentPresenter" >
-		    <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}"/>
-		</Style>
-		
-		<Style Selector="Button.ToolBarItem:pressed /template/ ContentPresenter" >
-		    <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush4}"/>
-		    <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}"/>
-		</Style>
-	</Application.Styles>
+
+	</Application.Resources>
 </Application>

@@ -17,7 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Avalonia.Interactivity;
+using System.Windows.Threading;
+
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
 
@@ -30,7 +31,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 	{
 		readonly AssemblyReference r;
 		readonly AssemblyTreeNode parentAssembly;
-		
+
 		public AssemblyReferenceTreeNode(AssemblyReference r, AssemblyTreeNode parentAssembly)
 		{
 			this.r = r ?? throw new ArgumentNullException(nameof(r));
@@ -41,59 +42,67 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		public IAssemblyReference AssemblyNameReference => r;
 
 		public override object Text {
-			get { return r.Name + ((System.Reflection.Metadata.EntityHandle)r.Handle).ToSuffixString(); }
+			get { return Language.EscapeName(r.Name) + GetSuffixString(r.Handle); }
 		}
-		
-		public override object Icon {
-			get { return Images.Assembly; }
-		}
-		
+
+		public override object Icon => Images.Assembly;
+
 		public override bool ShowExpander {
 			get {
+				// Special case for mscorlib: It likely doesn't have any children so call EnsureLazyChildren to
+				// remove the expander from the node.
 				if (r.Name == "mscorlib")
-					EnsureLazyChildren(); // likely doesn't have any children
+				{
+					// See https://github.com/icsharpcode/ILSpy/issues/2548: Adding assemblies to the tree view
+					// while the list of references is updated causes problems with WPF's ListView rendering.
+					// Moving the assembly resolving out of the "add assembly reference"-loop by using the
+					// dispatcher fixes the issue.
+					Dispatcher.CurrentDispatcher.BeginInvoke((Action)EnsureLazyChildren, DispatcherPriority.Normal);
+				}
 				return base.ShowExpander;
 			}
 		}
-		
-		public override void ActivateItem(RoutedEventArgs e)
+
+		public override void ActivateItem(System.Windows.RoutedEventArgs e)
 		{
-			var assemblyListNode = parentAssembly.Parent as AssemblyListTreeNode;
-			if (assemblyListNode != null) {
-				assemblyListNode.Select(assemblyListNode.FindAssemblyNode(parentAssembly.LoadedAssembly.LookupReferencedAssembly(r)));
+			if (parentAssembly.Parent is AssemblyListTreeNode assemblyListNode)
+			{
+				var resolver = parentAssembly.LoadedAssembly.GetAssemblyResolver();
+				assemblyListNode.Select(assemblyListNode.FindAssemblyNode(resolver.Resolve(r)));
 				e.Handled = true;
 			}
 		}
-		
+
 		protected override void LoadChildren()
 		{
-			var assemblyListNode = parentAssembly.Parent as AssemblyListTreeNode;
-			if (assemblyListNode != null) {
-				var refNode = assemblyListNode.FindAssemblyNode(parentAssembly.LoadedAssembly.LookupReferencedAssembly(r));
-				if (refNode != null) {
-					var module = refNode.LoadedAssembly.GetPEFileOrNull();
-					if (module != null) {
-						foreach (var childRef in module.AssemblyReferences)
-							this.Children.Add(new AssemblyReferenceTreeNode(childRef, refNode));
-					}
-				}
+			var resolver = parentAssembly.LoadedAssembly.GetAssemblyResolver(MainWindow.Instance.CurrentDecompilerSettings.AutoLoadAssemblyReferences);
+			var module = resolver.Resolve(r);
+			if (module != null)
+			{
+				foreach (var childRef in module.AssemblyReferences)
+					this.Children.Add(new AssemblyReferenceTreeNode(childRef, parentAssembly));
 			}
 		}
-		
+
 		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
 		{
 			var loaded = parentAssembly.LoadedAssembly.LoadedAssemblyReferencesInfo.TryGetInfo(r.FullName, out var info);
-			if (r.IsWindowsRuntime) {
+			if (r.IsWindowsRuntime)
+			{
 				language.WriteCommentLine(output, r.FullName + " [WinRT]" + (!loaded ? " (unresolved)" : ""));
-			} else {
+			}
+			else
+			{
 				language.WriteCommentLine(output, r.FullName + (!loaded ? " (unresolved)" : ""));
 			}
-			if (loaded) {
+			if (loaded)
+			{
 				output.Indent();
 				language.WriteCommentLine(output, "Assembly reference loading information:");
 				if (info.HasErrors)
 					language.WriteCommentLine(output, "There were some problems during assembly reference load, see below for more information!");
-				foreach (var item in info.Messages) {
+				foreach (var item in info.Messages)
+				{
 					language.WriteCommentLine(output, $"{item.Item1}: {item.Item2}");
 				}
 				output.Unindent();

@@ -25,8 +25,9 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Threading;
 using System.Windows;
-using Avalonia.Media;
-using AvaloniaEdit.Highlighting;
+using System.Windows.Media;
+
+using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
@@ -35,6 +36,8 @@ using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.Decompiler.Util;
+using ICSharpCode.ILSpyX;
+using ICSharpCode.ILSpyX.Extensions;
 
 namespace ICSharpCode.ILSpy
 {
@@ -47,12 +50,18 @@ namespace ICSharpCode.ILSpy
 
 		protected override ReflectionDisassembler CreateDisassembler(ITextOutput output, DecompilationOptions options)
 		{
-			return new ReflectionDisassembler(output, 
+			var displaySettings = MainWindow.Instance.CurrentDisplaySettings;
+			return new ReflectionDisassembler(output,
 				new MixedMethodBodyDisassembler(output, options) {
 					DetectControlStructure = detectControlStructure,
 					ShowSequencePoints = options.DecompilerSettings.ShowDebugInfo
 				},
-				options.CancellationToken);
+				options.CancellationToken) {
+				ShowMetadataTokens = displaySettings.ShowMetadataTokens,
+				ShowMetadataTokensInBase10 = displaySettings.ShowMetadataTokensInBase10,
+				ShowRawRVAOffsetAndBytes = displaySettings.ShowRawOffsetsAndBytesBeforeInstruction,
+				ExpandMemberDefinitions = options.DecompilerSettings.ExpandMemberDefinitions
+			};
 		}
 
 		static CSharpDecompiler CreateDecompiler(PEFile module, DecompilationOptions options)
@@ -65,11 +74,11 @@ namespace ICSharpCode.ILSpy
 		static void WriteCode(TextWriter output, DecompilerSettings settings, SyntaxTree syntaxTree, IDecompilerTypeSystem typeSystem)
 		{
 			syntaxTree.AcceptVisitor(new InsertParenthesesVisitor { InsertParenthesesForReadability = true });
-            TokenWriter tokenWriter = new TextWriterTokenWriter(output) { IndentationString = settings.CSharpFormattingOptions.IndentationString };
-            tokenWriter = TokenWriter.WrapInWriterThatSetsLocationsInAST(tokenWriter);
+			TokenWriter tokenWriter = new TextWriterTokenWriter(output) { IndentationString = settings.CSharpFormattingOptions.IndentationString };
+			tokenWriter = TokenWriter.WrapInWriterThatSetsLocationsInAST(tokenWriter);
 			syntaxTree.AcceptVisitor(new CSharpOutputVisitor(tokenWriter, settings.CSharpFormattingOptions));
 		}
-		
+
 		class MixedMethodBodyDisassembler : MethodBodyDisassembler
 		{
 			readonly DecompilationOptions options;
@@ -86,30 +95,37 @@ namespace ICSharpCode.ILSpy
 
 			public override void Disassemble(PEFile module, MethodDefinitionHandle handle)
 			{
-				try {
+				try
+				{
 					var csharpOutput = new StringWriter();
 					CSharpDecompiler decompiler = CreateDecompiler(module, options);
 					var st = decompiler.Decompile(handle);
 					WriteCode(csharpOutput, options.DecompilerSettings, st, decompiler.TypeSystem);
-                    var mapping = decompiler.CreateSequencePoints(st).FirstOrDefault(kvp => (kvp.Key.MoveNextMethod ?? kvp.Key.Method).MetadataToken == handle);
-                    this.sequencePoints = mapping.Value ?? (IList<SequencePoint>)EmptyList<SequencePoint>.Instance;
+					var mapping = decompiler.CreateSequencePoints(st).FirstOrDefault(kvp => (kvp.Key.MoveNextMethod ?? kvp.Key.Method)?.MetadataToken == handle);
+					this.sequencePoints = mapping.Value ?? (IList<SequencePoint>)EmptyList<SequencePoint>.Instance;
 					this.codeLines = csharpOutput.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 					base.Disassemble(module, handle);
-				} finally {
+				}
+				finally
+				{
 					this.sequencePoints = null;
 					this.codeLines = null;
 				}
 			}
 
-			protected override void WriteInstruction(ITextOutput output, MetadataReader metadata, MethodDefinitionHandle methodDefinition, ref BlobReader blob, int methodRva)
+			protected override void WriteInstruction(ITextOutput output, MetadataReader metadata, MethodDefinitionHandle methodHandle, ref BlobReader blob, int methodRva)
 			{
 				int index = sequencePoints.BinarySearch(blob.Offset, seq => seq.Offset);
-				if (index >= 0) {
+				if (index >= 0)
+				{
 					var info = sequencePoints[index];
 					var highlightingOutput = output as ISmartTextOutput;
-					if (!info.IsHidden) {
-						for (int line = info.StartLine; line <= info.EndLine; line++) {
-							if (highlightingOutput != null) {
+					if (!info.IsHidden)
+					{
+						for (int line = info.StartLine; line <= info.EndLine; line++)
+						{
+							if (highlightingOutput != null)
+							{
 								string text = codeLines[line - 1];
 								int startColumn = 1;
 								int endColumn = text.Length + 1;
@@ -118,28 +134,33 @@ namespace ICSharpCode.ILSpy
 								if (line == info.EndLine)
 									endColumn = info.EndColumn;
 								WriteHighlightedCommentLine(highlightingOutput, text, startColumn - 1, endColumn - 1, info.StartLine == info.EndLine);
-							} else
+							}
+							else
 								WriteCommentLine(output, codeLines[line - 1]);
 						}
-					} else {
+					}
+					else
+					{
 						output.Write("// ");
 						highlightingOutput?.BeginSpan(gray);
 						output.WriteLine("(no C# code)");
 						highlightingOutput?.EndSpan();
 					}
 				}
-				base.WriteInstruction(output, metadata, methodDefinition, ref blob, methodRva);
+				base.WriteInstruction(output, metadata, methodHandle, ref blob, methodRva);
 			}
 
 			HighlightingColor gray = new HighlightingColor { Foreground = new SimpleHighlightingBrush(Colors.DarkGray) };
 
 			void WriteHighlightedCommentLine(ISmartTextOutput output, string text, int startColumn, int endColumn, bool isSingleLine)
 			{
-				if (startColumn > text.Length) {
+				if (startColumn > text.Length)
+				{
 					Debug.Fail("startColumn is invalid");
 					startColumn = text.Length;
 				}
-				if (endColumn > text.Length) {
+				if (endColumn > text.Length)
+				{
 					Debug.Fail("endColumn is invalid");
 					endColumn = text.Length;
 				}

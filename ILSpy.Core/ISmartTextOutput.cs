@@ -17,14 +17,14 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Layout;
-using AvaloniaEdit.Highlighting;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+
+using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.Decompiler;
-using Avalonia.Media.Imaging;
-using Avalonia.Interactivity;
+using ICSharpCode.ILSpy.Themes;
 
 namespace ICSharpCode.ILSpy
 {
@@ -36,27 +36,33 @@ namespace ICSharpCode.ILSpy
 		/// <summary>
 		/// Inserts an interactive UI element at the current position in the text output.
 		/// </summary>
-		void AddUIElement(Func<IControl> element);
+		void AddUIElement(Func<UIElement> element);
 
 		void BeginSpan(HighlightingColor highlightingColor);
 		void EndSpan();
+
+		/// <summary>
+		/// Gets/sets the title displayed in the document tab's header.
+		/// </summary>
+		string Title { get; set; }
 	}
-	
+
 	public static class SmartTextOutputExtensions
 	{
 		/// <summary>
 		/// Creates a button.
 		/// </summary>
-		public static void AddButton(this ISmartTextOutput output, IBitmap icon, string text, EventHandler<RoutedEventArgs> click)
+		public static void AddButton(this ISmartTextOutput output, ImageSource icon, string text, RoutedEventHandler click)
 		{
 			output.AddUIElement(
 				delegate {
-					Button button = new Button();
-					button.Cursor = Cursor.Default;
+					Button button = ThemeManager.Current.CreateButton();
+					button.Cursor = Cursors.Arrow;
 					button.Margin = new Thickness(2);
 					button.Padding = new Thickness(9, 1, 9, 1);
 					button.MinWidth = 73;
-					if (icon != null) {
+					if (icon != null)
+					{
 						button.Content = new StackPanel {
 							Orientation = Orientation.Horizontal,
 							Children = {
@@ -64,7 +70,9 @@ namespace ICSharpCode.ILSpy
 								new TextBlock { Text = text }
 							}
 						};
-					} else {
+					}
+					else
+					{
 						button.Content = text;
 					}
 					button.Click += click;

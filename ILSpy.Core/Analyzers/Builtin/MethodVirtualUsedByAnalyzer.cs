@@ -17,11 +17,10 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
-using ICSharpCode.Decompiler;
+
 using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
@@ -41,36 +40,58 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 		public IEnumerable<ISymbol> Analyze(ISymbol analyzedSymbol, AnalyzerContext context)
 		{
 			Debug.Assert(analyzedSymbol is IMethod);
-			var scope = context.GetScopeOf((IEntity)analyzedSymbol);
-			foreach (var type in scope.GetTypesInScope(context.CancellationToken)) {
-				var mappingInfo = context.Language.GetCodeMappingInfo(type.ParentModule.PEFile, type.MetadataToken);
+			var analyzedMethod = (IMethod)analyzedSymbol;
+			var mapping = context.Language
+				.GetCodeMappingInfo(analyzedMethod.ParentModule.PEFile,
+					analyzedMethod.DeclaringTypeDefinition.MetadataToken);
+
+			var parentMethod = mapping.GetParentMethod((MethodDefinitionHandle)analyzedMethod.MetadataToken);
+			if (parentMethod != analyzedMethod.MetadataToken)
+				yield return ((MetadataModule)analyzedMethod.ParentModule).GetDefinition(parentMethod);
+
+			var scope = context.GetScopeOf(analyzedMethod);
+			foreach (var type in scope.GetTypesInScope(context.CancellationToken))
+			{
+				var parentModule = (MetadataModule)type.ParentModule;
+				mapping = context.Language.GetCodeMappingInfo(parentModule.PEFile, type.MetadataToken);
 				var methods = type.GetMembers(m => m is IMethod, Options).OfType<IMethod>();
-				foreach (var method in methods) {
-					if (IsUsedInMethod((IMethod)analyzedSymbol, method, mappingInfo, context))
-						yield return method;
-				}
-
-				foreach (var property in type.Properties) {
-					if (property.CanGet && IsUsedInMethod((IMethod)analyzedSymbol, property.Getter, mappingInfo, context)) {
-						yield return property;
-						continue;
-					}
-					if (property.CanSet && IsUsedInMethod((IMethod)analyzedSymbol, property.Setter, mappingInfo, context)) {
-						yield return property;
-						continue;
+				foreach (var method in methods)
+				{
+					if (IsUsedInMethod((IMethod)analyzedSymbol, method, context))
+					{
+						var parent = mapping.GetParentMethod((MethodDefinitionHandle)method.MetadataToken);
+						yield return parentModule.GetDefinition(parent);
 					}
 				}
 
-				foreach (var @event in type.Events) {
-					if (@event.CanAdd && IsUsedInMethod((IMethod)analyzedSymbol, @event.AddAccessor, mappingInfo, context)) {
+				foreach (var property in type.Properties)
+				{
+					if (property.CanGet && IsUsedInMethod((IMethod)analyzedSymbol, property.Getter, context))
+					{
+						yield return property;
+						continue;
+					}
+					if (property.CanSet && IsUsedInMethod((IMethod)analyzedSymbol, property.Setter, context))
+					{
+						yield return property;
+						continue;
+					}
+				}
+
+				foreach (var @event in type.Events)
+				{
+					if (@event.CanAdd && IsUsedInMethod((IMethod)analyzedSymbol, @event.AddAccessor, context))
+					{
 						yield return @event;
 						continue;
 					}
-					if (@event.CanRemove && IsUsedInMethod((IMethod)analyzedSymbol, @event.RemoveAccessor, mappingInfo, context)) {
+					if (@event.CanRemove && IsUsedInMethod((IMethod)analyzedSymbol, @event.RemoveAccessor, context))
+					{
 						yield return @event;
 						continue;
 					}
-					if (@event.CanInvoke && IsUsedInMethod((IMethod)analyzedSymbol, @event.InvokeAccessor, mappingInfo, context)) {
+					if (@event.CanInvoke && IsUsedInMethod((IMethod)analyzedSymbol, @event.InvokeAccessor, context))
+					{
 						yield return @event;
 						continue;
 					}
@@ -79,7 +100,7 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 			}
 		}
 
-		bool IsUsedInMethod(IMethod analyzedEntity, IMethod method, CodeMappingInfo mappingInfo, AnalyzerContext context)
+		bool IsUsedInMethod(IMethod analyzedEntity, IMethod method, AnalyzerContext context)
 		{
 			return ScanMethodBody(analyzedEntity, method, context.GetMethodBody(method));
 		}
@@ -92,22 +113,26 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 			var blob = methodBody.GetILReader();
 			var genericContext = new Decompiler.TypeSystem.GenericContext();
 
-			while (blob.RemainingBytes > 0) {
+			while (blob.RemainingBytes > 0)
+			{
 				var opCode = blob.DecodeOpCode();
-				switch (opCode.GetOperandType()) {
-					case OperandType.Field:
+				switch (opCode.GetOperandType())
+				{
 					case OperandType.Method:
 					case OperandType.Sig:
 					case OperandType.Tok:
 						var member = MetadataTokenHelpers.EntityHandleOrNil(blob.ReadInt32());
-						if (member.IsNil) continue;
+						if (member.IsNil)
+							continue;
 
-						switch (member.Kind) {
+						switch (member.Kind)
+						{
 							case HandleKind.MethodDefinition:
 							case HandleKind.MethodSpecification:
 							case HandleKind.MemberReference:
 								var m = (mainModule.ResolveEntity(member, genericContext) as IMember)?.MemberDefinition;
-								if (m.MetadataToken == analyzedMethod.MetadataToken && m.ParentModule.PEFile == analyzedMethod.ParentModule.PEFile) {
+								if (m != null && m.MetadataToken == analyzedMethod.MetadataToken && m.ParentModule.PEFile == analyzedMethod.ParentModule.PEFile)
+								{
 									return true;
 								}
 								break;

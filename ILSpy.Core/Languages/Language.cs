@@ -21,60 +21,26 @@ using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using AvaloniaEdit.Highlighting;
+
+using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.Solution;
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.Decompiler.TypeSystem.Implementation;
 using ICSharpCode.Decompiler.Util;
-
-using SRM = System.Reflection.Metadata;
+using ICSharpCode.ILSpyX;
+using ICSharpCode.ILSpyX.Abstractions;
 
 namespace ICSharpCode.ILSpy
 {
-	public struct LanguageVersion : IEquatable<LanguageVersion>
-	{
-		public string Version { get; }
-		public string DisplayName { get; }
-
-		public LanguageVersion(string version, string name = null)
-		{
-			this.Version = version ?? "";
-			this.DisplayName = name ?? version.ToString();
-		}
-
-		public bool Equals(LanguageVersion other)
-		{
-			return other.Version == this.Version && other.DisplayName == this.DisplayName;
-		}
-
-		public override bool Equals(object obj)
-		{
-			return obj is LanguageVersion version && Equals(version);
-		}
-
-		public override int GetHashCode()
-		{
-			return unchecked(982451629 * Version.GetHashCode() + 982451653 * DisplayName.GetHashCode());
-		}
-
-        public override string ToString()
-        {
-            return DisplayName;
-        }
-
-        public static bool operator ==(LanguageVersion lhs, LanguageVersion rhs) => lhs.Equals(rhs);
-		public static bool operator !=(LanguageVersion lhs, LanguageVersion rhs) => !lhs.Equals(rhs);
-	}
-
 	/// <summary>
 	/// Base class for language-specific decompiler implementations.
 	/// </summary>
 	/// <remarks>
 	/// Implementations of this class must be thread-safe.
 	/// </remarks>
-	public abstract class Language
+	public abstract class Language : ILanguage
 	{
 		/// <summary>
 		/// Gets the name of the language (as shown in the UI)
@@ -86,8 +52,7 @@ namespace ICSharpCode.ILSpy
 		/// </summary>
 		public abstract string FileExtension { get; }
 
-		public virtual string ProjectFileExtension
-		{
+		public virtual string ProjectFileExtension {
 			get { return null; }
 		}
 
@@ -100,11 +65,9 @@ namespace ICSharpCode.ILSpy
 		/// <summary>
 		/// Gets the syntax highlighting used for this language.
 		/// </summary>
-		public virtual IHighlightingDefinition SyntaxHighlighting
-		{
-			get
-			{
-				return HighlightingManager.Instance.GetDefinitionByExtension(this.FileExtension);
+		public virtual IHighlightingDefinition SyntaxHighlighting {
+			get {
+				return HighlightingManager.Instance.GetDefinitionByExtension(FileExtension);
 			}
 		}
 
@@ -148,16 +111,31 @@ namespace ICSharpCode.ILSpy
 		{
 			WriteCommentLine(output, assembly.FileName);
 			var asm = assembly.GetPEFileOrNull();
-			if (asm == null) return null;
+			if (asm == null)
+				return null;
+			if (options.FullDecompilation && options.SaveAsProjectDirectory != null)
+			{
+				throw new NotSupportedException($"Language '{Name}' does not support exporting assemblies as projects!");
+			}
 			var metadata = asm.Metadata;
-			if (metadata.IsAssembly) {
+			if (metadata.IsAssembly)
+			{
 				var name = metadata.GetAssemblyDefinition();
-				if ((name.Flags & System.Reflection.AssemblyFlags.WindowsRuntime) != 0) {
+				if ((name.Flags & System.Reflection.AssemblyFlags.WindowsRuntime) != 0)
+				{
 					WriteCommentLine(output, metadata.GetString(name.Name) + " [WinRT]");
-				} else {
-					WriteCommentLine(output, metadata.GetFullAssemblyName());
 				}
-			} else {
+				else if (metadata.TryGetFullAssemblyName(out string assemblyName))
+				{
+					WriteCommentLine(output, assemblyName);
+				}
+				else
+				{
+					WriteCommentLine(output, "ERR: Could not read assembly name");
+				}
+			}
+			else
+			{
 				WriteCommentLine(output, metadata.GetString(metadata.GetModuleDefinition().Name));
 			}
 			return null;
@@ -239,7 +217,7 @@ namespace ICSharpCode.ILSpy
 			public override IType VisitTypeParameter(ITypeParameter type)
 			{
 				base.VisitTypeParameter(type);
-                EscapeName(builder, type.Name);
+				EscapeName(builder, type.Name);
 				return type;
 			}
 
@@ -247,7 +225,8 @@ namespace ICSharpCode.ILSpy
 			{
 				type.GenericType.AcceptVisitor(this);
 				builder.Append('<');
-				for (int i = 0; i < type.TypeArguments.Count; i++) {
+				for (int i = 0; i < type.TypeArguments.Count; i++)
+				{
 					if (i > 0)
 						builder.Append(',');
 					type.TypeArguments[i].AcceptVisitor(this);
@@ -262,6 +241,30 @@ namespace ICSharpCode.ILSpy
 				return type;
 			}
 
+			public override IType VisitFunctionPointerType(FunctionPointerType type)
+			{
+				builder.Append("method ");
+				if (type.CallingConvention != SignatureCallingConvention.Default)
+				{
+					builder.Append(type.CallingConvention.ToILSyntax());
+					builder.Append(' ');
+				}
+				type.ReturnType.AcceptVisitor(this);
+				builder.Append(" *(");
+				bool first = true;
+				foreach (var p in type.ParameterTypes)
+				{
+					if (first)
+						first = false;
+					else
+						builder.Append(", ");
+
+					p.AcceptVisitor(this);
+				}
+				builder.Append(')');
+				return type;
+			}
+
 			public override IType VisitOtherType(IType type)
 			{
 				WriteType(type);
@@ -271,10 +274,11 @@ namespace ICSharpCode.ILSpy
 			private void WriteType(IType type)
 			{
 				if (includeNamespace)
-                    EscapeName(builder, type.FullName);
-                else
-                    EscapeName(builder, type.Name);
-                if (type.TypeParameterCount > 0) {
+					EscapeName(builder, type.FullName);
+				else
+					EscapeName(builder, type.Name);
+				if (type.TypeParameterCount > 0)
+				{
 					builder.Append('`');
 					builder.Append(type.TypeParameterCount);
 				}
@@ -282,7 +286,8 @@ namespace ICSharpCode.ILSpy
 
 			public override IType VisitTypeDefinition(ITypeDefinition type)
 			{
-				switch (type.KnownTypeCode) {
+				switch (type.KnownTypeCode)
+				{
 					case KnownTypeCode.Object:
 						builder.Append("object");
 						break;
@@ -355,6 +360,15 @@ namespace ICSharpCode.ILSpy
 			return GetDisplayName(entity, true, true, true);
 		}
 
+		/// <summary>
+		/// Converts a member signature to a string.
+		/// This is used for displaying the tooltip on a member reference.
+		/// </summary>
+		public virtual RichText GetRichTextTooltip(IEntity entity)
+		{
+			return GetTooltip(entity);
+		}
+
 		public virtual string FieldToString(IField field, bool includeDeclaringTypeName, bool includeNamespace, bool includeNamespaceOfDeclaringTypeName)
 		{
 			if (field == null)
@@ -375,14 +389,16 @@ namespace ICSharpCode.ILSpy
 				throw new ArgumentNullException(nameof(method));
 
 			int i = 0;
-            var buffer = new StringBuilder();
-            buffer.Append(GetDisplayName(method, includeDeclaringTypeName, includeNamespace, includeNamespaceOfDeclaringTypeName));
+			var buffer = new StringBuilder();
+			buffer.Append(GetDisplayName(method, includeDeclaringTypeName, includeNamespace, includeNamespaceOfDeclaringTypeName));
 			var typeParameters = method.TypeParameters;
-			if (typeParameters.Count > 0) {
+			if (typeParameters.Count > 0)
+			{
 				buffer.Append("``");
 				buffer.Append(typeParameters.Count);
 				buffer.Append('<');
-				foreach (var tp in typeParameters) {
+				foreach (var tp in typeParameters)
+				{
 					if (i > 0)
 						buffer.Append(", ");
 					buffer.Append(tp.Name);
@@ -394,14 +410,16 @@ namespace ICSharpCode.ILSpy
 
 			i = 0;
 			var parameters = method.Parameters;
-			foreach (var param in parameters) {
+			foreach (var param in parameters)
+			{
 				if (i > 0)
 					buffer.Append(", ");
 				buffer.Append(TypeToString(param.Type, includeNamespace));
 				i++;
 			}
 			buffer.Append(')');
-			if (!method.IsConstructor) {
+			if (!method.IsConstructor)
+			{
 				buffer.Append(" : ");
 				buffer.Append(TypeToString(method.ReturnType, includeNamespace));
 			}
@@ -412,8 +430,8 @@ namespace ICSharpCode.ILSpy
 		{
 			if (@event == null)
 				throw new ArgumentNullException(nameof(@event));
-            var buffer = new StringBuilder();
-            buffer.Append(GetDisplayName(@event, includeDeclaringTypeName, includeNamespace, includeNamespaceOfDeclaringTypeName));
+			var buffer = new StringBuilder();
+			buffer.Append(GetDisplayName(@event, includeDeclaringTypeName, includeNamespace, includeNamespaceOfDeclaringTypeName));
 			buffer.Append(" : ");
 			buffer.Append(TypeToString(@event.ReturnType, includeNamespace));
 			return buffer.ToString();
@@ -421,21 +439,27 @@ namespace ICSharpCode.ILSpy
 
 		protected string GetDisplayName(IEntity entity, bool includeDeclaringTypeName, bool includeNamespace, bool includeNamespaceOfDeclaringTypeName)
 		{
-            string entityName;
-            if (entity is ITypeDefinition t && !t.MetadataToken.IsNil) {
-                MetadataReader metadata = t.ParentModule.PEFile.Metadata;
-                var typeDef = metadata.GetTypeDefinition((TypeDefinitionHandle)t.MetadataToken);
-                entityName = EscapeName(metadata.GetString(typeDef.Name));
-            } else {
-                entityName = EscapeName(entity.Name);
-            }
-            if (includeNamespace || includeDeclaringTypeName) {
-                if (entity.DeclaringTypeDefinition != null)
-                    return TypeToString(entity.DeclaringTypeDefinition, includeNamespaceOfDeclaringTypeName) + "." + entityName;
-                return EscapeName(entity.Namespace) + "." + entityName;
-            } else {
-                return entityName;
-            }
+			string entityName;
+			if (entity is ITypeDefinition t && !t.MetadataToken.IsNil)
+			{
+				MetadataReader metadata = t.ParentModule.PEFile.Metadata;
+				var typeDef = metadata.GetTypeDefinition((TypeDefinitionHandle)t.MetadataToken);
+				entityName = EscapeName(metadata.GetString(typeDef.Name));
+			}
+			else
+			{
+				entityName = EscapeName(entity.Name);
+			}
+			if (includeNamespace || includeDeclaringTypeName)
+			{
+				if (entity.DeclaringTypeDefinition != null)
+					return TypeToString(entity.DeclaringTypeDefinition, includeNamespaceOfDeclaringTypeName) + "." + entityName;
+				return EscapeName(entity.Namespace) + "." + entityName;
+			}
+			else
+			{
+				return entityName;
+			}
 		}
 
 		/// <summary>
@@ -457,75 +481,76 @@ namespace ICSharpCode.ILSpy
 		public virtual string GetEntityName(PEFile module, EntityHandle handle, bool fullName, bool omitGenerics)
 		{
 			MetadataReader metadata = module.Metadata;
-			switch (handle.Kind) {
+			switch (handle.Kind)
+			{
 				case HandleKind.TypeDefinition:
 					if (fullName)
-                        return EscapeName(((TypeDefinitionHandle)handle).GetFullTypeName(metadata).ToILNameString(omitGenerics));
-                    var td = metadata.GetTypeDefinition((TypeDefinitionHandle)handle);
-                    return EscapeName(metadata.GetString(td.Name));
-                case HandleKind.FieldDefinition:
+						return EscapeName(((TypeDefinitionHandle)handle).GetFullTypeName(metadata).ToILNameString(omitGenerics));
+					var td = metadata.GetTypeDefinition((TypeDefinitionHandle)handle);
+					return EscapeName(metadata.GetString(td.Name));
+				case HandleKind.FieldDefinition:
 					var fd = metadata.GetFieldDefinition((FieldDefinitionHandle)handle);
 					if (fullName)
-                        return EscapeName(fd.GetDeclaringType().GetFullTypeName(metadata).ToILNameString(omitGenerics) + "." + metadata.GetString(fd.Name));
-                    return EscapeName(metadata.GetString(fd.Name));
-                case HandleKind.MethodDefinition:
+						return EscapeName(fd.GetDeclaringType().GetFullTypeName(metadata).ToILNameString(omitGenerics) + "." + metadata.GetString(fd.Name));
+					return EscapeName(metadata.GetString(fd.Name));
+				case HandleKind.MethodDefinition:
 					var md = metadata.GetMethodDefinition((MethodDefinitionHandle)handle);
 					string methodName = metadata.GetString(md.Name);
-                    if (!omitGenerics) {
-                        int genericParamCount = md.GetGenericParameters().Count;
-                        if (genericParamCount > 0)
-                            methodName += "``" + genericParamCount;
-                    }
-                    if (fullName)
-                        return EscapeName(md.GetDeclaringType().GetFullTypeName(metadata).ToILNameString(omitGenerics) + "." + methodName);
-                    return EscapeName(methodName);
-                case HandleKind.EventDefinition:
+					if (!omitGenerics)
+					{
+						int genericParamCount = md.GetGenericParameters().Count;
+						if (genericParamCount > 0)
+							methodName += "``" + genericParamCount;
+					}
+					if (fullName)
+						return EscapeName(md.GetDeclaringType().GetFullTypeName(metadata).ToILNameString(omitGenerics) + "." + methodName);
+					return EscapeName(methodName);
+				case HandleKind.EventDefinition:
 					var ed = metadata.GetEventDefinition((EventDefinitionHandle)handle);
 					var declaringType = metadata.GetMethodDefinition(ed.GetAccessors().GetAny()).GetDeclaringType();
 					if (fullName)
-                        return EscapeName(declaringType.GetFullTypeName(metadata).ToILNameString(omitGenerics) + "." + metadata.GetString(ed.Name));
-                    return EscapeName(metadata.GetString(ed.Name));
-                case HandleKind.PropertyDefinition:
+						return EscapeName(declaringType.GetFullTypeName(metadata).ToILNameString(omitGenerics) + "." + metadata.GetString(ed.Name));
+					return EscapeName(metadata.GetString(ed.Name));
+				case HandleKind.PropertyDefinition:
 					var pd = metadata.GetPropertyDefinition((PropertyDefinitionHandle)handle);
 					declaringType = metadata.GetMethodDefinition(pd.GetAccessors().GetAny()).GetDeclaringType();
 					if (fullName)
-                        return EscapeName(declaringType.GetFullTypeName(metadata).ToILNameString(omitGenerics) + "." + metadata.GetString(pd.Name));
-                    return EscapeName(metadata.GetString(pd.Name));
-                default:
+						return EscapeName(declaringType.GetFullTypeName(metadata).ToILNameString(omitGenerics) + "." + metadata.GetString(pd.Name));
+					return EscapeName(metadata.GetString(pd.Name));
+				default:
 					return null;
 			}
 		}
 
-		public virtual CodeMappingInfo GetCodeMappingInfo(PEFile module, SRM.EntityHandle member)
+		public virtual CodeMappingInfo GetCodeMappingInfo(PEFile module, EntityHandle member)
 		{
-			var parts = new Dictionary<SRM.MethodDefinitionHandle, SRM.MethodDefinitionHandle[]>();
-			var locations = new Dictionary<SRM.EntityHandle, SRM.MethodDefinitionHandle>();
+			var declaringType = (TypeDefinitionHandle)member.GetDeclaringType(module.Metadata);
 
-			var declaringType = member.GetDeclaringType(module.Metadata);
-
-			if (declaringType.IsNil && member.Kind == SRM.HandleKind.TypeDefinition) {
-				declaringType = (SRM.TypeDefinitionHandle)member;
+			if (declaringType.IsNil && member.Kind == HandleKind.TypeDefinition)
+			{
+				declaringType = (TypeDefinitionHandle)member;
 			}
 
-			return new CodeMappingInfo(module, (TypeDefinitionHandle)declaringType);
+			return new CodeMappingInfo(module, declaringType);
 		}
 
 		public static string GetPlatformDisplayName(PEFile module)
 		{
-            var headers = module.Reader.PEHeaders;
-            var architecture = headers.CoffHeader.Machine;
-            var characteristics = headers.CoffHeader.Characteristics;
-            var corflags = headers.CorHeader.Flags;
-            switch (architecture) {
+			var headers = module.Reader.PEHeaders;
+			var architecture = headers.CoffHeader.Machine;
+			var characteristics = headers.CoffHeader.Characteristics;
+			var corflags = headers.CorHeader.Flags;
+			switch (architecture)
+			{
 				case Machine.I386:
-                    if ((corflags & CorFlags.Prefers32Bit) != 0)
-                        return "AnyCPU (32-bit preferred)";
-                    if ((corflags & CorFlags.Requires32Bit) != 0)
-                        return "x86";
-                    // According to ECMA-335, II.25.3.3.1 CorFlags.Requires32Bit and Characteristics.Bit32Machine must be in sync
-                    // for assemblies containing managed code. However, this is not true for C++/CLI assemblies.
-                    if ((corflags & CorFlags.ILOnly) == 0 && (characteristics & Characteristics.Bit32Machine) != 0)
-                        return "x86";
+					if ((corflags & CorFlags.Prefers32Bit) != 0)
+						return "AnyCPU (32-bit preferred)";
+					if ((corflags & CorFlags.Requires32Bit) != 0)
+						return "x86";
+					// According to ECMA-335, II.25.3.3.1 CorFlags.Requires32Bit and Characteristics.Bit32Machine must be in sync
+					// for assemblies containing managed code. However, this is not true for C++/CLI assemblies.
+					if ((corflags & CorFlags.ILOnly) == 0 && (characteristics & Characteristics.Bit32Machine) != 0)
+						return "x86";
 					return "AnyCPU (64-bit preferred)";
 				case Machine.Amd64:
 					return "x64";
@@ -541,27 +566,27 @@ namespace ICSharpCode.ILSpy
 			return module.Metadata.MetadataVersion;
 		}
 
-        /// <summary>
-        /// Escape characters that cannot be displayed in the UI.
-        /// </summary>
-        public static StringBuilder EscapeName(StringBuilder sb, string name)
-        {
-            foreach (char ch in name)
-            {
-                if (char.IsWhiteSpace(ch) || char.IsControl(ch) || char.IsSurrogate(ch))
-                    sb.AppendFormat("\\u{0:x4}", (int)ch);
-                else
-                    sb.Append(ch);
-            }
-            return sb;
-        }
+		/// <summary>
+		/// Escape characters that cannot be displayed in the UI.
+		/// </summary>
+		public static StringBuilder EscapeName(StringBuilder sb, string name)
+		{
+			foreach (char ch in name)
+			{
+				if (char.IsWhiteSpace(ch) || char.IsControl(ch) || char.IsSurrogate(ch))
+					sb.AppendFormat("\\u{0:x4}", (int)ch);
+				else
+					sb.Append(ch);
+			}
+			return sb;
+		}
 
-        /// <summary>
-        /// Escape characters that cannot be displayed in the UI.
-        /// </summary>
-        public static string EscapeName(string name)
-        {
-            return EscapeName(new StringBuilder(name.Length), name).ToString();
-        }
-    }
+		/// <summary>
+		/// Escape characters that cannot be displayed in the UI.
+		/// </summary>
+		public static string EscapeName(string name)
+		{
+			return EscapeName(new StringBuilder(name.Length), name).ToString();
+		}
+	}
 }

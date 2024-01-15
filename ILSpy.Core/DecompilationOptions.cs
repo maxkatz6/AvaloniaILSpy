@@ -18,8 +18,10 @@
 
 using System;
 using System.Threading;
-using Decompiler = ICSharpCode.Decompiler;
+
+using ICSharpCode.Decompiler;
 using ICSharpCode.ILSpy.Options;
+using ICSharpCode.ILSpyX;
 
 namespace ICSharpCode.ILSpy
 {
@@ -40,6 +42,12 @@ namespace ICSharpCode.ILSpy
 		public string SaveAsProjectDirectory { get; set; }
 
 		/// <summary>
+		/// Gets/sets whether invalid identifiers should be escaped (and therefore the code be made compilable).
+		/// This setting is ignored in case <see cref="SaveAsProjectDirectory"/> is set.
+		/// </summary>
+		public bool EscapeInvalidIdentifiers { get; set; }
+
+		/// <summary>
 		/// Gets the cancellation token that is used to abort the decompiler.
 		/// </summary>
 		/// <remarks>
@@ -47,6 +55,14 @@ namespace ICSharpCode.ILSpy
 		/// to allow for cooperative cancellation of the decompilation task.
 		/// </remarks>
 		public CancellationToken CancellationToken { get; set; }
+
+		/// <summary>
+		/// Gets the progress reporter.
+		/// </summary>
+		/// <remarks>
+		/// If decompilers do not implement progress reporting, an indeterminate wait bar is displayed.
+		/// </remarks>
+		public IProgress<DecompilationProgress> Progress { get; set; }
 
 		/// <summary>
 		/// Gets the settings for the decompiler.
@@ -67,19 +83,9 @@ namespace ICSharpCode.ILSpy
 		internal int StepLimit = int.MaxValue;
 		internal bool IsDebug = false;
 
-		public DecompilationOptions()
-			: this(MainWindow.Instance.CurrentLanguageVersion, DecompilerSettingsPanel.CurrentDecompilerSettings, DisplaySettingsPanel.CurrentDisplaySettings)
+		public DecompilationOptions(LanguageVersion version, Decompiler.DecompilerSettings settings, DisplaySettingsViewModel displaySettings)
 		{
-		}
-
-		public DecompilationOptions(LanguageVersion version)
-			: this(version, DecompilerSettingsPanel.CurrentDecompilerSettings, DisplaySettingsPanel.CurrentDisplaySettings)
-		{
-		}
-
-		public DecompilationOptions(LanguageVersion version, Decompiler.DecompilerSettings settings, Options.DisplaySettings displaySettings)
-		{
-			if (!Enum.TryParse(version.Version, out Decompiler.CSharp.LanguageVersion languageVersion))
+			if (!Enum.TryParse(version?.Version, out Decompiler.CSharp.LanguageVersion languageVersion))
 				languageVersion = Decompiler.CSharp.LanguageVersion.Latest;
 			var newSettings = this.DecompilerSettings = settings.Clone();
 			newSettings.SetLanguageVersion(languageVersion);
@@ -90,7 +96,7 @@ namespace ICSharpCode.ILSpy
 			newSettings.CSharpFormattingOptions.IndentationString = GetIndentationString(displaySettings);
 		}
 
-		private string GetIndentationString(DisplaySettings displaySettings)
+		private string GetIndentationString(DisplaySettingsViewModel displaySettings)
 		{
 			if (displaySettings.IndentationUseTabs)
 			{
@@ -99,7 +105,6 @@ namespace ICSharpCode.ILSpy
 				return new string('\t', numberOfTabs) + new string(' ', numberOfSpaces);
 			}
 			return new string(' ', displaySettings.IndentationSize);
-
 		}
 	}
 }

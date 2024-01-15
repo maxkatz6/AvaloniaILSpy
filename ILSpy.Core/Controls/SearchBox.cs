@@ -17,112 +17,145 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Interactivity;
-using Avalonia.Input;
-using Avalonia.Media.Imaging;
-using Avalonia.Controls.Primitives;
-using Avalonia.Data.Converters;
-using Avalonia.Controls.Metadata;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace ICSharpCode.ILSpy.Controls
 {
-    [PseudoClasses(":hastext")]
 	public class SearchBox : TextBox
 	{
+		static SearchBox()
+		{
+			DefaultStyleKeyProperty.OverrideMetadata(
+				typeof(SearchBox),
+				new FrameworkPropertyMetadata(typeof(SearchBox)));
+		}
+
 		#region Dependency properties
 
-        public static StyledProperty<IBitmap> SearchIconProperty = AvaloniaProperty.Register<SearchBox, IBitmap>(nameof(SearchIcon));
+		public static DependencyProperty WatermarkTextProperty = DependencyProperty.Register("WatermarkText", typeof(string), typeof(SearchBox));
 
-        public static StyledProperty<IBitmap> ClearSearchIconProperty = AvaloniaProperty.Register<SearchBox, IBitmap>(nameof(ClearSearchIcon));
+		public static DependencyProperty WatermarkColorProperty = DependencyProperty.Register("WatermarkColor", typeof(Brush), typeof(SearchBox));
 
-        public static StyledProperty<IBrush> WatermarkColorProperty = AvaloniaProperty.Register<SearchBox, IBrush>(nameof(WatermarkColor));
+		public static DependencyProperty HasTextProperty = DependencyProperty.Register("HasText", typeof(bool), typeof(SearchBox));
 
-        public static readonly IValueConverter GridLengthConvert = new FuncValueConverter<double, GridLength>(n => new GridLength(n));
+		public static readonly DependencyProperty UpdateDelayProperty =
+			DependencyProperty.Register("UpdateDelay", typeof(TimeSpan), typeof(SearchBox),
+										new FrameworkPropertyMetadata(TimeSpan.FromMilliseconds(200)));
 
-        public static readonly StyledProperty<TimeSpan> UpdateDelayProperty =
-			AvaloniaProperty.Register<SearchBox, TimeSpan>(nameof(UpdateDelay), TimeSpan.FromMilliseconds(200));
+		#endregion
 
-        #endregion
-
-        public SearchBox()
-        {
-            UpdatePseudoclasses();
-        }
-		
 		#region Public Properties
 
-		public IBrush WatermarkColor {
-			get { return (IBrush)GetValue(WatermarkColorProperty); }
+		public string WatermarkText {
+			get { return (string)GetValue(WatermarkTextProperty); }
+			set { SetValue(WatermarkTextProperty, value); }
+		}
+
+		public Brush WatermarkColor {
+			get { return (Brush)GetValue(WatermarkColorProperty); }
 			set { SetValue(WatermarkColorProperty, value); }
 		}
 
-        public TimeSpan UpdateDelay
-        {
-            get { return (TimeSpan)GetValue(UpdateDelayProperty); }
-            set { SetValue(UpdateDelayProperty, value); }
-        }
-        
-        public IBitmap SearchIcon
-        {
-            get { return GetValue(SearchIconProperty); }
-            set { SetValue(SearchIconProperty, value); }
-        }
-
-        public IBitmap ClearSearchIcon
-        {
-            get { return GetValue(ClearSearchIconProperty); }
-            set { SetValue(ClearSearchIconProperty, value); }
-        }
-
-        #endregion
-
-        #region Handlers
-
-		private void IconBorder_MouseLeftButtonUp(object obj, PointerReleasedEventArgs e) {
-            this.Text = string.Empty;
+		public bool HasText {
+			get { return (bool)GetValue(HasTextProperty); }
+			private set { SetValue(HasTextProperty, value); }
 		}
 
-        #endregion
+		public TimeSpan UpdateDelay {
+			get { return (TimeSpan)GetValue(UpdateDelayProperty); }
+			set { SetValue(UpdateDelayProperty, value); }
+		}
 
-        #region Overrides
+		#endregion
 
-        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
-        {
-            base.OnApplyTemplate(e);
-            Border iconBorder = e.NameScope.Find<Border>("PART_IconBorder");
-            if (iconBorder != null)
-            {
-                iconBorder.AddHandler(Border.PointerReleasedEvent, IconBorder_MouseLeftButtonUp, RoutingStrategies.Tunnel);
-            }
-        }
+		#region Handlers
 
-        protected override void OnPropertyChanged<T>(AvaloniaPropertyChangedEventArgs<T> change)
-        {
-            base.OnPropertyChanged(change);
-
-            if (change.Property == TextProperty)
-            {
-                UpdatePseudoclasses();
-            }
-        }
-
-        private void UpdatePseudoclasses()
-        {
-            PseudoClasses.Set(":hastext", !string.IsNullOrWhiteSpace(Text));
-        }
-
-        protected override void OnKeyDown(KeyEventArgs e)
+		private void IconBorder_MouseLeftButtonUp(object obj, MouseButtonEventArgs e)
 		{
-			if (e.Key == Key.Escape && this.Text.Length > 0) {
+			if (this.HasText)
+				this.Text = string.Empty;
+		}
+
+		#endregion
+
+		#region Overrides
+
+		DispatcherTimer timer;
+
+		protected override void OnTextChanged(TextChangedEventArgs e)
+		{
+			base.OnTextChanged(e);
+
+			HasText = this.Text.Length > 0;
+			if (timer == null)
+			{
+				timer = new DispatcherTimer();
+				timer.Tick += timer_Tick;
+			}
+			timer.Stop();
+			timer.Interval = this.UpdateDelay;
+			timer.Start();
+
+			UpdateWatermarkLabel();
+		}
+
+		private void UpdateWatermarkLabel()
+		{
+			Label wl = (Label)GetTemplateChild("WatermarkLabel");
+			if (wl != null)
+				wl.Visibility = HasText ? Visibility.Hidden : Visibility.Visible;
+		}
+
+		void timer_Tick(object sender, EventArgs e)
+		{
+			timer.Stop();
+			timer = null;
+			var textBinding = GetBindingExpression(TextProperty);
+			if (textBinding != null)
+			{
+				textBinding.UpdateSource();
+			}
+		}
+
+		protected override void OnLostFocus(RoutedEventArgs e)
+		{
+			UpdateWatermarkLabel();
+			base.OnLostFocus(e);
+		}
+
+		protected override void OnGotFocus(RoutedEventArgs e)
+		{
+			UpdateWatermarkLabel();
+			base.OnGotFocus(e);
+		}
+
+		public override void OnApplyTemplate()
+		{
+			base.OnApplyTemplate();
+
+			Border iconBorder = GetTemplateChild("PART_IconBorder") as Border;
+			if (iconBorder != null)
+			{
+				iconBorder.MouseLeftButtonUp += IconBorder_MouseLeftButtonUp;
+			}
+		}
+
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			if (e.Key == Key.Escape && this.Text.Length > 0)
+			{
 				this.Text = string.Empty;
 				e.Handled = true;
-			} else {
+			}
+			else
+			{
 				base.OnKeyDown(e);
 			}
 		}
-        #endregion
-    }
+		#endregion
+	}
 }

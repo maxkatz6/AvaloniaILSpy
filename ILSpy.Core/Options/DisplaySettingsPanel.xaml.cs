@@ -19,191 +19,201 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Media;
+using System.Windows.Threading;
 using System.Xml.Linq;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Data.Converters;
-using Avalonia.Input;
-using Avalonia.Input.Platform;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using Avalonia.Media;
-using Avalonia.Threading;
-using AvaloniaEdit;
-using AvaloniaEdit.Document;
+
+using ICSharpCode.ILSpyX.Settings;
 
 namespace ICSharpCode.ILSpy.Options
 {
-    /// <summary>
-    /// Interaction logic for DisplaySettingsPanel.xaml
-    /// </summary>
+	/// <summary>
+	/// Interaction logic for DisplaySettingsPanel.xaml
+	/// </summary>
 	[ExportOptionPage(Title = nameof(Properties.Resources.Display), Order = 20)]
-    public partial class DisplaySettingsPanel : UserControl, IOptionPage
+	public partial class DisplaySettingsPanel : UserControl, IOptionPage
 	{
-		internal ComboBox fontSelector;
-
 		public DisplaySettingsPanel()
 		{
 			InitializeComponent();
 
-            Task<FontFamily[]> task = new Task<FontFamily[]>(FontLoader);
+			DataObject.AddPastingHandler(tabSizeTextBox, OnPaste);
+			DataObject.AddPastingHandler(indentSizeTextBox, OnPaste);
+
+			Task<FontFamily[]> task = new Task<FontFamily[]>(FontLoader);
 			task.Start();
 			task.ContinueWith(
-				delegate(Task continuation) {
-					Dispatcher.UIThread.InvokeAsync(
+				delegate (Task continuation) {
+					App.Current.Dispatcher.Invoke(
+						DispatcherPriority.Normal,
 						(Action)(
-							async () => {
-								fontSelector.Items = task.Result;
-								if (continuation.Exception != null) {
-									foreach (var ex in continuation.Exception.InnerExceptions) {
-										await MessageBox.Show(ex.ToString());
+							() => {
+								fontSelector.ItemsSource = task.Result;
+								if (continuation.Exception != null)
+								{
+									foreach (var ex in continuation.Exception.InnerExceptions)
+									{
+										MessageBox.Show(ex.ToString());
 									}
 								}
-							}),
-						DispatcherPriority.Normal
+							})
 					);
 				}
 			);
 		}
 
-		private void InitializeComponent()
-		{
-			AvaloniaXamlLoader.Load(this);
-			fontSelector = this.FindControl<ComboBox>("fontSelector");
-            var textEditor = this.FindControl<TextEditor>("textEditor");
-
-            textEditor.Document = new TextDocument("AaBbCcXxYyZz".ToCharArray());
-        }
-
 		public void Load(ILSpySettings settings)
 		{
 			this.DataContext = LoadDisplaySettings(settings);
-        }
-
-        static DisplaySettings currentDisplaySettings;
-		
-		public static DisplaySettings CurrentDisplaySettings {
-			get {
-				return currentDisplaySettings ?? (currentDisplaySettings = LoadDisplaySettings(ILSpySettings.Load()));
-			}
 		}
-		
-		//static bool IsSymbolFont(FontFamily fontFamily)
-		//{
-		//	foreach (var tf in fontFamily.GetTypefaces()) {
-		//		GlyphTypeface glyph;
-		//		try {
-		//			if (tf.TryGetGlyphTypeface(out glyph))
-		//				return glyph.Symbol;
-		//		} catch (Exception) {
-		//			return true;
-		//		}
-		//	}
-		//	return false;
-		//}
-		
+
+		static bool IsSymbolFont(FontFamily fontFamily)
+		{
+			foreach (var tf in fontFamily.GetTypefaces())
+			{
+				GlyphTypeface glyph;
+				try
+				{
+					if (tf.TryGetGlyphTypeface(out glyph))
+						return glyph.Symbol;
+				}
+				catch (Exception)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		static FontFamily[] FontLoader()
 		{
-			// TODO: filter SymbolFonts
-			return FontManager.Current.GetInstalledFontFamilyNames().Select(x => new FontFamily(x)).ToArray();
+			return (from ff in Fonts.SystemFontFamilies
+					where !IsSymbolFont(ff)
+					orderby ff.Source
+					select ff).ToArray();
 		}
 
-		public static DisplaySettings LoadDisplaySettings(ILSpySettings settings)
+		public static DisplaySettingsViewModel LoadDisplaySettings(ILSpySettings settings)
 		{
 			XElement e = settings["DisplaySettings"];
-			var s = new DisplaySettings();
-			s.SelectedFont = new FontFamily((string)e.Attribute("Font") ?? FontManager.Current.DefaultFontFamilyName);
+			var s = new DisplaySettingsViewModel();
+			s.SelectedFont = new FontFamily((string)e.Attribute("Font") ?? "Consolas");
 			s.SelectedFontSize = (double?)e.Attribute("FontSize") ?? 10.0 * 4 / 3;
 			s.ShowLineNumbers = (bool?)e.Attribute("ShowLineNumbers") ?? false;
-            s.ShowDebugInfo = (bool?)e.Attribute("ShowDebugInfo") ?? false;
-            s.ShowMetadataTokens = (bool?) e.Attribute("ShowMetadataTokens") ?? false;
-            s.ShowMetadataTokensInBase10 = (bool?)e.Attribute("ShowMetadataTokensInBase10") ?? false;
-            s.EnableWordWrap = (bool?)e.Attribute("EnableWordWrap") ?? false;
+			s.ShowMetadataTokens = (bool?)e.Attribute("ShowMetadataTokens") ?? false;
+			s.ShowMetadataTokensInBase10 = (bool?)e.Attribute("ShowMetadataTokensInBase10") ?? false;
+			s.ShowDebugInfo = (bool?)e.Attribute("ShowDebugInfo") ?? false;
+			s.EnableWordWrap = (bool?)e.Attribute("EnableWordWrap") ?? false;
 			s.SortResults = (bool?)e.Attribute("SortResults") ?? true;
-            s.FoldBraces = (bool?)e.Attribute("FoldBraces") ?? false;
-            s.ExpandMemberDefinitions = (bool?)e.Attribute("ExpandMemberDefinitions") ?? false;
-            s.ExpandUsingDeclarations = (bool?)e.Attribute("ExpandUsingDeclarations") ?? false;
-            s.IndentationUseTabs = (bool?)e.Attribute("IndentationUseTabs") ?? true;
-            s.IndentationSize = (int?)e.Attribute("IndentationSize") ?? 4;
-            s.IndentationTabSize = (int?)e.Attribute("IndentationTabSize") ?? 4;
-            s.HighlightMatchingBraces = (bool?)e.Attribute("HighlightMatchingBraces") ?? true;
+			s.FoldBraces = (bool?)e.Attribute("FoldBraces") ?? false;
+			s.ExpandMemberDefinitions = (bool?)e.Attribute("ExpandMemberDefinitions") ?? false;
+			s.ExpandUsingDeclarations = (bool?)e.Attribute("ExpandUsingDeclarations") ?? false;
+			s.IndentationUseTabs = (bool?)e.Attribute("IndentationUseTabs") ?? true;
+			s.IndentationSize = (int?)e.Attribute("IndentationSize") ?? 4;
+			s.IndentationTabSize = (int?)e.Attribute("IndentationTabSize") ?? 4;
+			s.HighlightMatchingBraces = (bool?)e.Attribute("HighlightMatchingBraces") ?? true;
+			s.HighlightCurrentLine = (bool?)e.Attribute("HighlightCurrentLine") ?? false;
+			s.HideEmptyMetadataTables = (bool?)e.Attribute("HideEmptyMetadataTables") ?? true;
+			s.UseNestedNamespaceNodes = (bool?)e.Attribute("UseNestedNamespaceNodes") ?? false;
+			s.ShowRawOffsetsAndBytesBeforeInstruction = (bool?)e.Attribute("ShowRawOffsetsAndBytesBeforeInstruction") ?? false;
+			s.StyleWindowTitleBar = (bool?)e.Attribute("StyleWindowTitleBar") ?? false;
 
-            return s;
+			s.Theme = MainWindow.Instance.SessionSettings.Theme;
+
+			return s;
 		}
-		
+
 		public void Save(XElement root)
 		{
-			var s = (DisplaySettings)this.DataContext;
-			
+			var s = (DisplaySettingsViewModel)this.DataContext;
+
 			var section = new XElement("DisplaySettings");
-			section.SetAttributeValue("Font", s.SelectedFont.Name);
+			section.SetAttributeValue("Font", s.SelectedFont.Source);
 			section.SetAttributeValue("FontSize", s.SelectedFontSize);
 			section.SetAttributeValue("ShowLineNumbers", s.ShowLineNumbers);
-            section.SetAttributeValue("ShowDebugInfo", s.ShowDebugInfo);
-            section.SetAttributeValue("ShowMetadataTokens", s.ShowMetadataTokens);
-            section.SetAttributeValue("ShowMetadataTokensInBase10", s.ShowMetadataTokensInBase10);
-            section.SetAttributeValue("EnableWordWrap", s.EnableWordWrap);
+			section.SetAttributeValue("ShowMetadataTokens", s.ShowMetadataTokens);
+			section.SetAttributeValue("ShowMetadataTokensInBase10", s.ShowMetadataTokensInBase10);
+			section.SetAttributeValue("ShowDebugInfo", s.ShowDebugInfo);
+			section.SetAttributeValue("EnableWordWrap", s.EnableWordWrap);
 			section.SetAttributeValue("SortResults", s.SortResults);
-            section.SetAttributeValue("FoldBraces", s.FoldBraces);
-            section.SetAttributeValue("ExpandMemberDefinitions", s.ExpandMemberDefinitions);
-            section.SetAttributeValue("ExpandUsingDeclarations", s.ExpandUsingDeclarations);
-            section.SetAttributeValue("IndentationUseTabs", s.IndentationUseTabs);
-            section.SetAttributeValue("IndentationSize", s.IndentationSize);
-            section.SetAttributeValue("IndentationTabSize", s.IndentationTabSize);
-            section.SetAttributeValue("HighlightMatchingBraces", s.HighlightMatchingBraces);
+			section.SetAttributeValue("FoldBraces", s.FoldBraces);
+			section.SetAttributeValue("ExpandMemberDefinitions", s.ExpandMemberDefinitions);
+			section.SetAttributeValue("ExpandUsingDeclarations", s.ExpandUsingDeclarations);
+			section.SetAttributeValue("IndentationUseTabs", s.IndentationUseTabs);
+			section.SetAttributeValue("IndentationSize", s.IndentationSize);
+			section.SetAttributeValue("IndentationTabSize", s.IndentationTabSize);
+			section.SetAttributeValue("HighlightMatchingBraces", s.HighlightMatchingBraces);
+			section.SetAttributeValue("HighlightCurrentLine", s.HighlightCurrentLine);
+			section.SetAttributeValue("HideEmptyMetadataTables", s.HideEmptyMetadataTables);
+			section.SetAttributeValue("UseNestedNamespaceNodes", s.UseNestedNamespaceNodes);
+			section.SetAttributeValue("ShowRawOffsetsAndBytesBeforeInstruction", s.ShowRawOffsetsAndBytesBeforeInstruction);
+			section.SetAttributeValue("StyleWindowTitleBar", s.StyleWindowTitleBar);
 
-            XElement existingElement = root.Element("DisplaySettings");
-			if (existingElement != null)
-				existingElement.ReplaceWith(section);
-			else
-				root.Add(section);
+			MainWindow.Instance.SessionSettings.Theme = s.Theme;
+			var sessionSettings = MainWindow.Instance.SessionSettings.ToXml();
 
-			if (currentDisplaySettings != null)
-				currentDisplaySettings.CopyValues(s);
+			MainWindow.Instance.CurrentDisplaySettings.CopyValues(s);
+
+			Update(section);
+			Update(sessionSettings);
+
+			void Update(XElement element)
+			{
+				var existingElement = root.Element(element.Name);
+				if (existingElement != null)
+					existingElement.ReplaceWith(element);
+				else
+					root.Add(element);
+			}
 		}
 
-        private void TextBox_PreviewTextInput(object sender, TextInputEventArgs e)
-        {
-            if (!e.Text.All(char.IsDigit))
-                e.Handled = true;
-        }
-    }
+		private void TextBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+		{
+			if (!e.Text.All(char.IsDigit))
+				e.Handled = true;
+		}
 
+		private void OnPaste(object sender, DataObjectPastingEventArgs e)
+		{
+			if (!e.SourceDataObject.GetDataPresent(DataFormats.UnicodeText, true))
+				return;
+			var text = (string)e.SourceDataObject.GetData(DataFormats.UnicodeText, true) ?? string.Empty;
+			if (!text.All(char.IsDigit))
+				e.CancelCommand();
+		}
 
-    public class FontSizeConverter : IValueConverter
+		public void LoadDefaults()
+		{
+			MainWindow.Instance.CurrentDisplaySettings.CopyValues(new DisplaySettingsViewModel());
+			this.DataContext = MainWindow.Instance.CurrentDisplaySettings;
+		}
+	}
+
+	public class FontSizeConverter : IValueConverter
 	{
-		public static readonly FontSizeConverter Instance = new FontSizeConverter();
-
 		public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            if (value == null) {
-                return 11.0;
-            }
-
-            if (value is double d) {
+		{
+			if (value is double d)
+			{
 				return Math.Round(d / 4 * 3);
 			}
-			
+
 			throw new NotImplementedException();
 		}
-		
+
 		public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            if (value == null) {
-                return 11.0 * 4 / 3;
-            }
+		{
+			if (value is string s)
+			{
+				if (double.TryParse(s, out double d))
+					return d * 4 / 3;
+				return 11.0 * 4 / 3;
+			}
 
-            if (value is double dd) {
-                return dd * 4 / 3;
-            }
-
-            if (value is string s) {
-                if (double.TryParse(s, out double d))
-                    return d * 4 / 3;
-                return 11.0 * 4 / 3;
-            }
-
-            throw new NotImplementedException();
-        }
+			throw new NotImplementedException();
+		}
 	}
 }

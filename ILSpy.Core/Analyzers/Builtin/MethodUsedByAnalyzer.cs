@@ -22,6 +22,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
+
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
@@ -37,41 +38,66 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 	{
 		const GetMemberOptions Options = GetMemberOptions.IgnoreInheritedMembers | GetMemberOptions.ReturnMemberDefinitions;
 
-		public bool Show(ISymbol symbol) => symbol is IMethod method && !method.IsVirtual;
+		public bool Show(ISymbol symbol) => symbol is IMethod method && !method.IsVirtual && method.ParentModule is not null;
 
 		public IEnumerable<ISymbol> Analyze(ISymbol analyzedSymbol, AnalyzerContext context)
 		{
 			Debug.Assert(analyzedSymbol is IMethod);
-			var scope = context.GetScopeOf((IEntity)analyzedSymbol);
-			foreach (var type in scope.GetTypesInScope(context.CancellationToken)) {
-				var mappingInfo = context.Language.GetCodeMappingInfo(type.ParentModule.PEFile, type.MetadataToken);
+
+			var analyzedMethod = (IMethod)analyzedSymbol;
+			var analyzedBaseMethod = (IMethod)InheritanceHelper.GetBaseMember(analyzedMethod);
+			var mapping = context.Language
+				.GetCodeMappingInfo(analyzedMethod.ParentModule.PEFile,
+					analyzedMethod.DeclaringTypeDefinition.MetadataToken);
+
+			var parentMethod = mapping.GetParentMethod((MethodDefinitionHandle)analyzedMethod.MetadataToken);
+			if (parentMethod != analyzedMethod.MetadataToken)
+				yield return ((MetadataModule)analyzedMethod.ParentModule).GetDefinition(parentMethod);
+
+			var scope = context.GetScopeOf(analyzedMethod);
+			foreach (var type in scope.GetTypesInScope(context.CancellationToken))
+			{
+				var parentModule = (MetadataModule)type.ParentModule;
+				mapping = null;
 				var methods = type.GetMembers(m => m is IMethod, Options).OfType<IMethod>();
-				foreach (var method in methods) {
-					if (IsUsedInMethod((IMethod)analyzedSymbol, method, mappingInfo, context))
-						yield return method;
-				}
-
-				foreach (var property in type.Properties) {
-					if (property.CanGet && IsUsedInMethod((IMethod)analyzedSymbol, property.Getter, mappingInfo, context)) {
-						yield return property;
-						continue;
-					}
-					if (property.CanSet && IsUsedInMethod((IMethod)analyzedSymbol, property.Setter, mappingInfo, context)) {
-						yield return property;
-						continue;
+				foreach (var method in methods)
+				{
+					if (IsUsedInMethod(analyzedMethod, analyzedBaseMethod, method, context))
+					{
+						mapping ??= context.Language.GetCodeMappingInfo(parentModule.PEFile, type.MetadataToken);
+						var parent = mapping.GetParentMethod((MethodDefinitionHandle)method.MetadataToken);
+						yield return parentModule.GetDefinition(parent);
 					}
 				}
 
-				foreach (var @event in type.Events) {
-					if (@event.CanAdd && IsUsedInMethod((IMethod)analyzedSymbol, @event.AddAccessor, mappingInfo, context)) {
+				foreach (var property in type.Properties)
+				{
+					if (property.CanGet && IsUsedInMethod(analyzedMethod, analyzedBaseMethod, property.Getter, context))
+					{
+						yield return property;
+						continue;
+					}
+					if (property.CanSet && IsUsedInMethod(analyzedMethod, analyzedBaseMethod, property.Setter, context))
+					{
+						yield return property;
+						continue;
+					}
+				}
+
+				foreach (var @event in type.Events)
+				{
+					if (@event.CanAdd && IsUsedInMethod(analyzedMethod, analyzedBaseMethod, @event.AddAccessor, context))
+					{
 						yield return @event;
 						continue;
 					}
-					if (@event.CanRemove && IsUsedInMethod((IMethod)analyzedSymbol, @event.RemoveAccessor, mappingInfo, context)) {
+					if (@event.CanRemove && IsUsedInMethod(analyzedMethod, analyzedBaseMethod, @event.RemoveAccessor, context))
+					{
 						yield return @event;
 						continue;
 					}
-					if (@event.CanInvoke && IsUsedInMethod((IMethod)analyzedSymbol, @event.InvokeAccessor, mappingInfo, context)) {
+					if (@event.CanInvoke && IsUsedInMethod(analyzedMethod, analyzedBaseMethod, @event.InvokeAccessor, context))
+					{
 						yield return @event;
 						continue;
 					}
@@ -79,12 +105,12 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 			}
 		}
 
-		bool IsUsedInMethod(IMethod analyzedEntity, IMethod method, CodeMappingInfo mappingInfo, AnalyzerContext context)
+		bool IsUsedInMethod(IMethod analyzedEntity, IMethod analyzedBaseMethod, IMethod method, AnalyzerContext context)
 		{
-			return ScanMethodBody(analyzedEntity, method, context.GetMethodBody(method));
+			return ScanMethodBody(analyzedEntity, method, analyzedBaseMethod, context.GetMethodBody(method));
 		}
 
-		static bool ScanMethodBody(IMethod analyzedMethod, IMethod method, MethodBodyBlock methodBody)
+		static bool ScanMethodBody(IMethod analyzedMethod, IMethod method, IMethod analyzedBaseMethod, MethodBodyBlock methodBody)
 		{
 			if (methodBody == null)
 				return false;
@@ -92,63 +118,78 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 			var mainModule = (MetadataModule)method.ParentModule;
 			var blob = methodBody.GetILReader();
 
-			var baseMethod = InheritanceHelper.GetBaseMember(analyzedMethod);
 			var genericContext = new Decompiler.TypeSystem.GenericContext(); // type parameters don't matter for this analyzer
 
-			while (blob.RemainingBytes > 0) {
+			while (blob.RemainingBytes > 0)
+			{
 				ILOpCode opCode;
-				try {
+				try
+				{
 					opCode = blob.DecodeOpCode();
-                    if (!IsSupportedOpCode(opCode)) {
+					if (!IsSupportedOpCode(opCode))
+					{
 						ILParser.SkipOperand(ref blob, opCode);
 						continue;
 					}
-				} catch (BadImageFormatException) {
+				}
+				catch (BadImageFormatException)
+				{
 					return false; // unexpected end of blob
 				}
 				var member = MetadataTokenHelpers.EntityHandleOrNil(blob.ReadInt32());
-				if (member.IsNil || !member.Kind.IsMemberKind()) continue;
+				if (!AnalyzerHelpers.IsPossibleReferenceTo(member, mainModule.PEFile, analyzedMethod))
+				{
+					if (analyzedBaseMethod == null || !AnalyzerHelpers.IsPossibleReferenceTo(member, mainModule.PEFile, analyzedBaseMethod))
+					{
+						continue;
+					}
+				}
 
 				IMember m;
-				try {
+				try
+				{
 					m = (mainModule.ResolveEntity(member, genericContext) as IMember)?.MemberDefinition;
-				} catch (BadImageFormatException) {
+				}
+				catch (BadImageFormatException)
+				{
 					continue;
 				}
 				if (m == null)
 					continue;
 
-				if (opCode == ILOpCode.Callvirt && baseMethod != null) {
-					if (IsSameMember(baseMethod, m)) {
+				if (opCode == ILOpCode.Callvirt && analyzedBaseMethod != null)
+				{
+					if (IsSameMember(analyzedBaseMethod, m))
+					{
 						return true;
 					}
-				} else {
-					if (IsSameMember(analyzedMethod, m)) {
-						return true;
-					}
+				}
+				if (IsSameMember(analyzedMethod, m))
+				{
+					return true;
 				}
 			}
 
 			return false;
 		}
 
-        static bool IsSupportedOpCode(ILOpCode opCode)
-        {
-            switch (opCode)
-            {
-                case ILOpCode.Call:
-                case ILOpCode.Callvirt:
-                case ILOpCode.Ldtoken:
-                case ILOpCode.Ldftn:
-                case ILOpCode.Ldvirtftn:
-                case ILOpCode.Newobj:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+		static bool IsSupportedOpCode(ILOpCode opCode)
+		{
+			switch (opCode)
+			{
+				case ILOpCode.Call:
+				case ILOpCode.Callvirt:
+				case ILOpCode.Ldtoken:
+				case ILOpCode.Ldftn:
+				case ILOpCode.Ldvirtftn:
+				case ILOpCode.Newobj:
+					return true;
+				default:
+					return false;
+			}
+		}
 
-        static bool IsSameMember(IMember analyzedMethod, IMember m)
+		static bool IsSameMember(IMember analyzedMethod, IMember m)
 		{
 			return m.MetadataToken == analyzedMethod.MetadataToken
 				&& m.ParentModule.PEFile == analyzedMethod.ParentModule.PEFile;

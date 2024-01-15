@@ -17,17 +17,16 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Reflection;
 using System.Reflection.Metadata;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
+using System.Windows.Media;
+
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.Metadata;
-using ICSharpCode.Decompiler.TypeSystem;
-using SRM = System.Reflection.Metadata;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
+	using ICSharpCode.Decompiler.TypeSystem;
+	using ICSharpCode.ILSpyX;
+
 	/// <summary>
 	/// Represents a property in the TreeView.
 	/// </summary>
@@ -50,16 +49,23 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public IProperty PropertyDefinition { get; }
 
-		public override object Text => GetText(PropertyDefinition, Language) + PropertyDefinition.MetadataToken.ToSuffixString();
+		public override object Text => GetText(GetPropertyDefinition(), Language) + GetSuffixString(PropertyDefinition);
+
+		private IProperty GetPropertyDefinition()
+		{
+			return ((MetadataModule)PropertyDefinition.ParentModule.PEFile
+				?.GetTypeSystemWithCurrentOptionsOrNull()
+				?.MainModule)?.GetDefinition((PropertyDefinitionHandle)PropertyDefinition.MetadataToken) ?? PropertyDefinition;
+		}
 
 		public static object GetText(IProperty property, Language language)
 		{
 			return language.PropertyToString(property, false, false, false);
 		}
 
-		public override object Icon => GetIcon(PropertyDefinition);
+		public override object Icon => GetIcon(GetPropertyDefinition());
 
-		public static IBitmap GetIcon(IProperty property)
+		public static ImageSource GetIcon(IProperty property)
 		{
 			return Images.GetIcon(property.IsIndexer ? MemberIcon.Indexer : MemberIcon.Property,
 				MethodTreeNode.GetOverlayIcon(property.Accessibility), property.IsStatic);
@@ -67,10 +73,10 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override FilterResult Filter(FilterSettings settings)
 		{
-            if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
-                return FilterResult.Hidden;
-            if (settings.SearchTermMatches(PropertyDefinition.Name) && (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(PropertyDefinition)))
-                return FilterResult.Match;
+			if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
+				return FilterResult.Hidden;
+			if (settings.SearchTermMatches(PropertyDefinition.Name) && (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(PropertyDefinition)))
+				return FilterResult.Match;
 			else
 				return FilterResult.Hidden;
 		}
@@ -82,7 +88,8 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override bool IsPublicAPI {
 			get {
-				switch (PropertyDefinition.Accessibility) {
+				switch (GetPropertyDefinition().Accessibility)
+				{
 					case Accessibility.Public:
 					case Accessibility.ProtectedOrInternal:
 					case Accessibility.Protected:
@@ -94,5 +101,10 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		}
 
 		IEntity IMemberTreeNode.Member => PropertyDefinition;
+
+		public override string ToString()
+		{
+			return Languages.ILLanguage.PropertyToString(PropertyDefinition, false, false, false);
+		}
 	}
 }

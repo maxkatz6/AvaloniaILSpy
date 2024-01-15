@@ -21,10 +21,12 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Threading.Tasks;
 
-using AvaloniaEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.TextView;
 using ICSharpCode.ILSpy.TreeNodes;
+using ICSharpCode.ILSpy.ViewModels;
+using ICSharpCode.ILSpyX.Abstractions;
 
 namespace ICSharpCode.ILSpy.Xaml
 {
@@ -33,40 +35,29 @@ namespace ICSharpCode.ILSpy.Xaml
 	{
 		private readonly static string[] xmlFileExtensions = { ".xml", ".xsd", ".xslt" };
 
-		public ILSpyTreeNode CreateNode(Resource resource)
+		public ITreeNode CreateNode(Resource resource)
 		{
-			Stream stream = resource.TryOpenStream();
-			if (stream == null)
-				return null;
-			return CreateNode(resource.Name, stream);
-		}
-		
-		public ILSpyTreeNode CreateNode(string key, object data)
-		{
-			if (!(data is Stream))
-			    return null;
+			string key = resource.Name;
 			foreach (string fileExt in xmlFileExtensions)
 			{
 				if (key.EndsWith(fileExt, StringComparison.OrdinalIgnoreCase))
-					return new XmlResourceEntryNode(key, (Stream)data);
+					return new XmlResourceEntryNode(key, resource.TryOpenStream);
 			}
 			return null;
 		}
 	}
-	
+
 	sealed class XmlResourceEntryNode : ResourceEntryNode
 	{
 		string xml;
-		
-		public XmlResourceEntryNode(string key, Stream data)
+
+		public XmlResourceEntryNode(string key, Func<Stream> data)
 			: base(key, data)
 		{
 		}
-		
-		public override object Icon
-		{
-			get
-			{
+
+		public override object Icon {
+			get {
 				string text = (string)Text;
 				if (text.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
 					return Images.ResourceXml;
@@ -79,30 +70,43 @@ namespace ICSharpCode.ILSpy.Xaml
 			}
 		}
 
-		public override bool View(DecompilerTextView textView)
+		public override bool View(TabPageModel tabPage)
 		{
-			AvaloniaEditTextOutput output = new AvaloniaEditTextOutput();
+			AvalonEditTextOutput output = new AvalonEditTextOutput();
 			IHighlightingDefinition highlighting = null;
-			
-			textView.RunWithCancellation(
+
+			tabPage.ShowTextView(textView => textView.RunWithCancellation(
 				token => Task.Factory.StartNew(
 					() => {
-						try {
+						try
+						{
 							// cache read XAML because stream will be closed after first read
-							if (xml == null) {
-								using (var reader = new StreamReader(Data)) {
+							if (xml == null)
+							{
+								using var data = OpenStream();
+								if (data == null)
+								{
+									output.Write("ILSpy: Failed opening resource stream.");
+									output.WriteLine();
+									return output;
+								}
+								using (var reader = new StreamReader(data))
+								{
 									xml = reader.ReadToEnd();
 								}
 							}
 							output.Write(xml);
 							highlighting = HighlightingManager.Instance.GetDefinitionByExtension(".xml");
 						}
-						catch (Exception ex) {
+						catch (Exception ex)
+						{
 							output.Write(ex.ToString());
 						}
 						return output;
 					}, token)
-			).Then(t => textView.ShowNode(t, this, highlighting)).HandleExceptions();
+			).Then(t => textView.ShowNode(t, this, highlighting))
+			.HandleExceptions());
+			tabPage.SupportsLanguageSwitching = false;
 			return true;
 		}
 	}

@@ -20,14 +20,18 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using Avalonia.Controls;
-using AvaloniaEdit.Highlighting;
-using AvaloniaEdit.Utils;
+
+using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Utils;
 using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpy.TextView;
+using ICSharpCode.ILSpy.ViewModels;
+using ICSharpCode.ILSpyX;
+using ICSharpCode.ILSpyX.Abstractions;
+
 using Microsoft.Win32;
 
 namespace ICSharpCode.ILSpy.TreeNodes
@@ -36,101 +40,92 @@ namespace ICSharpCode.ILSpy.TreeNodes
 	/// This is the default resource entry tree node, which is used if no specific
 	/// <see cref="IResourceNodeFactory"/> exists for the given resource type. 
 	/// </summary>
-	public class ResourceTreeNode : ILSpyTreeNode
+	public class ResourceTreeNode : ILSpyTreeNode, IResourcesFileTreeNode
 	{
-		readonly Resource r;
-		
 		public ResourceTreeNode(Resource r)
 		{
 			if (r == null)
 				throw new ArgumentNullException(nameof(r));
-			this.r = r;
+			this.Resource = r;
 		}
-		
-		public Resource Resource {
-			get { return r; }
-		}
-		
-		public override object Text {
-			get { return r.Name; }
-		}
-		
-		public override object Icon {
-			get { return Images.Resource; }
-		}
-		
+
+		public Resource Resource { get; }
+
+		public override object Text => Language.EscapeName(Resource.Name);
+
+		public override object Icon => Images.Resource;
+
 		public override FilterResult Filter(FilterSettings settings)
-        {
-            if (settings.ShowApiLevel == ApiVisibility.PublicOnly && (r.Attributes & ManifestResourceAttributes.VisibilityMask) == ManifestResourceAttributes.Private)
-                return FilterResult.Hidden;
-			if (settings.SearchTermMatches(r.Name))
+		{
+			if (settings.ShowApiLevel == ApiVisibility.PublicOnly && (Resource.Attributes & ManifestResourceAttributes.VisibilityMask) == ManifestResourceAttributes.Private)
+				return FilterResult.Hidden;
+			if (settings.SearchTermMatches(Resource.Name))
 				return FilterResult.Match;
 			else
 				return FilterResult.Hidden;
 		}
-		
+
 		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
 		{
-			language.WriteCommentLine(output, string.Format("{0} ({1}, {2})", r.Name, r.ResourceType, r.Attributes));
-			
+			var sizeInBytes = Resource.TryGetLength();
+			var sizeInBytesText = sizeInBytes == null ? "" : ", " + sizeInBytes + " bytes";
+			language.WriteCommentLine(output, $"{Resource.Name} ({Resource.ResourceType}, {Resource.Attributes}{sizeInBytesText})");
+
 			ISmartTextOutput smartOutput = output as ISmartTextOutput;
-			if (smartOutput != null) {
-                smartOutput.AddButton(Images.Save, Resources.Save, delegate { Save(MainWindow.Instance.TextView); });
+			if (smartOutput != null)
+			{
+				smartOutput.AddButton(Images.Save, Resources.Save, delegate { Save(Docking.DockWorkspace.Instance.ActiveTabPage); });
 				output.WriteLine();
 			}
 		}
-		
-		public override bool View(DecompilerTextView textView)
+
+		public override bool View(TabPageModel tabPage)
 		{
 			Stream s = Resource.TryOpenStream();
-			if (s != null && s.Length < DecompilerTextView.DefaultOutputLengthLimit) {
+			if (s != null && s.Length < DecompilerTextView.DefaultOutputLengthLimit)
+			{
 				s.Position = 0;
 				FileType type = GuessFileType.DetectFileType(s);
-				if (type != FileType.Binary) {
+				if (type != FileType.Binary)
+				{
 					s.Position = 0;
-					AvaloniaEditTextOutput output = new AvaloniaEditTextOutput();
-                    output.Write(new StreamReader(s, Encoding.UTF8).ReadToEnd());
+					AvalonEditTextOutput output = new AvalonEditTextOutput();
+					output.Title = Resource.Name;
+					output.Write(FileReader.OpenStream(s, Encoding.UTF8).ReadToEnd());
 					string ext;
 					if (type == FileType.Xml)
 						ext = ".xml";
 					else
-						ext = Path.GetExtension(DecompilerTextView.CleanUpName(Resource.Name));
-					textView.ShowNode(output, this, HighlightingManager.Instance.GetDefinitionByExtension(ext));
+						ext = Path.GetExtension(WholeProjectDecompiler.SanitizeFileName(Resource.Name));
+					tabPage.ShowTextView(textView => textView.ShowNode(output, this, HighlightingManager.Instance.GetDefinitionByExtension(ext)));
+					tabPage.SupportsLanguageSwitching = false;
 					return true;
 				}
 			}
 			return false;
 		}
-		
-	    public override async Task<bool> Save(DecompilerTextView textView)
+
+		public override bool Save(TabPageModel tabPage)
 		{
 			Stream s = Resource.TryOpenStream();
 			if (s == null)
 				return false;
-            SaveFileDialog dlg = new SaveFileDialog();
-			dlg.Title = "Save file";
-            dlg.InitialFileName = DecompilerTextView.CleanUpName(Resource.Name);
-            var filename = await dlg.ShowAsync(App.Current.GetMainWindow());
-            if (!string.IsNullOrEmpty(filename))
-            {
-                s.Position = 0;
-                using (var fs = File.OpenWrite(filename))
-                {
-                    s.CopyTo(fs);
-                }
+			SaveFileDialog dlg = new SaveFileDialog();
+			dlg.FileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(Resource.Name));
+			if (dlg.ShowDialog() == true)
+			{
+				s.Position = 0;
+				using (var fs = dlg.OpenFile())
+				{
+					s.CopyTo(fs);
+				}
 			}
 			return true;
 		}
-		
+
 		public static ILSpyTreeNode Create(Resource resource)
 		{
-			ILSpyTreeNode result = null;
-			foreach (var factory in App.ExportProvider.GetExportedValues<IResourceNodeFactory>()) {
-				result = factory.CreateNode(resource);
-				if (result != null)
-					break;
-			}
-			return result ?? new ResourceTreeNode(resource);
+			return ResourceEntryNode.Create(resource);
 		}
 	}
 }

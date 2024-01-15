@@ -17,115 +17,186 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Avalonia.Media.Imaging;
-using Avalonia;
 using System.Collections.Generic;
-using Avalonia.Controls.Platform.Surfaces;
-using Avalonia.Platform;
+using System.IO;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace ICSharpCode.ILSpy
 {
-    static class Images
+	static class Images
 	{
-		static IBitmap LoadBitmap(string name)
+		static ImageSource Load(string icon)
 		{
-			Bitmap image = new Bitmap("Images/" + name + ".png");
-			//image.Freeze();
+			var image = new DrawingImage(LoadDrawingGroup(null, "Images/" + icon));
+			if (image.CanFreeze)
+			{
+				image.Freeze();
+			}
+
 			return image;
 		}
-		
-		public static readonly IBitmap Breakpoint = LoadBitmap("Breakpoint");
-		public static readonly IBitmap CurrentLine = LoadBitmap("CurrentLine");
 
-		public static readonly IBitmap ViewCode = LoadBitmap("ViewCode");
-		public static readonly IBitmap Save = LoadBitmap("SaveFile");
-		public static readonly IBitmap OK = LoadBitmap("OK");
+		public static readonly ImageSource ILSpyIcon = new BitmapImage(new Uri("pack://application:,,,/ILSpy;component/images/ILSpy.ico"));
 
-		public static readonly IBitmap Delete = LoadBitmap("Delete");
-		public static readonly IBitmap Search = LoadBitmap("Search");
+		public static readonly ImageSource ViewCode = Load("ViewCode");
+		public static readonly ImageSource Save = Load("Save");
+		public static readonly ImageSource OK = Load("OK");
 
-		public static readonly IBitmap Assembly = LoadBitmap("Assembly");
-		public static readonly IBitmap AssemblyWarning = LoadBitmap("AssemblyWarning");
-		public static readonly IBitmap AssemblyLoading = LoadBitmap("FindAssembly");
+		public static readonly ImageSource Delete = Load("Delete");
+		public static readonly ImageSource Search = Load("Search");
 
-		public static readonly IBitmap Library = LoadBitmap("Library");
-		public static readonly IBitmap Namespace = LoadBitmap("NameSpace");
+		public static readonly ImageSource Assembly = Load("Assembly");
+		public static readonly ImageSource AssemblyWarning = Load("AssemblyWarning");
+		public static readonly ImageSource FindAssembly = Load("FindAssembly");
 
-		public static readonly IBitmap ReferenceFolderOpen = LoadBitmap("ReferenceFolder.Open");
-		public static readonly IBitmap ReferenceFolderClosed = LoadBitmap("ReferenceFolder.Closed");
+		public static readonly ImageSource Library = Load("Library");
+		public static readonly ImageSource Namespace = Load("Namespace");
 
-		public static readonly IBitmap SubTypes = LoadBitmap("SubTypes");
-		public static readonly IBitmap SuperTypes = LoadBitmap("SuperTypes");
+		public static readonly ImageSource ReferenceFolder = Load("ReferenceFolder");
+		public static readonly ImageSource NuGet = Load(null, "Images/NuGet.png");
+		public static readonly ImageSource MetadataFile = Load("MetadataFile");
+		public static readonly ImageSource ProgramDebugDatabase = Load("ProgramDebugDatabase");
 
-		public static readonly IBitmap FolderOpen = LoadBitmap("Folder.Open");
-		public static readonly IBitmap FolderClosed = LoadBitmap("Folder.Closed");
+		public static readonly ImageSource Metadata = Load("Metadata");
+		public static readonly ImageSource Heap = Load("Heap");
+		public static readonly ImageSource Header = Load("Header");
+		public static readonly ImageSource MetadataTable = Load("MetadataTable");
+		public static readonly ImageSource MetadataTableGroup = Load("MetadataTableGroup");
+		public static readonly ImageSource ListFolder = Load("ListFolder");
+		public static readonly ImageSource ListFolderOpen = Load("ListFolder.Open");
 
-		public static readonly IBitmap Resource = LoadBitmap("Resource");
-		public static readonly IBitmap ResourceImage = LoadBitmap("ResourceImage");
-		public static readonly IBitmap ResourceResourcesFile = LoadBitmap("ResourceResourcesFile");
-		public static readonly IBitmap ResourceXml = LoadBitmap("ResourceXml");
-		public static readonly IBitmap ResourceXsd = LoadBitmap("ResourceXsd");
-		public static readonly IBitmap ResourceXslt = LoadBitmap("ResourceXslt");
+		public static readonly ImageSource SubTypes = Load("SubTypes");
+		public static readonly ImageSource SuperTypes = Load("SuperTypes");
 
-		public static readonly IBitmap Class = LoadBitmap("Class");
-		public static readonly IBitmap Struct = LoadBitmap("Struct");
-		public static readonly IBitmap Interface = LoadBitmap("Interface");
-		public static readonly IBitmap Delegate = LoadBitmap("Delegate");
-		public static readonly IBitmap Enum = LoadBitmap("Enum");
-		public static readonly IBitmap StaticClass = LoadBitmap("StaticClass");
+		public static readonly ImageSource FolderOpen = Load("Folder.Open");
+		public static readonly ImageSource FolderClosed = Load("Folder.Closed");
 
+		public static readonly ImageSource Resource = Load("Resource");
+		public static readonly ImageSource ResourceImage = Load("ResourceImage");
+		public static readonly ImageSource ResourceResourcesFile = Load("ResourceResourcesFile");
+		public static readonly ImageSource ResourceXml = Load("ResourceXml");
+		public static readonly ImageSource ResourceXsd = Load("ResourceXslt");
+		public static readonly ImageSource ResourceXslt = Load("ResourceXslt");
 
-		public static readonly IBitmap Field = LoadBitmap("Field");
-		public static readonly IBitmap FieldReadOnly = LoadBitmap("FieldReadOnly");
-		public static readonly IBitmap Literal = LoadBitmap("Literal");
-		public static readonly IBitmap EnumValue = LoadBitmap("EnumValue");
+		public static readonly ImageSource Class = Load("Class");
+		public static readonly ImageSource Struct = Load("Struct");
+		public static readonly ImageSource Interface = Load("Interface");
+		public static readonly ImageSource Delegate = Load("Delegate");
+		public static readonly ImageSource Enum = Load("Enum");
 
-		public static readonly IBitmap Method = LoadBitmap("Method");
-		public static readonly IBitmap Constructor = LoadBitmap("Constructor");
-		public static readonly IBitmap VirtualMethod = LoadBitmap("VirtualMethod");
-		public static readonly IBitmap Operator = LoadBitmap("Operator");
-		public static readonly IBitmap ExtensionMethod = LoadBitmap("ExtensionMethod");
-		public static readonly IBitmap PInvokeMethod = LoadBitmap("PInvokeMethod");
+		public static readonly ImageSource Field = Load("Field");
+		public static readonly ImageSource FieldReadOnly = Load("FieldReadOnly");
+		public static readonly ImageSource Literal = Load("Literal");
+		public static readonly ImageSource EnumValue = Load("EnumValue");
 
-		public static readonly IBitmap Property = LoadBitmap("Property");
-		public static readonly IBitmap Indexer = LoadBitmap("Indexer");
+		public static readonly ImageSource Method = Load("Method");
+		public static readonly ImageSource Constructor = Load("Constructor");
+		public static readonly ImageSource VirtualMethod = Load("VirtualMethod");
+		public static readonly ImageSource Operator = Load("Operator");
+		public static readonly ImageSource ExtensionMethod = Load("ExtensionMethod");
+		public static readonly ImageSource PInvokeMethod = Load("PInvokeMethod");
 
-		public static readonly IBitmap Event = LoadBitmap("Event");
+		public static readonly ImageSource Property = Load("Property");
+		public static readonly ImageSource Indexer = Load("Indexer");
 
-		private static readonly IBitmap OverlayProtected = LoadBitmap("OverlayProtected");
-		private static readonly IBitmap OverlayInternal = LoadBitmap("OverlayInternal");
-		private static readonly IBitmap OverlayProtectedInternal = LoadBitmap("OverlayProtectedInternal");
-		private static readonly IBitmap OverlayPrivate = LoadBitmap("OverlayPrivate");
-		private static readonly IBitmap OverlayPrivateProtected = LoadBitmap("OverlayPrivateProtected");
-		private static readonly IBitmap OverlayCompilerControlled = LoadBitmap("OverlayCompilerControlled");
+		public static readonly ImageSource Event = Load("Event");
 
-		private static readonly IBitmap OverlayStatic = LoadBitmap("OverlayStatic");
+		private static readonly ImageSource OverlayProtected = Load("OverlayProtected");
+		private static readonly ImageSource OverlayInternal = Load("OverlayInternal");
+		private static readonly ImageSource OverlayProtectedInternal = Load("OverlayProtectedInternal");
+		private static readonly ImageSource OverlayPrivate = Load("OverlayPrivate");
+		private static readonly ImageSource OverlayPrivateProtected = Load("OverlayPrivateProtected");
+		private static readonly ImageSource OverlayCompilerControlled = Load("OverlayCompilerControlled");
 
-		public static IBitmap LoadImage(object part, string icon)
+		private static readonly ImageSource OverlayStatic = Load("OverlayStatic");
+
+		public static ImageSource Load(object part, string icon)
 		{
-            IBitmap image;
-            var assembly = part.GetType().Assembly;
-			if (assembly == typeof(Images).Assembly) {
-				image = new Bitmap(icon);
-			} else {
+			if (icon.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+				return LoadImage(part, icon);
+			Uri uri = GetUri(part, icon + ".xaml");
+			if (ResourceExists(uri))
+			{
+				var image = new DrawingImage(LoadDrawingGroup(part, icon));
+				if (image.CanFreeze)
+				{
+					image.Freeze();
+				}
+				return image;
+			}
+			return LoadImage(part, icon + ".png");
+		}
+
+		static BitmapImage LoadImage(object part, string icon)
+		{
+			Uri uri = GetUri(part, icon);
+			BitmapImage image = new BitmapImage(uri);
+			if (image.CanFreeze)
+			{
+				image.Freeze();
+			}
+			return image;
+		}
+
+		public static Drawing LoadDrawingGroup(object part, string icon)
+		{
+			return (Drawing)Application.LoadComponent(GetUri(part, icon + ".xaml", absolute: false));
+		}
+
+		private static Uri GetUri(object part, string icon, bool absolute = true)
+		{
+			Uri uri;
+			var assembly = part?.GetType().Assembly;
+			string prefix;
+			UriKind kind;
+			if (absolute)
+			{
+				prefix = "pack://application:,,,/";
+				kind = UriKind.Absolute;
+			}
+			else
+			{
+				prefix = "/";
+				kind = UriKind.Relative;
+			}
+			if (part == null || assembly == typeof(Images).Assembly)
+			{
+				uri = new Uri(prefix + icon, kind);
+			}
+			else
+			{
 				var name = assembly.GetName();
-                var embededResourceStream = assembly.GetManifestResourceStream(icon);
-                image = new Bitmap(embededResourceStream);
-            }
-			return image;
+				uri = new Uri(prefix + name.Name + ";v" + name.Version + ";component/" + icon, kind);
+			}
+
+			return uri;
 		}
 
+		private static bool ResourceExists(Uri uri)
+		{
+			try
+			{
+				Application.GetResourceStream(uri);
+				return true;
+			}
+			catch (IOException)
+			{
+				return false;
+			}
+		}
 
 		private static readonly TypeIconCache typeIconCache = new TypeIconCache();
 		private static readonly MemberIconCache memberIconCache = new MemberIconCache();
 
-		public static IBitmap GetIcon(TypeIcon icon, AccessOverlayIcon overlay, bool isStatic = false)
+		public static ImageSource GetIcon(TypeIcon icon, AccessOverlayIcon overlay, bool isStatic = false)
 		{
 			lock (typeIconCache)
 				return typeIconCache.GetIcon(icon, overlay, isStatic);
 		}
 
-		public static IBitmap GetIcon(MemberIcon icon, AccessOverlayIcon overlay, bool isStatic)
+		public static ImageSource GetIcon(MemberIcon icon, AccessOverlayIcon overlay, bool isStatic)
 		{
 			lock (memberIconCache)
 				return memberIconCache.GetIcon(icon, overlay, isStatic);
@@ -142,13 +213,13 @@ namespace ICSharpCode.ILSpy
 				PreloadPublicIconToCache(TypeIcon.Struct, Images.Struct);
 				PreloadPublicIconToCache(TypeIcon.Interface, Images.Interface);
 				PreloadPublicIconToCache(TypeIcon.Delegate, Images.Delegate);
-				PreloadPublicIconToCache(TypeIcon.StaticClass, Images.StaticClass);
 			}
 
-			protected override IBitmap GetBaseImage(TypeIcon icon)
+			protected override ImageSource GetBaseImage(TypeIcon icon)
 			{
-				IBitmap baseImage;
-				switch (icon) {
+				ImageSource baseImage;
+				switch (icon)
+				{
 					case TypeIcon.Class:
 						baseImage = Images.Class;
 						break;
@@ -164,12 +235,9 @@ namespace ICSharpCode.ILSpy
 					case TypeIcon.Delegate:
 						baseImage = Images.Delegate;
 						break;
-					case TypeIcon.StaticClass:
-						baseImage = Images.StaticClass;
-						break;
 					default:
-                        throw new ArgumentOutOfRangeException(nameof(icon), $"TypeIcon.{icon} is not supported!");
-                }
+						throw new ArgumentOutOfRangeException(nameof(icon), $"TypeIcon.{icon} is not supported!");
+				}
 
 				return baseImage;
 			}
@@ -194,10 +262,11 @@ namespace ICSharpCode.ILSpy
 				PreloadPublicIconToCache(MemberIcon.Event, Images.Event);
 			}
 
-			protected override IBitmap GetBaseImage(MemberIcon icon)
+			protected override ImageSource GetBaseImage(MemberIcon icon)
 			{
-				IBitmap baseImage;
-				switch (icon) {
+				ImageSource baseImage;
+				switch (icon)
+				{
 					case MemberIcon.Field:
 						baseImage = Images.Field;
 						break;
@@ -208,7 +277,7 @@ namespace ICSharpCode.ILSpy
 						baseImage = Images.Literal;
 						break;
 					case MemberIcon.EnumValue:
-						baseImage = Images.Literal;
+						baseImage = Images.EnumValue;
 						break;
 					case MemberIcon.Property:
 						baseImage = Images.Property;
@@ -238,60 +307,53 @@ namespace ICSharpCode.ILSpy
 						baseImage = Images.Event;
 						break;
 					default:
-                        throw new ArgumentOutOfRangeException(nameof(icon), $"MemberIcon.{icon} is not supported!");
-                }
+						throw new ArgumentOutOfRangeException(nameof(icon), $"MemberIcon.{icon} is not supported!");
+				}
 
 				return baseImage;
 			}
 		}
 
-        private class WbFb : IFramebufferPlatformSurface
-        {
-            WriteableBitmap _bitmap;
-            public ILockedFramebuffer Lock() => _bitmap.Lock();
-
-            public WbFb(WriteableBitmap bitmap)
-            {
-                _bitmap = bitmap;
-            }
-        }
-
-        private abstract class IconCache<T>
+		private abstract class IconCache<T>
 		{
-			private readonly Dictionary<Tuple<T, AccessOverlayIcon, bool>, IBitmap> cache = new Dictionary<Tuple<T, AccessOverlayIcon, bool>, IBitmap>();
+			private readonly Dictionary<(T, AccessOverlayIcon, bool), ImageSource> cache = new Dictionary<(T, AccessOverlayIcon, bool), ImageSource>();
 
-			protected void PreloadPublicIconToCache(T icon, IBitmap image)
+			protected void PreloadPublicIconToCache(T icon, ImageSource image)
 			{
-				var iconKey = new Tuple<T, AccessOverlayIcon, bool>(icon, AccessOverlayIcon.Public, false);
+				var iconKey = (icon, AccessOverlayIcon.Public, false);
 				cache.Add(iconKey, image);
 			}
 
-			public IBitmap GetIcon(T icon, AccessOverlayIcon overlay, bool isStatic)
+			public ImageSource GetIcon(T icon, AccessOverlayIcon overlay, bool isStatic)
 			{
-				var iconKey = new Tuple<T, AccessOverlayIcon, bool>(icon, overlay, isStatic);
-				if (cache.ContainsKey(iconKey)) {
+				var iconKey = (icon, overlay, isStatic);
+				if (cache.ContainsKey(iconKey))
+				{
 					return cache[iconKey];
-				} else {
-					IBitmap result = BuildMemberIcon(icon, overlay, isStatic);
+				}
+				else
+				{
+					ImageSource result = BuildMemberIcon(icon, overlay, isStatic);
 					cache.Add(iconKey, result);
 					return result;
 				}
 			}
 
-			private IBitmap BuildMemberIcon(T icon, AccessOverlayIcon overlay, bool isStatic)
+			private ImageSource BuildMemberIcon(T icon, AccessOverlayIcon overlay, bool isStatic)
 			{
-				IBitmap baseImage = GetBaseImage(icon);
-				IBitmap overlayImage = GetOverlayImage(overlay);
+				ImageSource baseImage = GetBaseImage(icon);
+				ImageSource overlayImage = GetOverlayImage(overlay);
 
 				return CreateOverlayImage(baseImage, overlayImage, isStatic);
 			}
 
-			protected abstract IBitmap GetBaseImage(T icon);
+			protected abstract ImageSource GetBaseImage(T icon);
 
-			private static IBitmap GetOverlayImage(AccessOverlayIcon overlay)
+			private static ImageSource GetOverlayImage(AccessOverlayIcon overlay)
 			{
-				IBitmap overlayImage;
-				switch (overlay) {
+				ImageSource overlayImage;
+				switch (overlay)
+				{
 					case AccessOverlayIcon.Public:
 						overlayImage = null;
 						break;
@@ -314,39 +376,44 @@ namespace ICSharpCode.ILSpy
 						overlayImage = Images.OverlayCompilerControlled;
 						break;
 					default:
-                        throw new ArgumentOutOfRangeException(nameof(overlay), $"AccessOverlayIcon.{overlay} is not supported!");
-                }
+						throw new ArgumentOutOfRangeException(nameof(overlay), $"AccessOverlayIcon.{overlay} is not supported!");
+				}
 				return overlayImage;
 			}
 
 			private static readonly Rect iconRect = new Rect(0, 0, 16, 16);
 
-            private static IBitmap CreateOverlayImage(IBitmap baseImage, IBitmap overlay, bool isStatic)
+			private static ImageSource CreateOverlayImage(ImageSource baseImage, ImageSource overlay, bool isStatic)
 			{
-                var image = new WriteableBitmap(new PixelSize(16, 16), new Vector(96, 96), PixelFormat.Rgba8888, AlphaFormat.Unpremul);
+				var group = new DrawingGroup();
 
-                using (var rt = AvaloniaLocator.Current.GetService<IPlatformRenderInterface>().CreateRenderTarget(new[] { new WbFb(image)})) {
+				Drawing baseDrawing = new ImageDrawing(baseImage, iconRect);
 
-                    using (var ctx = rt.CreateDrawingContext(null)) {
+				if (overlay != null)
+				{
+					var nestedGroup = new DrawingGroup { Transform = new ScaleTransform(0.8, 0.8) };
+					nestedGroup.Children.Add(baseDrawing);
+					group.Children.Add(nestedGroup);
+					group.Children.Add(new ImageDrawing(overlay, iconRect));
+				}
+				else
+				{
+					group.Children.Add(baseDrawing);
+				}
 
-                        ctx.DrawBitmap(baseImage.PlatformImpl, 1.0, iconRect, iconRect);
+				if (isStatic)
+				{
+					group.Children.Add(new ImageDrawing(Images.OverlayStatic, iconRect));
+				}
 
-                        if (overlay != null) {
-                            ctx.DrawBitmap(overlay.PlatformImpl, 1.0, iconRect, iconRect);
-                        }
-
-                        if (isStatic) {
-                            ctx.DrawBitmap(Images.OverlayStatic.PlatformImpl, 1.0, iconRect, iconRect);
-                        }
-
-                    }
-
-                }
-
-                // TODO: image.Freeze()
-                return image;
-            }
-        }
+				var image = new DrawingImage(group);
+				if (image.CanFreeze)
+				{
+					image.Freeze();
+				}
+				return image;
+			}
+		}
 
 		#endregion
 	}

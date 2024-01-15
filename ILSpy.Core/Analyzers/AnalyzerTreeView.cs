@@ -20,10 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using Avalonia;
-using Avalonia.Threading;
+using System.Windows;
+
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.Analyzers.TreeNodes;
+using ICSharpCode.ILSpy.Docking;
+using ICSharpCode.ILSpy.ViewModels;
+using ICSharpCode.ILSpyX;
 using ICSharpCode.TreeView;
 
 namespace ICSharpCode.ILSpy.Analyzers
@@ -31,36 +34,53 @@ namespace ICSharpCode.ILSpy.Analyzers
 	/// <summary>
 	/// Analyzer tree view.
 	/// </summary>
-	public class AnalyzerTreeView : SharpTreeView, IPane
+	public class AnalyzerTreeView : SharpTreeView
 	{
-		static AnalyzerTreeView instance;
+		FilterSettings filterSettings;
 
-		public static AnalyzerTreeView Instance
-		{
-			get
-			{
-				if (instance == null) {
-					Dispatcher.UIThread.VerifyAccess();
-					instance = new AnalyzerTreeView();
-				}
-				return instance;
-			}
-		}
-
-		private AnalyzerTreeView()
+		public AnalyzerTreeView()
 		{
 			this.ShowRoot = false;
 			this.Root = new AnalyzerRootNode { Language = MainWindow.Instance.CurrentLanguage };
 			this.BorderThickness = new Thickness(0);
 			ContextMenuProvider.Add(this);
 			MainWindow.Instance.CurrentAssemblyListChanged += MainWindow_Instance_CurrentAssemblyListChanged;
+			DockWorkspace.Instance.PropertyChanged += DockWorkspace_PropertyChanged;
+			filterSettings = MainWindow.Instance.SessionSettings.FilterSettings;
+			filterSettings.PropertyChanged += FilterSettings_PropertyChanged;
+		}
+
+		private void DockWorkspace_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			switch (e.PropertyName)
+			{
+				case nameof(DockWorkspace.Instance.ActiveTabPage):
+					filterSettings.PropertyChanged -= FilterSettings_PropertyChanged;
+					filterSettings = DockWorkspace.Instance.ActiveTabPage.FilterSettings;
+					filterSettings.PropertyChanged += FilterSettings_PropertyChanged;
+					break;
+			}
+		}
+
+		private void FilterSettings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			switch (e.PropertyName)
+			{
+				case "Language":
+				case "LanguageVersion":
+					((AnalyzerRootNode)this.Root).Language = MainWindow.Instance.CurrentLanguage;
+					break;
+			}
 		}
 
 		void MainWindow_Instance_CurrentAssemblyListChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
-			if (e.Action == NotifyCollectionChangedAction.Reset) {
+			if (e.Action == NotifyCollectionChangedAction.Reset)
+			{
 				this.Root.Children.Clear();
-			} else {
+			}
+			else
+			{
 				List<LoadedAssembly> removedAssemblies = new List<LoadedAssembly>();
 				if (e.OldItems != null)
 					removedAssemblies.AddRange(e.OldItems.Cast<LoadedAssembly>());
@@ -73,8 +93,7 @@ namespace ICSharpCode.ILSpy.Analyzers
 
 		public void Show()
 		{
-			if (VisualRoot == null)
-				MainWindow.Instance.ShowInBottomPane("Analyzer", this);
+			DockWorkspace.Instance.ShowToolPane(AnalyzerPaneModel.PaneContentId);
 		}
 
 		public void Show(AnalyzerTreeNode node)
@@ -89,12 +108,14 @@ namespace ICSharpCode.ILSpy.Analyzers
 
 		public void ShowOrFocus(AnalyzerTreeNode node)
 		{
-			if (node is AnalyzerEntityTreeNode) {
+			if (node is AnalyzerEntityTreeNode)
+			{
 				var an = node as AnalyzerEntityTreeNode;
 				var found = this.Root.Children.OfType<AnalyzerEntityTreeNode>().FirstOrDefault(n => n.Member == an.Member);
-				if (found != null) {
+				if (found != null)
+				{
 					Show();
-					
+
 					found.IsExpanded = true;
 					this.SelectedItem = found;
 					this.FocusNode(found);
@@ -106,23 +127,25 @@ namespace ICSharpCode.ILSpy.Analyzers
 
 		public void Analyze(IEntity entity)
 		{
-			if (entity == null) {
+			if (entity == null)
+			{
 				throw new ArgumentNullException(nameof(entity));
 			}
 
-            if (entity.MetadataToken.IsNil)
-            {
-                MessageBox.Show(Properties.Resources.CannotAnalyzeMissingRef, "ILSpy");
-                return;
-            }
+			if (entity.MetadataToken.IsNil)
+			{
+				MessageBox.Show(Properties.Resources.CannotAnalyzeMissingRef, "ILSpy");
+				return;
+			}
 
-            switch (entity) {
+			switch (entity)
+			{
 				case ITypeDefinition td:
 					ShowOrFocus(new AnalyzedTypeTreeNode(td));
 					break;
 				case IField fd:
-                    if (!fd.IsConst)
-                        ShowOrFocus(new AnalyzedFieldTreeNode(fd));
+					if (!fd.IsConst)
+						ShowOrFocus(new AnalyzedFieldTreeNode(fd));
 					break;
 				case IMethod md:
 					ShowOrFocus(new AnalyzedMethodTreeNode(md));
@@ -138,17 +161,12 @@ namespace ICSharpCode.ILSpy.Analyzers
 			}
 		}
 
-		void IPane.Closed()
-		{
-			this.Root.Children.Clear();
-		}
-		
 		sealed class AnalyzerRootNode : AnalyzerTreeNode
 		{
 			public override bool HandleAssemblyListChanged(ICollection<LoadedAssembly> removedAssemblies, ICollection<LoadedAssembly> addedAssemblies)
 			{
 				this.Children.RemoveAll(
-					delegate(SharpTreeNode n) {
+					delegate (SharpTreeNode n) {
 						AnalyzerTreeNode an = n as AnalyzerTreeNode;
 						return an == null || !an.HandleAssemblyListChanged(removedAssemblies, addedAssemblies);
 					});

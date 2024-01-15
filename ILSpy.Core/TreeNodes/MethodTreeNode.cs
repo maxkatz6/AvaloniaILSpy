@@ -17,13 +17,16 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
+using System.Reflection.Metadata;
+using System.Windows.Media;
+
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.TypeSystem;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
+	using ICSharpCode.Decompiler.TypeSystem;
+	using ICSharpCode.ILSpyX;
+
 	/// <summary>
 	/// Tree Node representing a field, method, property, or event.
 	/// </summary>
@@ -36,16 +39,23 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			this.MethodDefinition = method ?? throw new ArgumentNullException(nameof(method));
 		}
 
-		public override object Text => GetText(MethodDefinition, Language) + MethodDefinition.MetadataToken.ToSuffixString();
+		public override object Text => GetText(GetMethodDefinition(), Language) + GetSuffixString(MethodDefinition);
+
+		private IMethod GetMethodDefinition()
+		{
+			return ((MetadataModule)MethodDefinition.ParentModule.PEFile
+				?.GetTypeSystemWithCurrentOptionsOrNull()
+				?.MainModule)?.GetDefinition((MethodDefinitionHandle)MethodDefinition.MetadataToken) ?? MethodDefinition;
+		}
 
 		public static object GetText(IMethod method, Language language)
 		{
 			return language.MethodToString(method, false, false, false);
 		}
 
-		public override object Icon => GetIcon(MethodDefinition);
+		public override object Icon => GetIcon(GetMethodDefinition());
 
-		public static IBitmap GetIcon(IMethod method)
+		public static ImageSource GetIcon(IMethod method)
 		{
 			if (method.IsOperator)
 				return Images.GetIcon(MemberIcon.Operator, GetOverlayIcon(method.Accessibility), false);
@@ -65,7 +75,8 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		internal static AccessOverlayIcon GetOverlayIcon(Accessibility accessibility)
 		{
-			switch (accessibility) {
+			switch (accessibility)
+			{
 				case Accessibility.Public:
 					return AccessOverlayIcon.Public;
 				case Accessibility.Internal:
@@ -90,17 +101,18 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override FilterResult Filter(FilterSettings settings)
 		{
-            if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
-                return FilterResult.Hidden;
-            if (settings.SearchTermMatches(MethodDefinition.Name) && (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(MethodDefinition)))
-                return FilterResult.Match;
+			if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
+				return FilterResult.Hidden;
+			if (settings.SearchTermMatches(MethodDefinition.Name) && (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(MethodDefinition)))
+				return FilterResult.Match;
 			else
 				return FilterResult.Hidden;
 		}
 
 		public override bool IsPublicAPI {
 			get {
-				switch (MethodDefinition.Accessibility) {
+				switch (GetMethodDefinition().Accessibility)
+				{
 					case Accessibility.Public:
 					case Accessibility.Protected:
 					case Accessibility.ProtectedOrInternal:
@@ -112,5 +124,10 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		}
 
 		IEntity IMemberTreeNode.Member => MethodDefinition;
+
+		public override string ToString()
+		{
+			return Languages.ILLanguage.MethodToString(MethodDefinition, false, false, false);
+		}
 	}
 }

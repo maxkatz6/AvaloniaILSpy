@@ -18,11 +18,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Linq;
 using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
+
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
@@ -40,54 +38,70 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 
 		public IEnumerable<ISymbol> Analyze(ISymbol symbol, AnalyzerContext context)
 		{
-			if (symbol is IMethod method) {
+			if (symbol is IMethod method)
+			{
+				var typeSystem = context.GetOrCreateTypeSystem(method.ParentModule.PEFile);
 				return context.Language.GetCodeMappingInfo(method.ParentModule.PEFile, method.MetadataToken)
 					.GetMethodParts((MethodDefinitionHandle)method.MetadataToken)
-					.SelectMany(h => ScanMethod(method, h, context)).Distinct();
+					.SelectMany(h => ScanMethod(h, typeSystem)).Distinct();
 			}
 			throw new InvalidOperationException("Should never happen.");
 		}
 
-		IEnumerable<IEntity> ScanMethod(IMethod analyzedMethod, MethodDefinitionHandle handle, AnalyzerContext context)
+		IEnumerable<IEntity> ScanMethod(MethodDefinitionHandle handle, DecompilerTypeSystem typeSystem)
 		{
-			var module = (MetadataModule)analyzedMethod.ParentModule;
+			var module = typeSystem.MainModule;
 			var md = module.PEFile.Metadata.GetMethodDefinition(handle);
-			if (!md.HasBody()) yield break;
+			if (!md.HasBody())
+				yield break;
 
 			BlobReader blob;
-			try {
+			try
+			{
 				blob = module.PEFile.Reader.GetMethodBody(md.RelativeVirtualAddress).GetILReader();
-			} catch (BadImageFormatException) {
+			}
+			catch (BadImageFormatException)
+			{
 				yield break;
 			}
 			var visitor = new TypeDefinitionCollector();
 			var genericContext = new Decompiler.TypeSystem.GenericContext(); // type parameters don't matter for this analyzer
 
-			while (blob.RemainingBytes > 0) {
+			while (blob.RemainingBytes > 0)
+			{
 				ILOpCode opCode;
-				try {
+				try
+				{
 					opCode = blob.DecodeOpCode();
-				} catch (BadImageFormatException) {
+				}
+				catch (BadImageFormatException)
+				{
 					yield break;
 				}
-				switch (opCode.GetOperandType()) {
+				switch (opCode.GetOperandType())
+				{
 					case OperandType.Field:
 					case OperandType.Method:
 					case OperandType.Sig:
 					case OperandType.Tok:
 						var member = MetadataTokenHelpers.EntityHandleOrNil(blob.ReadInt32());
-						if (member.IsNil) continue;
+						if (member.IsNil)
+							continue;
 
-						switch (member.Kind) {
+						switch (member.Kind)
+						{
 							case HandleKind.StandaloneSignature:
 								break;
 							case HandleKind.TypeDefinition:
 							case HandleKind.TypeReference:
 							case HandleKind.TypeSpecification:
 								IType ty;
-								try {
+								try
+								{
 									ty = module.ResolveType(member, genericContext);
-								} catch (BadImageFormatException) {
+								}
+								catch (BadImageFormatException)
+								{
 									ty = null;
 								}
 								ty?.AcceptVisitor(visitor);
@@ -97,9 +111,12 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 							case HandleKind.MemberReference:
 							case HandleKind.FieldDefinition:
 								IEntity m;
-								try {
+								try
+								{
 									m = module.ResolveEntity(member, genericContext);
-								} catch (BadImageFormatException) {
+								}
+								catch (BadImageFormatException)
+								{
 									m = null;
 								}
 								if (m != null)
@@ -108,23 +125,27 @@ namespace ICSharpCode.ILSpy.Analyzers.Builtin
 						}
 						break;
 					default:
-						try {
+						try
+						{
 							ILParser.SkipOperand(ref blob, opCode);
-						} catch (BadImageFormatException) {
+						}
+						catch (BadImageFormatException)
+						{
 							yield break;
 						}
 						break;
 				}
 			}
 
-			foreach (var type in visitor.UsedTypes) {
+			foreach (var type in visitor.UsedTypes)
+			{
 				yield return type;
 			}
 		}
 
 		class TypeDefinitionCollector : TypeVisitor
 		{
-			public readonly List<ITypeDefinition> UsedTypes = new List<ITypeDefinition>(); 
+			public readonly List<ITypeDefinition> UsedTypes = new List<ITypeDefinition>();
 
 			public override IType VisitTypeDefinition(ITypeDefinition type)
 			{

@@ -16,13 +16,14 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using Avalonia.Input;
+using System.Windows.Input;
+
 using ICSharpCode.ILSpy.Properties;
 
 namespace ICSharpCode.ILSpy
 {
-    [ExportToolbarCommand(ToolTip = nameof(Resources.Back), ToolbarIcon = "Images/Back.png", ToolbarCategory = nameof(Resources.Navigation), ToolbarOrder = 0)]
-    sealed class BrowseBackCommand : CommandWrapper
+	[ExportToolbarCommand(ToolTip = nameof(Resources.Back), ToolbarIcon = "Images/Back", ToolbarCategory = nameof(Resources.Navigation), ToolbarOrder = 0)]
+	sealed class BrowseBackCommand : CommandWrapper
 	{
 		public BrowseBackCommand()
 			: base(NavigationCommands.BrowseBack)

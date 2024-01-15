@@ -17,30 +17,33 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using Avalonia.Controls;
+
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
+using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
 using ICSharpCode.Decompiler.DebugInfo;
 using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpy.TextView;
 using ICSharpCode.ILSpy.TreeNodes;
+using ICSharpCode.ILSpyX;
+
 using Microsoft.Win32;
 
 namespace ICSharpCode.ILSpy
 {
-	[ExportContextMenuEntry(Header = "Generate portable PDB")]
+	[ExportContextMenuEntry(Header = nameof(Resources.GeneratePortable))]
 	class GeneratePdbContextMenuEntry : IContextMenuEntry
 	{
 		public void Execute(TextViewContext context)
 		{
 			var assembly = (context.SelectedTreeNodes?.FirstOrDefault() as AssemblyTreeNode)?.LoadedAssembly;
-			if (assembly == null) return;
+			if (assembly == null)
+				return;
 			GeneratePdbForAssembly(assembly);
 		}
 
@@ -50,49 +53,56 @@ namespace ICSharpCode.ILSpy
 		{
 			return context.SelectedTreeNodes?.Length == 1
 				&& context.SelectedTreeNodes?.FirstOrDefault() is AssemblyTreeNode tn
-				&& !tn.LoadedAssembly.HasLoadError;
+				&& tn.LoadedAssembly.IsLoadedAsValidAssembly;
 		}
 
-		internal static async void GeneratePdbForAssembly(LoadedAssembly assembly)
+		internal static void GeneratePdbForAssembly(LoadedAssembly assembly)
 		{
 			var file = assembly.GetPEFileOrNull();
-			if (!PortablePdbWriter.HasCodeViewDebugDirectoryEntry(file)) {
-				await MessageBox.Show($"Cannot create PDB file for {Path.GetFileName(assembly.FileName)}, because it does not contain a PE Debug Directory Entry of type 'CodeView'.");
+			if (!PortablePdbWriter.HasCodeViewDebugDirectoryEntry(file))
+			{
+				MessageBox.Show(string.Format(Resources.CannotCreatePDBFile, Path.GetFileName(assembly.FileName)));
 				return;
 			}
 			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.Title = "Save file";
-			dlg.InitialFileName = DecompilerTextView.CleanUpName(assembly.ShortName) + ".pdb";
-			dlg.Filters = new List<FileDialogFilter> { new FileDialogFilter { Name = "Portable PDB", Extensions = { "pdb" } }, new FileDialogFilter { Name = "All files", Extensions = { "*" } } };
-            dlg.Directory = Path.GetDirectoryName(assembly.FileName);
-            string fileName = await dlg.ShowAsync(App.Current.GetMainWindow());
-            if (string.IsNullOrEmpty(fileName)) return;
-			DecompilationOptions options = new DecompilationOptions();
-			MainWindow.Instance.TextView.RunWithCancellation(ct => Task<AvaloniaEditTextOutput>.Factory.StartNew(() => {
-				AvaloniaEditTextOutput output = new AvaloniaEditTextOutput();
+			dlg.FileName = WholeProjectDecompiler.CleanUpFileName(assembly.ShortName) + ".pdb";
+			dlg.Filter = Resources.PortablePDBPdbAllFiles;
+			dlg.InitialDirectory = Path.GetDirectoryName(assembly.FileName);
+			if (dlg.ShowDialog() != true)
+				return;
+			DecompilationOptions options = MainWindow.Instance.CreateDecompilationOptions();
+			string fileName = dlg.FileName;
+			Docking.DockWorkspace.Instance.RunWithCancellation(ct => Task<AvalonEditTextOutput>.Factory.StartNew(() => {
+				AvalonEditTextOutput output = new AvalonEditTextOutput();
 				Stopwatch stopwatch = Stopwatch.StartNew();
-				using (FileStream stream = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write)) {
-					try {
-						var decompiler = new CSharpDecompiler(file, assembly.GetAssemblyResolver(), options.DecompilerSettings);
-						PortablePdbWriter.WritePdb(file, decompiler, options.DecompilerSettings, stream);
-					} catch (OperationCanceledException) {
+				options.CancellationToken = ct;
+				using (FileStream stream = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write))
+				{
+					try
+					{
+						var decompiler = new CSharpDecompiler(file, assembly.GetAssemblyResolver(options.DecompilerSettings.AutoLoadAssemblyReferences), options.DecompilerSettings);
+						decompiler.CancellationToken = ct;
+						PortablePdbWriter.WritePdb(file, decompiler, options.DecompilerSettings, stream, progress: options.Progress);
+					}
+					catch (OperationCanceledException)
+					{
 						output.WriteLine();
-						output.WriteLine("Generation was cancelled.");
+						output.WriteLine(Resources.GenerationWasCancelled);
 						throw;
 					}
 				}
 				stopwatch.Stop();
-				output.WriteLine("Generation complete in " + stopwatch.Elapsed.TotalSeconds.ToString("F1") + " seconds.");
+				output.WriteLine(Resources.GenerationCompleteInSeconds, stopwatch.Elapsed.TotalSeconds.ToString("F1"));
 				output.WriteLine();
-				output.AddButton(null, "Open Explorer", delegate { Process.Start("explorer", "/select,\"" + fileName + "\""); });
+				output.AddButton(null, Resources.OpenExplorer, delegate { Process.Start("explorer", "/select,\"" + fileName + "\""); });
 				output.WriteLine();
 				return output;
-			}, ct)).Then(output => MainWindow.Instance.TextView.ShowText(output)).HandleExceptions();
+			}, ct)).Then(output => Docking.DockWorkspace.Instance.ShowText(output)).HandleExceptions();
 		}
 	}
 
-    [ExportMainMenuCommand(Menu = nameof(Resources._File), Header = nameof(Resources.GeneratePortable), MenuCategory = "Save")]
-    class GeneratePdbMainMenuEntry : SimpleCommand
+	[ExportMainMenuCommand(ParentMenuID = nameof(Resources._File), Header = nameof(Resources.GeneratePortable), MenuCategory = nameof(Resources.Save))]
+	class GeneratePdbMainMenuEntry : SimpleCommand
 	{
 		public override bool CanExecute(object parameter)
 		{
@@ -104,7 +114,8 @@ namespace ICSharpCode.ILSpy
 		public override void Execute(object parameter)
 		{
 			var assembly = (MainWindow.Instance.SelectedNodes?.FirstOrDefault() as AssemblyTreeNode)?.LoadedAssembly;
-			if (assembly == null) return;
+			if (assembly == null)
+				return;
 			GeneratePdbContextMenuEntry.GeneratePdbForAssembly(assembly);
 		}
 	}

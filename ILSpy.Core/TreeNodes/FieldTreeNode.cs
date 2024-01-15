@@ -17,13 +17,16 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
+using System.Reflection.Metadata;
+using System.Windows.Media;
+
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.TypeSystem;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
+	using ICSharpCode.Decompiler.TypeSystem;
+	using ICSharpCode.ILSpyX;
+
 	/// <summary>
 	/// Represents a field in the TreeView.
 	/// </summary>
@@ -36,16 +39,23 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			this.FieldDefinition = field ?? throw new ArgumentNullException(nameof(field));
 		}
 
-		public override object Text => GetText(FieldDefinition, Language) + FieldDefinition.MetadataToken.ToSuffixString();
+		public override object Text => GetText(GetFieldDefinition(), Language) + GetSuffixString(FieldDefinition);
+
+		private IField GetFieldDefinition()
+		{
+			return ((MetadataModule)FieldDefinition.ParentModule.PEFile
+				?.GetTypeSystemWithCurrentOptionsOrNull()
+				?.MainModule)?.GetDefinition((FieldDefinitionHandle)FieldDefinition.MetadataToken) ?? FieldDefinition;
+		}
 
 		public static object GetText(IField field, Language language)
 		{
 			return language.FieldToString(field, includeDeclaringTypeName: false, includeNamespace: false, includeNamespaceOfDeclaringTypeName: false);
 		}
 
-		public override object Icon => GetIcon(FieldDefinition);
+		public override object Icon => GetIcon(GetFieldDefinition());
 
-		public static IBitmap GetIcon(IField field)
+		public static ImageSource GetIcon(IField field)
 		{
 			if (field.DeclaringType.Kind == TypeKind.Enum && field.ReturnType.Kind == TypeKind.Enum)
 				return Images.GetIcon(MemberIcon.EnumValue, MethodTreeNode.GetOverlayIcon(field.Accessibility), false);
@@ -60,11 +70,11 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		}
 
 		public override FilterResult Filter(FilterSettings settings)
-        {
-            if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
-                return FilterResult.Hidden;
-            if (settings.SearchTermMatches(FieldDefinition.Name) && (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(FieldDefinition)))
-                return FilterResult.Match;
+		{
+			if (settings.ShowApiLevel == ApiVisibility.PublicOnly && !IsPublicAPI)
+				return FilterResult.Hidden;
+			if (settings.SearchTermMatches(FieldDefinition.Name) && (settings.ShowApiLevel == ApiVisibility.All || settings.Language.ShowMember(FieldDefinition)))
+				return FilterResult.Match;
 			else
 				return FilterResult.Hidden;
 		}
@@ -73,10 +83,11 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		{
 			language.DecompileField(FieldDefinition, output, options);
 		}
-		
+
 		public override bool IsPublicAPI {
 			get {
-				switch (FieldDefinition.Accessibility) {
+				switch (GetFieldDefinition().Accessibility)
+				{
 					case Accessibility.Public:
 					case Accessibility.Protected:
 					case Accessibility.ProtectedOrInternal:
@@ -88,5 +99,10 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		}
 
 		IEntity IMemberTreeNode.Member => FieldDefinition;
+
+		public override string ToString()
+		{
+			return FieldDefinition.Name;
+		}
 	}
 }

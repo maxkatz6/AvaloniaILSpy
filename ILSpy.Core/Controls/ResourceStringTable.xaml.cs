@@ -16,62 +16,93 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System.Collections;
-using System.Text;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input;
-using AvaloniaEdit;
 using System;
-using Avalonia.Markup.Xaml;
-using Avalonia.Controls.Presenters;
+using System.Collections;
 using System.Collections.Generic;
-using Avalonia.Layout;
-using Avalonia.LogicalTree;
-using Avalonia.VisualTree;
+using System.ComponentModel;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Input;
 
 namespace ICSharpCode.ILSpy.Controls
 {
 	/// <summary>
 	/// Interaction logic for ResourceStringTable.xaml
 	/// </summary>
-	public partial class ResourceStringTable : UserControl, IRoutedCommandBindable
-    {
-		internal DataGrid resourceListView;
+	public partial class ResourceStringTable : UserControl
+	{
+		ICollectionView filteredView;
+		string filter;
 
-        public IList<RoutedCommandBinding> CommandBindings { get; } = new List<RoutedCommandBinding>();
-
-        public ResourceStringTable(IEnumerable strings, ContentPresenter contentPresenter)
+		public ResourceStringTable(IEnumerable strings, FrameworkElement container)
 		{
-            InitializeComponent();
-            resourceListView.Items = strings;
-        }
+			InitializeComponent();
+			// set size to fit decompiler window
+			container.SizeChanged += OnParentSizeChanged;
+			if (!double.IsNaN(container.ActualWidth))
+				Width = Math.Max(container.ActualWidth - 45, 0);
+			MaxHeight = container.ActualHeight;
 
-		private void InitializeComponent()
-		{
-			AvaloniaXamlLoader.Load(this);
-			resourceListView = this.FindControl<DataGrid>("resourceListView");
-            CommandBindings.Add(new RoutedCommandBinding(global::AvaloniaEdit.ApplicationCommands.Copy, ExecuteCopy, CanExecuteCopy));
+			filteredView = CollectionViewSource.GetDefaultView(strings);
+			filteredView.Filter = OnResourceFilter;
+			resourceListView.ItemsSource = filteredView;
 		}
 
-        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-        {
-            base.OnAttachedToVisualTree(e);
-            var size = e.Parent.Bounds;
-            Width = size.Width - 45;
-            MaxHeight = size.Height;
-        }
+		private bool OnResourceFilter(object obj)
+		{
+			if (string.IsNullOrEmpty(filter))
+				return true;
 
-        void ExecuteCopy(object sender, ExecutedRoutedEventArgs args)
+			if (obj is KeyValuePair<string, string> item)
+				return item.Key?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true ||
+					   item.Value?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true;
+
+			return false; // make it obvious search is not working
+		}
+
+		private void OnParentSizeChanged(object sender, SizeChangedEventArgs e)
+		{
+			if (e.WidthChanged && !double.IsNaN(e.NewSize.Width))
+				Width = Math.Max(e.NewSize.Width - 45, 0);
+			if (e.HeightChanged)
+				MaxHeight = e.NewSize.Height;
+		}
+
+		private void OnFilterTextChanged(object sender, TextChangedEventArgs e)
+		{
+			filter = resourceFilterBox.Text;
+			filteredView?.Refresh();
+		}
+
+		void ExecuteCopy(object sender, ExecutedRoutedEventArgs args)
 		{
 			StringBuilder sb = new StringBuilder();
 			foreach (var item in resourceListView.SelectedItems)
 			{
+				if (item is KeyValuePair<string, string> pair)
+				{
+					switch (args.Parameter)
+					{
+						case "Key":
+							sb.AppendLine(pair.Key);
+							continue;
+
+						case "Value":
+							sb.AppendLine(pair.Value);
+							continue;
+
+						default:
+							sb.AppendLine($"{pair.Key}\t{pair.Value}");
+							continue;
+					}
+				}
 				sb.AppendLine(item.ToString());
 			}
-			App.Current.Clipboard.SetTextAsync(sb.ToString());
+			Clipboard.SetText(sb.ToString());
 		}
-		
+
 		void CanExecuteCopy(object sender, CanExecuteRoutedEventArgs args)
 		{
 			args.CanExecute = true;

@@ -17,10 +17,13 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
+
+using ICSharpCode.ILSpyX;
 
 namespace ICSharpCode.ILSpy
 {
@@ -34,6 +37,13 @@ namespace ICSharpCode.ILSpy
 	/// </remarks>
 	public class FilterSettings : INotifyPropertyChanged
 	{
+		/// <summary>
+		/// This dictionary is necessary to remember language versions across language changes. For example, 
+		/// the user first select C# 10, then switches to IL, then switches back to C#. After that we must be
+		/// able to restore the original selection (i.e., C# 10).
+		/// </summary>
+		private readonly Dictionary<Language, LanguageVersion> languageVersionHistory = new Dictionary<Language, LanguageVersion>();
+
 		public FilterSettings(XElement element)
 		{
 			this.ShowApiLevel = (ApiVisibility?)(int?)element.Element("ShowAPILevel") ?? ApiVisibility.PublicAndInternal;
@@ -49,7 +59,7 @@ namespace ICSharpCode.ILSpy
 				"FilterSettings",
 				new XElement("ShowAPILevel", (int)this.ShowApiLevel),
 				new XElement("Language", this.Language.Name),
-				new XElement("LanguageVersion", this.LanguageVersion.Version)
+				new XElement("LanguageVersion", this.LanguageVersion?.Version)
 			);
 		}
 
@@ -59,11 +69,9 @@ namespace ICSharpCode.ILSpy
 		/// Gets/Sets the search term.
 		/// Only tree nodes containing the search term will be shown.
 		/// </summary>
-		public string SearchTerm
-		{
+		public string SearchTerm {
 			get { return searchTerm; }
-			set
-			{
+			set {
 				if (searchTerm != value)
 				{
 					searchTerm = value;
@@ -75,7 +83,7 @@ namespace ICSharpCode.ILSpy
 		/// <summary>
 		/// Gets whether a node with the specified text is matched by the current search term.
 		/// </summary>
-		public bool SearchTermMatches(string text)
+		public virtual bool SearchTermMatches(string text)
 		{
 			if (string.IsNullOrEmpty(searchTerm))
 				return true;
@@ -87,11 +95,9 @@ namespace ICSharpCode.ILSpy
 		/// <summary>
 		/// Gets/Sets whether public, internal or all API members should be shown.
 		/// </summary>
-		public ApiVisibility ShowApiLevel
-		{
+		public ApiVisibility ShowApiLevel {
 			get { return showApiLevel; }
-			set
-			{
+			set {
 				if (showApiLevel != value)
 				{
 					showApiLevel = value;
@@ -100,39 +106,39 @@ namespace ICSharpCode.ILSpy
 			}
 		}
 
-		public bool ShowInternalApi
-		{
-			get { return ShowApiLevel == ApiVisibility.PublicAndInternal; }
-			set
-			{
-				if (ShowApiLevel == ApiVisibility.PublicAndInternal)
-				{
-					ShowApiLevel = ApiVisibility.PublicOnly;
-				}
-				else
-				{
-					ShowApiLevel = ApiVisibility.PublicAndInternal;
-				}
-				OnPropertyChanged(nameof(ShowInternalApi));
-				OnPropertyChanged(nameof(ShowAllApi));
+		public bool ApiVisPublicOnly {
+			get { return showApiLevel == ApiVisibility.PublicOnly; }
+			set {
+				if (value == (showApiLevel == ApiVisibility.PublicOnly))
+					return;
+				ShowApiLevel = ApiVisibility.PublicOnly;
+				OnPropertyChanged(nameof(ApiVisPublicOnly));
+				OnPropertyChanged(nameof(ApiVisPublicAndInternal));
+				OnPropertyChanged(nameof(ApiVisAll));
 			}
 		}
 
-		public bool ShowAllApi
-		{
-			get { return ShowApiLevel == ApiVisibility.All; }
-			set
-			{
-				if (ShowApiLevel == ApiVisibility.All)
-				{
-					ShowApiLevel = ApiVisibility.PublicOnly;
-				}
-				else
-				{
-					ShowApiLevel = ApiVisibility.All;
-				}
-				OnPropertyChanged(nameof(ShowInternalApi));
-				OnPropertyChanged(nameof(ShowAllApi));
+		public bool ApiVisPublicAndInternal {
+			get { return showApiLevel == ApiVisibility.PublicAndInternal; }
+			set {
+				if (value == (showApiLevel == ApiVisibility.PublicAndInternal))
+					return;
+				ShowApiLevel = ApiVisibility.PublicAndInternal;
+				OnPropertyChanged(nameof(ApiVisPublicOnly));
+				OnPropertyChanged(nameof(ApiVisPublicAndInternal));
+				OnPropertyChanged(nameof(ApiVisAll));
+			}
+		}
+
+		public bool ApiVisAll {
+			get { return showApiLevel == ApiVisibility.All; }
+			set {
+				if (value == (showApiLevel == ApiVisibility.All))
+					return;
+				ShowApiLevel = ApiVisibility.All;
+				OnPropertyChanged(nameof(ApiVisPublicOnly));
+				OnPropertyChanged(nameof(ApiVisPublicAndInternal));
+				OnPropertyChanged(nameof(ApiVisAll));
 			}
 		}
 
@@ -145,16 +151,32 @@ namespace ICSharpCode.ILSpy
 		/// While this isn't related to filtering, having it as part of the FilterSettings
 		/// makes it easy to pass it down into all tree nodes.
 		/// </remarks>
-		public Language Language
-		{
+		public Language Language {
 			get { return language; }
-			set
-			{
+			set {
 				if (language != value)
 				{
+					if (language != null && language.HasLanguageVersions)
+					{
+						languageVersionHistory[language] = languageVersion;
+					}
 					language = value;
-					LanguageVersion = language.LanguageVersions.LastOrDefault();
 					OnPropertyChanged();
+					if (language.HasLanguageVersions)
+					{
+						if (languageVersionHistory.TryGetValue(value, out var version))
+						{
+							LanguageVersion = version;
+						}
+						else
+						{
+							LanguageVersion = Language.LanguageVersions.Last();
+						}
+					}
+					else
+					{
+						LanguageVersion = default;
+					}
 				}
 			}
 		}
@@ -168,14 +190,16 @@ namespace ICSharpCode.ILSpy
 		/// While this isn't related to filtering, having it as part of the FilterSettings
 		/// makes it easy to pass it down into all tree nodes.
 		/// </remarks>
-		public LanguageVersion LanguageVersion
-		{
+		public LanguageVersion LanguageVersion {
 			get { return languageVersion; }
-			set
-			{
+			set {
 				if (languageVersion != value)
 				{
 					languageVersion = value;
+					if (language.HasLanguageVersions)
+					{
+						languageVersionHistory[language] = languageVersion;
+					}
 					OnPropertyChanged();
 				}
 			}
@@ -197,12 +221,5 @@ namespace ICSharpCode.ILSpy
 			f.PropertyChanged = null;
 			return f;
 		}
-	}
-
-	public enum ApiVisibility
-	{
-		PublicOnly,
-		PublicAndInternal,
-		All
 	}
 }

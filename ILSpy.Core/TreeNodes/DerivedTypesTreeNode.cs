@@ -19,10 +19,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.Properties;
+using ICSharpCode.ILSpyX;
+
 using SRM = System.Reflection.Metadata;
 
 namespace ICSharpCode.ILSpy.TreeNodes
@@ -56,28 +58,33 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		IEnumerable<ILSpyTreeNode> FetchChildren(CancellationToken cancellationToken)
 		{
 			// FetchChildren() runs on the main thread; but the enumerator will be consumed on a background thread
-			var assemblies = list.GetAssemblies().Select(node => node.GetPEFileOrNull()).Where(asm => asm != null).ToArray();
-			return FindDerivedTypes(list, type, assemblies, cancellationToken);
+			return FindDerivedTypes(list, type, cancellationToken);
 		}
 
 		internal static IEnumerable<DerivedTypesEntryNode> FindDerivedTypes(AssemblyList list, ITypeDefinition type,
-			PEFile[] assemblies, CancellationToken cancellationToken)
+			CancellationToken cancellationToken)
 		{
 			var definitionMetadata = type.ParentModule.PEFile.Metadata;
 			var metadataToken = (SRM.TypeDefinitionHandle)type.MetadataToken;
-			foreach (var module in assemblies) {
+			var assemblies = list.GetAllAssemblies().GetAwaiter().GetResult()
+				.Select(node => node.GetPEFileOrNull()).Where(asm => asm != null).ToArray();
+			foreach (var module in assemblies)
+			{
 				var metadata = module.Metadata;
 				var assembly = (MetadataModule)module.GetTypeSystemOrNull().MainModule;
-				foreach (var h in metadata.TypeDefinitions) {
+				foreach (var h in metadata.TypeDefinitions)
+				{
 					cancellationToken.ThrowIfCancellationRequested();
 					var td = metadata.GetTypeDefinition(h);
-					foreach (var iface in td.GetInterfaceImplementations()) {
+					foreach (var iface in td.GetInterfaceImplementations())
+					{
 						var ifaceImpl = metadata.GetInterfaceImplementation(iface);
-						if (IsSameType(metadata, ifaceImpl.Interface, definitionMetadata, metadataToken))
+						if (!ifaceImpl.Interface.IsNil && IsSameType(metadata, ifaceImpl.Interface, definitionMetadata, metadataToken))
 							yield return new DerivedTypesEntryNode(list, assembly.GetDefinition(h));
 					}
 					SRM.EntityHandle baseType = td.GetBaseTypeOrNil();
-					if (!baseType.IsNil && IsSameType(metadata, baseType, definitionMetadata, metadataToken)) {
+					if (!baseType.IsNil && IsSameType(metadata, baseType, definitionMetadata, metadataToken))
+					{
 						yield return new DerivedTypesEntryNode(list, assembly.GetDefinition(h));
 					}
 				}
@@ -86,7 +93,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		}
 
 		static bool IsSameType(SRM.MetadataReader referenceMetadata, SRM.EntityHandle typeRef,
-			                   SRM.MetadataReader definitionMetadata, SRM.TypeDefinitionHandle typeDef)
+							   SRM.MetadataReader definitionMetadata, SRM.TypeDefinitionHandle typeDef)
 		{
 			// FullName contains only namespace, name and type parameter count, therefore this should suffice.
 			return typeRef.GetFullTypeName(referenceMetadata) == typeDef.GetFullTypeName(definitionMetadata);

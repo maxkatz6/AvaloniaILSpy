@@ -17,15 +17,14 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Media;
-using Avalonia.Animation;
-using Avalonia.Threading;
-using AvaloniaEdit.Editing;
-using Avalonia.Styling;
-using Avalonia.Controls.Shapes;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
+
+using ICSharpCode.AvalonEdit.Editing;
 
 namespace ICSharpCode.ILSpy.TextView
 {
@@ -33,82 +32,46 @@ namespace ICSharpCode.ILSpy.TextView
 	/// Animated rectangle around the caret.
 	/// This is used after clicking links that lead to another location within the text view.
 	/// </summary>
-	sealed class CaretHighlightAdorner : Control
+	sealed class CaretHighlightAdorner : Adorner
 	{
-        readonly Pen pen;
+		readonly Pen pen;
+		readonly RectangleGeometry geometry;
 
-        static readonly StyledProperty<double> RectOpacityProperty = AvaloniaProperty.Register<CaretHighlightAdorner, double>(nameof(RectOpacity));
-        public double RectOpacity => GetValue(RectOpacityProperty);
-
-        static readonly StyledProperty<Rect> RectProperty = AvaloniaProperty.Register<CaretHighlightAdorner, Rect>(nameof(Rect));
-        public Rect Rect => GetValue(RectProperty);
-
-        static CaretHighlightAdorner()
-        {
-            AffectsRender<CaretHighlightAdorner>(
-                RectProperty,
-                RectOpacityProperty
-            );
-        }
-
-        public CaretHighlightAdorner(TextArea textArea)
+		public CaretHighlightAdorner(TextArea textArea)
+			: base(textArea.TextView)
 		{
-            Rect min = textArea.Caret.CalculateCaretRectangle();
-            min = min.Translate(-textArea.TextView.ScrollOffset);
+			Rect min = textArea.Caret.CalculateCaretRectangle();
+			min.Offset(-textArea.TextView.ScrollOffset);
 
-            double size = Math.Max(min.Width, min.Height) * 0.25;
-            Rect max = min.Inflate(size);
+			Rect max = min;
+			double size = Math.Max(min.Width, min.Height) * 0.25;
+			max.Inflate(size, size);
 
-            pen = new Pen(TextBlock.GetForeground(textArea.TextView).ToImmutable());
+			pen = new Pen(TextBlock.GetForeground(textArea.TextView).Clone(), 1);
 
-            //geometry.BeginAnimation(RectangleGeometry.RectProperty, new RectAnimation(min, max, new Duration(TimeSpan.FromMilliseconds(300))) { AutoReverse = true });
-            //pen.Brush.BeginAnimation(Brush.OpacityProperty, new DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(200))) { BeginTime = TimeSpan.FromMilliseconds(450) });
+			geometry = new RectangleGeometry(min, 2, 2);
+			geometry.BeginAnimation(RectangleGeometry.RectProperty, new RectAnimation(min, max, new Duration(TimeSpan.FromMilliseconds(300))) { AutoReverse = true });
+			pen.Brush.BeginAnimation(Brush.OpacityProperty, new DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(200))) { BeginTime = TimeSpan.FromMilliseconds(450) });
+		}
 
-            // HACK: one animation at a time
-            var caretAnimation = new Animation
-            {
-                Duration = TimeSpan.FromMilliseconds(1000),
-                IterationCount = new IterationCount(1UL),
-                PlaybackDirection = PlaybackDirection.Normal,
-                Children =
-                {
-                    new KeyFrame{ Setters = {new Setter(RectProperty, min) }, Cue = new Cue(0) },
-                    new KeyFrame{ Setters = {new Setter(RectProperty, max) }, Cue = new Cue(0.3) },
-                    new KeyFrame{ Setters = {new Setter(RectProperty, min) }, Cue = new Cue(0.6) },
-                    new KeyFrame{ Setters = {new Setter(RectProperty, max) }, Cue = new Cue(1) },
-
-                    new KeyFrame { Setters = { new Setter(RectOpacityProperty, 1.0) },  Cue = new Cue(0), },
-                    new KeyFrame { Setters = { new Setter(RectOpacityProperty, 1.0) },  Cue = new Cue(0.45), },
-                    new KeyFrame { Setters = { new Setter(RectOpacityProperty, 0.0) },  Cue = new Cue(0.65), },
-                    new KeyFrame { Setters = { new Setter(RectOpacityProperty, 0.0) },  Cue = new Cue(1), }
-                }
-            };
-
-            caretAnimation.RunAsync(this, null, default);
-        }
-
-        public static void DisplayCaretHighlightAnimation(TextArea textArea)
+		public static void DisplayCaretHighlightAnimation(TextArea textArea)
 		{
 			AdornerLayer layer = AdornerLayer.GetAdornerLayer(textArea.TextView);
-            CaretHighlightAdorner adorner = new CaretHighlightAdorner(textArea)
-            {
-                [AdornerLayer.AdornedElementProperty] = textArea
-            };
-            layer.Children.Add(adorner);
+			CaretHighlightAdorner adorner = new CaretHighlightAdorner(textArea);
+			layer.Add(adorner);
 
 			DispatcherTimer timer = new DispatcherTimer();
 			timer.Interval = TimeSpan.FromSeconds(1);
 			timer.Tick += delegate {
 				timer.Stop();
-				layer.Children.Remove(adorner);
+				layer.Remove(adorner);
 			};
 			timer.Start();
 		}
-		
-		public override void Render(DrawingContext context)
+
+		protected override void OnRender(DrawingContext drawingContext)
 		{
-            using (context.PushOpacity(RectOpacity))
-                context.DrawRectangle(pen, Rect, 2f);
+			drawingContext.DrawGeometry(null, pen, geometry);
 		}
 	}
 }

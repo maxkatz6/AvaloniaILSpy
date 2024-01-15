@@ -35,8 +35,7 @@ namespace ICSharpCode.ILSpy
 		/// <summary>
 		/// A list of all languages.
 		/// </summary>
-		public static ReadOnlyCollection<Language> AllLanguages
-		{
+		public static ReadOnlyCollection<Language> AllLanguages {
 			get { return allLanguages; }
 		}
 
@@ -45,10 +44,10 @@ namespace ICSharpCode.ILSpy
 			List<Language> languages = new List<Language>();
 			languages.AddRange(ep.GetExportedValues<Language>());
 			languages.Sort((a, b) => a.Name.CompareTo(b.Name));
-			#if DEBUG
+#if DEBUG
 			languages.AddRange(ILAstLanguage.GetDebugLanguages());
 			languages.AddRange(CSharpLanguage.GetDebugLanguages());
-			#endif
+#endif
 			allLanguages = languages.AsReadOnly();
 		}
 
@@ -59,6 +58,17 @@ namespace ICSharpCode.ILSpy
 		public static Language GetLanguage(string name)
 		{
 			return AllLanguages.FirstOrDefault(l => l.Name == name) ?? AllLanguages.First();
+		}
+
+		static ILLanguage ilLanguage;
+		public static ILLanguage ILLanguage {
+			get {
+				if (ilLanguage == null)
+				{
+					ilLanguage = (ILLanguage)GetLanguage("IL");
+				}
+				return ilLanguage;
+			}
 		}
 	}
 }
