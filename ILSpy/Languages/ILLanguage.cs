@@ -19,10 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.Linq;
 using System.Reflection.Metadata;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using AvaloniaEdit.Highlighting;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;

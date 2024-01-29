@@ -23,8 +23,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows;
 using System.Xml.Linq;
+
+using Avalonia;
+using Avalonia.Controls;
 
 using ICSharpCode.ILSpy.Docking;
 using ICSharpCode.ILSpy.Themes;
@@ -58,7 +60,7 @@ namespace ICSharpCode.ILSpy
 			}
 			this.ActiveAutoLoadedAssembly = (string)doc.Element("ActiveAutoLoadedAssembly");
 
-			this.WindowState = FromString((string)doc.Element("WindowState"), WindowState.Normal);
+			this.WindowState = FromString((string)doc.Element("WindowState"), this.WindowState.Normal);
 			this.WindowBounds = FromString((string)doc.Element("WindowBounds"), DefaultWindowBounds);
 			this.SplitterPosition = FromString((string)doc.Element("SplitterPosition"), 0.4);
 			this.TopPaneSplitterPosition = FromString((string)doc.Element("TopPaneSplitterPosition"), 0.3);
@@ -116,7 +118,7 @@ namespace ICSharpCode.ILSpy
 			}
 		}
 
-		public WindowState WindowState = WindowState.Normal;
+		public WindowState WindowState = this.WindowState.Normal;
 		public Rect WindowBounds;
 		internal static Rect DefaultWindowBounds = new Rect(10, 10, 750, 550);
 		/// <summary>

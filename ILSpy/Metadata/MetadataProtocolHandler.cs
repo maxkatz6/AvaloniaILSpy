@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.Linq;
 using System.Reflection.Metadata;
 

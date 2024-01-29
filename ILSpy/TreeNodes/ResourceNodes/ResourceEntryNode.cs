@@ -19,6 +19,8 @@
 using System;
 using System.IO;
 
+using Avalonia.Controls;
+
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
 using ICSharpCode.Decompiler.Metadata;

@@ -17,7 +17,6 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 

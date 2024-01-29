@@ -23,8 +23,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using System.Windows;
-using System.Windows.Threading;
+
+using Avalonia.Interactivity;
+using Avalonia.Threading;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.TypeSystem;

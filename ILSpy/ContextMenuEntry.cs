@@ -19,13 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 
-using ICSharpCode.AvalonEdit;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+
+using AvaloniaEdit;
 using ICSharpCode.ILSpy.TextView;
 using ICSharpCode.ILSpyX.Search;
 using ICSharpCode.TreeView;

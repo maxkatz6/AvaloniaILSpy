@@ -18,9 +18,11 @@
 
 using System;
 using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
+
+using Avalonia.Data;
+using Avalonia.Data.Converters;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml.MarkupExtensions;
 
 namespace ICSharpCode.ILSpy.Controls
 {

@@ -17,7 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.Collections.Generic;
-using System.Windows;
+
+using Avalonia.Interactivity;
 
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.TreeNodes;
@@ -33,7 +34,7 @@ namespace ICSharpCode.ILSpy.Analyzers
 	{
 		public abstract IEntity Member { get; }
 
-		public override void ActivateItem(System.Windows.RoutedEventArgs e)
+		public override void ActivateItem(RoutedEventArgs e)
 		{
 			e.Handled = true;
 			if (this.Member.MetadataToken.IsNil)

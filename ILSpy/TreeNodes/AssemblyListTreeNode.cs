@@ -19,7 +19,8 @@
 using System;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Windows;
+
+using Avalonia.Input;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;

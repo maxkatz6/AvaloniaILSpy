@@ -19,10 +19,10 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Xml.Linq;
+
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 using ICSharpCode.ILSpyX.Settings;
 

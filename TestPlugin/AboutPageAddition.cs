@@ -2,10 +2,8 @@
 // This code is distributed under MIT X11 license (for details please see \doc\license.txt)
 
 using System.ComponentModel.Composition;
-using System.Windows;
-using System.Windows.Media;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using AvaloniaEdit.Highlighting;
 using ICSharpCode.ILSpy;
 
 namespace TestPlugin

@@ -18,7 +18,8 @@
 
 using System.Linq;
 using System.Text;
-using System.Windows;
+
+using Avalonia.Controls;
 
 namespace ICSharpCode.ILSpy.Analyzers
 {

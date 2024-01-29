@@ -18,22 +18,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Media;
 using System.Xml;
 using System.Xml.Linq;
 
-using ICSharpCode.AvalonEdit.Document;
-using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit.Utils;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Documents;
+using Avalonia.Media;
+
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Utils;
 using ICSharpCode.Decompiler.Documentation;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Output;
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.Options;
@@ -468,7 +471,7 @@ namespace ICSharpCode.ILSpy.TextView
 
 		void AddSection(Inline title, Action addChildren)
 		{
-			var section = new Section();
+			var section = new BitVector32.Section();
 			AddBlock(section);
 			var oldBlockCollection = blockCollection;
 			try

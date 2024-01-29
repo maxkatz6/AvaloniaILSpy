@@ -19,15 +19,18 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using System.Windows;
-using System.Windows.Controls;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+
+using AvaloniaEdit.Highlighting;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
@@ -354,7 +357,7 @@ namespace ICSharpCode.ILSpy
 		}
 
 		void AddWarningMessage(PEFile module, ITextOutput output, string line1, string line2 = null,
-			string buttonText = null, System.Windows.Media.ImageSource buttonImage = null, RoutedEventHandler buttonClickHandler = null)
+			string buttonText = null, System.Windows.Media.IImage buttonImage = null, RoutedEventHandler buttonClickHandler = null)
 		{
 			if (output is ISmartTextOutput fancyOutput)
 			{

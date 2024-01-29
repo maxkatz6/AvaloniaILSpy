@@ -19,13 +19,13 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Input;
-using System.Windows.Navigation;
 
-using ICSharpCode.AvalonEdit.Rendering;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Data;
+using Avalonia.Layout;
+
+using AvaloniaEdit.Rendering;
 using ICSharpCode.Decompiler;
 using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpy.TextView;

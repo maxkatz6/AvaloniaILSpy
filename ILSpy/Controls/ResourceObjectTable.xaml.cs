@@ -21,10 +21,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Input;
+
+using Avalonia.Controls;
+
+using AvaloniaEdit;
 
 namespace ICSharpCode.ILSpy.Controls
 {

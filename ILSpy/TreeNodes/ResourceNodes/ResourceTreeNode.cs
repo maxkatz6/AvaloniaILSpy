@@ -21,8 +21,10 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit.Utils;
+using Avalonia.Controls;
+
+using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Utils;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
 using ICSharpCode.Decompiler.Metadata;

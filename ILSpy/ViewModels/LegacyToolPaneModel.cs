@@ -17,7 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows;
+
+using Avalonia.Markup.Xaml.Templates;
 
 namespace ICSharpCode.ILSpy.ViewModels
 {

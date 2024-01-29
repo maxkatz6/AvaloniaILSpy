@@ -22,31 +22,33 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Threading;
 using System.Xml;
 
-using ICSharpCode.AvalonEdit;
-using ICSharpCode.AvalonEdit.Document;
-using ICSharpCode.AvalonEdit.Editing;
-using ICSharpCode.AvalonEdit.Folding;
-using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using ICSharpCode.AvalonEdit.Rendering;
-using ICSharpCode.AvalonEdit.Search;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Data;
+using Avalonia.Data.Core;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Threading;
+
+using AvaloniaEdit;
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Editing;
+using AvaloniaEdit.Folding;
+using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Highlighting.Xshd;
+using AvaloniaEdit.Rendering;
+using AvaloniaEdit.Search;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
@@ -63,7 +65,10 @@ using Microsoft.Win32;
 
 using TomsToolbox.Wpf;
 
+using Color = Avalonia.Media.Color;
+using Point = Avalonia.Point;
 using ResourceKeys = ICSharpCode.ILSpy.Themes.ResourceKeys;
+using Size = Avalonia.Size;
 
 namespace ICSharpCode.ILSpy.TextView
 {
@@ -144,9 +149,9 @@ namespace ICSharpCode.ILSpy.TextView
 
 			ContextMenuProvider.Add(this);
 
-			textEditor.TextArea.TextView.SetResourceReference(ICSharpCode.AvalonEdit.Rendering.TextView.LinkTextForegroundBrushProperty, ResourceKeys.LinkTextForegroundBrush);
-			textEditor.TextArea.TextView.SetResourceReference(ICSharpCode.AvalonEdit.Rendering.TextView.CurrentLineBackgroundProperty, ResourceKeys.CurrentLineBackgroundBrush);
-			textEditor.TextArea.TextView.SetResourceReference(ICSharpCode.AvalonEdit.Rendering.TextView.CurrentLineBorderProperty, ResourceKeys.CurrentLineBorderPen);
+			textEditor.TextArea.TextView.SetResourceReference(AvaloniaEdit.Rendering.TextView.LinkTextForegroundBrushProperty, ResourceKeys.LinkTextForegroundBrush);
+			textEditor.TextArea.TextView.SetResourceReference(AvaloniaEdit.Rendering.TextView.CurrentLineBackgroundProperty, ResourceKeys.CurrentLineBackgroundBrush);
+			textEditor.TextArea.TextView.SetResourceReference(AvaloniaEdit.Rendering.TextView.CurrentLineBorderProperty, ResourceKeys.CurrentLineBorderPen);
 
 			DataObject.AddSettingDataHandler(textEditor.TextArea, OnSettingData);
 

@@ -21,7 +21,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
+
+using Avalonia.Controls;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;

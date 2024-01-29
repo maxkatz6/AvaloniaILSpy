@@ -18,7 +18,8 @@
 
 using System;
 using System.Reflection.Metadata;
-using System.Windows.Media;
+
+using Avalonia.Media;
 
 using ICSharpCode.Decompiler;
 
@@ -55,7 +56,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override object Icon => GetIcon(GetMethodDefinition());
 
-		public static ImageSource GetIcon(IMethod method)
+		public static IImage GetIcon(IMethod method)
 		{
 			if (method.IsOperator)
 				return Images.GetIcon(MemberIcon.Operator, GetOverlayIcon(method.Accessibility), false);

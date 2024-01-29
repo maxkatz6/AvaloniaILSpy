@@ -19,7 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Threading;
+
+using Avalonia.Threading;
 
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.Docking;

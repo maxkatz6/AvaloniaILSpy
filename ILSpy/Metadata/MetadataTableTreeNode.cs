@@ -19,8 +19,9 @@
 using System;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using System.Windows.Controls;
-using System.Windows.Threading;
+
+using Avalonia.Controls;
+using Avalonia.Threading;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;

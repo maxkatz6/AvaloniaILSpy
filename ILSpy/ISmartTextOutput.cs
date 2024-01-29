@@ -17,12 +17,13 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
+
+using AvaloniaEdit.Highlighting;
 using ICSharpCode.Decompiler;
 using ICSharpCode.ILSpy.Themes;
 
@@ -52,7 +53,7 @@ namespace ICSharpCode.ILSpy
 		/// <summary>
 		/// Creates a button.
 		/// </summary>
-		public static void AddButton(this ISmartTextOutput output, ImageSource icon, string text, RoutedEventHandler click)
+		public static void AddButton(this ISmartTextOutput output, IImage icon, string text, RoutedEventHandler click)
 		{
 			output.AddUIElement(
 				delegate {

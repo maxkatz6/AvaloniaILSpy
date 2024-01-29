@@ -19,6 +19,8 @@
 using System.IO;
 using System.Linq;
 
+using Avalonia.Controls;
+
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
 using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpy.TreeNodes;

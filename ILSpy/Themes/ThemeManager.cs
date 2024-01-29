@@ -22,10 +22,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using Avalonia.Controls;
+using Avalonia.Styling;
+
+using AvaloniaEdit.Highlighting;
 
 namespace ICSharpCode.ILSpy.Themes
 {

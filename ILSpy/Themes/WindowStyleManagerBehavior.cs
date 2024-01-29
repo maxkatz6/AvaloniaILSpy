@@ -18,10 +18,11 @@
 
 using System;
 using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Interop;
-using System.Windows.Media;
+
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Styling;
+using Avalonia.Xaml.Interactivity;
 
 using ICSharpCode.ILSpy.Options;
 
@@ -31,7 +32,7 @@ using TomsToolbox.Wpf.Interactivity;
 
 namespace ICSharpCode.ILSpy.Themes
 {
-	public class WindowStyleManagerBehavior : FrameworkElementBehavior<Window>
+	public class WindowStyleManagerBehavior : Behavior<Window>
 	{
 		private static readonly DispatcherThrottle restartNotificationThrottle = new DispatcherThrottle(ShowRestartNotification);
 

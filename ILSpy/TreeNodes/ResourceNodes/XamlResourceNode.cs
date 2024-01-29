@@ -18,10 +18,11 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.IO;
 using System.Threading.Tasks;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using AvaloniaEdit.Highlighting;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.TextView;
 using ICSharpCode.ILSpy.TreeNodes;

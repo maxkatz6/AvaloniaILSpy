@@ -19,8 +19,8 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
+
+using Avalonia.Markup.Xaml.Templates;
 
 namespace ICSharpCode.ILSpy.Docking
 {

@@ -22,8 +22,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using System.Windows.Controls;
-using System.Windows.Threading;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Disassembler;

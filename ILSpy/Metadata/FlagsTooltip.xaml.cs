@@ -22,8 +22,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Windows;
-using System.Windows.Data;
+
+using Avalonia.Data.Converters;
 
 using ICSharpCode.Decompiler.Util;
 

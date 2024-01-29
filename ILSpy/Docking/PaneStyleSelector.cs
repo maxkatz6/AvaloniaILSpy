@@ -1,5 +1,5 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿
+using Avalonia.Styling;
 
 using ICSharpCode.ILSpy.ViewModels;
 // Copyright (c) 2019 AlphaSierraPapa for the SharpDevelop Team

@@ -17,11 +17,12 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
+
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Threading;
 
 namespace ICSharpCode.ILSpy.Controls
 {

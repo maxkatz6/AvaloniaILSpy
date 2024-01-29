@@ -18,9 +18,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
+
+using Avalonia.Data;
+using Avalonia.Markup.Xaml.Templates;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;

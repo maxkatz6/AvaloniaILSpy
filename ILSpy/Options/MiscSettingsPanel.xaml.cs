@@ -16,8 +16,9 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System.Windows.Controls;
 using System.Xml.Linq;
+
+using Avalonia.Controls;
 
 using ICSharpCode.ILSpyX.Settings;
 

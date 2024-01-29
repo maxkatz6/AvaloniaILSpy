@@ -17,7 +17,9 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows.Data;
+
+using Avalonia.Data;
+using Avalonia.Data.Converters;
 
 using ICSharpCode.ILSpy.ViewModels;
 

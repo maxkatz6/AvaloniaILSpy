@@ -18,9 +18,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Windows;
 
-using ICSharpCode.AvalonEdit.Rendering;
+using AvaloniaEdit.Rendering;
 
 namespace ICSharpCode.ILSpy.TextView
 {

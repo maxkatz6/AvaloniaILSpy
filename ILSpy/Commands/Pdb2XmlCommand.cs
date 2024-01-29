@@ -23,7 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using AvaloniaEdit.Highlighting;
 using ICSharpCode.Decompiler;
 using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpy.TextView;

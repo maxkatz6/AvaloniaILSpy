@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -25,12 +26,12 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Navigation;
-using System.Windows.Threading;
+
+using Avalonia.Controls;
+using Avalonia.Threading;
 
 using ICSharpCode.ILSpy.Options;
+using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpyX.Settings;
 
 using Microsoft.VisualStudio.Composition;

@@ -18,11 +18,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 
-using ICSharpCode.AvalonEdit.Rendering;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+
+using AvaloniaEdit.Rendering;
 using ICSharpCode.ILSpy.TextView;
 using ICSharpCode.ILSpy.TreeNodes;
 using ICSharpCode.ILSpy.ViewModels;

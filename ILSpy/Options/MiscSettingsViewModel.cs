@@ -21,7 +21,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Input;
 
 using ICSharpCode.ILSpy.Commands;

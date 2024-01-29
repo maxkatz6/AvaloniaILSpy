@@ -19,8 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Windows;
-using System.Windows.Controls;
+
+using Avalonia.Controls;
 
 namespace ICSharpCode.ILSpy.Controls
 {

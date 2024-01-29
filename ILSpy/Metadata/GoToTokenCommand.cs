@@ -20,9 +20,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Metadata;

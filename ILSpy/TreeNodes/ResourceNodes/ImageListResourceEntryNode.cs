@@ -17,9 +17,9 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;

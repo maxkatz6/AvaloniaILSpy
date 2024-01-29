@@ -27,14 +27,14 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Navigation;
-using System.Windows.Threading;
 
 using AvalonDock;
 using AvalonDock.Layout;
 using AvalonDock.Layout.Serialization;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using Avalonia.Threading;
+
+using AvaloniaEdit.Highlighting;
 using ICSharpCode.ILSpy.TextView;
 using ICSharpCode.ILSpy.ViewModels;
 

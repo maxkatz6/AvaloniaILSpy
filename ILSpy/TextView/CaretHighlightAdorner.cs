@@ -17,14 +17,14 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Threading;
 
-using ICSharpCode.AvalonEdit.Editing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Media;
+using Avalonia.Threading;
+
+using AvaloniaEdit.Editing;
 
 namespace ICSharpCode.ILSpy.TextView
 {

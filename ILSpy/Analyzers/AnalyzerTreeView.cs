@@ -20,7 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Windows;
+
+using Avalonia;
 
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.ILSpy.Analyzers.TreeNodes;

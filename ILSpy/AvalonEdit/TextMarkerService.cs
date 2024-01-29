@@ -19,16 +19,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Threading;
 
-using ICSharpCode.AvalonEdit.Document;
-using ICSharpCode.AvalonEdit.Rendering;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Immutable;
+using Avalonia.Threading;
+
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Rendering;
 
 namespace ICSharpCode.ILSpy.AvalonEdit
 {
-	using TextView = ICSharpCode.AvalonEdit.Rendering.TextView;
+	using TextView = AvaloniaEdit.Rendering.TextView;
 	/// <summary>
 	/// Handles the text markers for a code editor.
 	/// </summary>
@@ -115,7 +117,7 @@ namespace ICSharpCode.ILSpy.AvalonEdit
 		/// </summary>
 		internal void Redraw(ISegment segment)
 		{
-			textView.Redraw(segment, DispatcherPriority.Normal);
+			textView.Redraw(segment);
 			RedrawRequested?.Invoke(this, EventArgs.Empty);
 		}
 
@@ -131,11 +133,10 @@ namespace ICSharpCode.ILSpy.AvalonEdit
 			int lineEnd = lineStart + line.Length;
 			foreach (TextMarker marker in markers.FindOverlappingSegments(lineStart, line.Length))
 			{
-				Brush foregroundBrush = null;
+				IBrush foregroundBrush = null;
 				if (marker.ForegroundColor != null)
 				{
-					foregroundBrush = new SolidColorBrush(marker.ForegroundColor.Value);
-					foregroundBrush.Freeze();
+					foregroundBrush = new ImmutableSolidColorBrush(marker.ForegroundColor.Value);
 				}
 				ChangeLinePart(
 					Math.Max(marker.StartOffset, lineStart),
@@ -166,7 +167,7 @@ namespace ICSharpCode.ILSpy.AvalonEdit
 			}
 		}
 
-		public void Draw(ICSharpCode.AvalonEdit.Rendering.TextView textView, DrawingContext drawingContext)
+		public void Draw(AvaloniaEdit.Rendering.TextView textView, DrawingContext drawingContext)
 		{
 			if (textView == null)
 				throw new ArgumentNullException(nameof(textView));
@@ -191,8 +192,7 @@ namespace ICSharpCode.ILSpy.AvalonEdit
 					if (geometry != null)
 					{
 						Color color = marker.BackgroundColor.Value;
-						SolidColorBrush brush = new SolidColorBrush(color);
-						brush.Freeze();
+						IBrush brush = new ImmutableSolidColorBrush(color);
 						drawingContext.DrawGeometry(brush, null, geometry);
 					}
 				}
@@ -204,8 +204,7 @@ namespace ICSharpCode.ILSpy.AvalonEdit
 						Point startPoint = r.BottomLeft;
 						Point endPoint = r.BottomRight;
 
-						Brush usedBrush = new SolidColorBrush(marker.MarkerColor);
-						usedBrush.Freeze();
+						IImmutableBrush usedBrush = new ImmutableSolidColorBrush(marker.MarkerColor);
 						if ((marker.MarkerTypes & TextMarkerTypes.SquigglyUnderline) != 0)
 						{
 							double offset = 2.5;
@@ -216,27 +215,26 @@ namespace ICSharpCode.ILSpy.AvalonEdit
 
 							using (StreamGeometryContext ctx = geometry.Open())
 							{
-								ctx.BeginFigure(startPoint, false, false);
-								ctx.PolyLineTo(CreatePoints(startPoint, endPoint, offset, count).ToArray(), true, false);
+								ctx.BeginFigure(startPoint, false);
+								foreach (var point in CreatePoints(startPoint, endPoint, offset, count))
+								{
+									ctx.LineTo(point);
+								}
 							}
 
-							geometry.Freeze();
+							// geometry.Freeze();
 
-							Pen usedPen = new Pen(usedBrush, 1);
-							usedPen.Freeze();
+							IPen usedPen = new ImmutablePen(usedBrush, 1);
 							drawingContext.DrawGeometry(Brushes.Transparent, usedPen, geometry);
 						}
 						if ((marker.MarkerTypes & TextMarkerTypes.NormalUnderline) != 0)
 						{
-							Pen usedPen = new Pen(usedBrush, 1);
-							usedPen.Freeze();
+							IPen usedPen = new ImmutablePen(usedBrush, 1);
 							drawingContext.DrawLine(usedPen, startPoint, endPoint);
 						}
 						if ((marker.MarkerTypes & TextMarkerTypes.DottedUnderline) != 0)
 						{
-							Pen usedPen = new Pen(usedBrush, 1);
-							usedPen.DashStyle = DashStyles.Dot;
-							usedPen.Freeze();
+							IPen usedPen = new ImmutablePen(usedBrush, 1, DashStyle.Dot.ToImmutable());
 							drawingContext.DrawLine(usedPen, startPoint, endPoint);
 						}
 					}

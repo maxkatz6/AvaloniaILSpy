@@ -17,7 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows.Threading;
+
+using Avalonia.Threading;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;

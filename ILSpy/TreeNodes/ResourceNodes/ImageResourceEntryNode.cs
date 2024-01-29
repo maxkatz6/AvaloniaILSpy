@@ -18,9 +18,8 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.IO;
-using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Properties;

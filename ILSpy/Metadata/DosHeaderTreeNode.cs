@@ -17,8 +17,6 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.Collections.Generic;
-using System.Windows.Controls;
-using System.Windows.Data;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;

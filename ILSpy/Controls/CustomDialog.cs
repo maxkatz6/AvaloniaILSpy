@@ -18,7 +18,10 @@
 
 using System;
 using System.Drawing;
-using System.Windows.Forms;
+
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Platform;
 
 namespace ICSharpCode.ILSpy.Controls
 {

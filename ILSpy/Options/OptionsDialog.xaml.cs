@@ -18,12 +18,12 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Media;
 using System.Xml.Linq;
+
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpyX.Settings;

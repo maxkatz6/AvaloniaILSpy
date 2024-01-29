@@ -20,7 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows;
+
+using Avalonia.Controls;
 
 using ICSharpCode.Decompiler.IL;
 using ICSharpCode.ILSpy.Options;

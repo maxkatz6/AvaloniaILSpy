@@ -18,8 +18,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Media;
+
+using Avalonia.Media;
 
 namespace ICSharpCode.ILSpy.AvalonEdit
 {

@@ -17,7 +17,8 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows.Markup;
+
+using Avalonia.Markup.Xaml;
 
 namespace ICSharpCode.ILSpy.Controls
 {

@@ -23,9 +23,6 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.DebugInfo;

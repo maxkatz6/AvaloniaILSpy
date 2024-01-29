@@ -27,12 +27,15 @@ using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Media;
-using System.Windows.Navigation;
+
+using Avalonia.Controls;
+using Avalonia.Controls.Documents;
+using Avalonia.Data;
+using Avalonia.Data.Converters;
+using Avalonia.Data.Core;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml.Templates;
+using Avalonia.Styling;
 
 using DataGridExtensions;
 

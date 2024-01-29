@@ -18,7 +18,9 @@
 
 using System;
 using System.Globalization;
-using System.Windows.Data;
+
+using Avalonia.Data;
+using Avalonia.Data.Converters;
 
 namespace ICSharpCode.ILSpy.Controls
 {

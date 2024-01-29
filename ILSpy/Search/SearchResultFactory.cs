@@ -16,7 +16,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 using System;
-using System.Windows.Media;
+
+using Avalonia.Media;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
@@ -77,7 +78,7 @@ namespace ICSharpCode.ILSpy.Search
 			}
 		}
 
-		static ImageSource GetIcon(IEntity member)
+		static IImage GetIcon(IEntity member)
 		{
 			switch (member)
 			{

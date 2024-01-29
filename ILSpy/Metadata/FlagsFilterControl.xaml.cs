@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
+
+using Avalonia.Controls;
+using Avalonia.Markup.Xaml.Templates;
 
 using DataGridExtensions;
 

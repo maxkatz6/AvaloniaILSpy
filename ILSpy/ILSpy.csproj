@@ -3,29 +3,32 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <TargetFramework>net8.0</TargetFramework>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <UseWpf>true</UseWpf>
     <RootNamespace>ICSharpCode.ILSpy</RootNamespace>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <ApplicationIcon>Images\ILSpy-Large.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\ICSharpCode.Decompiler.snk</AssemblyOriginatorKeyFile>
     <CodeAnalysisRuleSet>..\ICSharpCode.Decompiler.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AvalonEdit" />
-    <PackageReference Include="Dirkster.AvalonDock.Themes.VS2013" />
-    <PackageReference Include="Microsoft.VisualStudio.Composition" />
-    <PackageReference Include="DataGridExtensions" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" />
-    <PackageReference Include="TomsToolbox.Wpf.Styles" />
+    <PackageReference Include="AvaloniaEdit" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
+<!--    <PackageReference Include="Dirkster.AvalonDock.Themes.VS2013" />-->
+<!--    <PackageReference Include="Microsoft.VisualStudio.Composition" />-->
+<!--    <PackageReference Include="DataGridExtensions" />-->
+    <PackageReference Include="Avalonia.Xaml.Behaviors" />
+<!--    <PackageReference Include="TomsToolbox.Wpf.Styles" />-->
   </ItemGroup>
 
+  <ItemGroup>
+    <AvaloniaXaml Include="**/*.xaml" />
+  </ItemGroup>
+  
   <ItemGroup>
     <EmbeddedResource Include="..\doc\ILSpyAboutPage.txt" />
     <EmbeddedResource Include="..\doc\ILSpyAboutPage_zh_Hans.txt" />

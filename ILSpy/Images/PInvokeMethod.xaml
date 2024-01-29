@@ -1,4 +1,4 @@
-<DrawingGroup xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+<DrawingGroup xmlns="https://github.com/avaloniaui" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
   <DrawingGroup.Transform>
     <TranslateTransform X="0.021484375" Y="0" />
   </DrawingGroup.Transform>

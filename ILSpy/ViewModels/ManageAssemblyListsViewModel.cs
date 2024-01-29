@@ -21,8 +21,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Windows;
 using System.Windows.Input;
+
+using Avalonia.Controls;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Commands;

@@ -19,90 +19,94 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
+
+using Avalonia;
+using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 
 namespace ICSharpCode.ILSpy
 {
 	static class Images
 	{
-		static ImageSource Load(string icon)
+		static IImage Load(string icon)
 		{
 			var image = new DrawingImage(LoadDrawingGroup(null, "Images/" + icon));
-			if (image.CanFreeze)
-			{
-				image.Freeze();
-			}
+			// TODO Avalonia: there should be something like .ToImmutable()
+			// if (image.CanFreeze)
+			// {
+			// 	image.Freeze();
+			// }
 
 			return image;
 		}
 
-		public static readonly ImageSource ILSpyIcon = new BitmapImage(new Uri("pack://application:,,,/ILSpy;component/images/ILSpy.ico"));
+		public static readonly IImage ILSpyIcon = new Bitmap(AssetLoader.Open(new Uri("avares://ILSpy/Images/ILSpy.ico")));
 
-		public static readonly ImageSource ViewCode = Load("ViewCode");
-		public static readonly ImageSource Save = Load("Save");
-		public static readonly ImageSource OK = Load("OK");
+		public static readonly IImage ViewCode = Load("ViewCode");
+		public static readonly IImage Save = Load("Save");
+		public static readonly IImage OK = Load("OK");
 
-		public static readonly ImageSource Delete = Load("Delete");
-		public static readonly ImageSource Search = Load("Search");
+		public static readonly IImage Delete = Load("Delete");
+		public static readonly IImage Search = Load("Search");
 
-		public static readonly ImageSource Assembly = Load("Assembly");
-		public static readonly ImageSource AssemblyWarning = Load("AssemblyWarning");
-		public static readonly ImageSource FindAssembly = Load("FindAssembly");
+		public static readonly IImage Assembly = Load("Assembly");
+		public static readonly IImage AssemblyWarning = Load("AssemblyWarning");
+		public static readonly IImage FindAssembly = Load("FindAssembly");
 
-		public static readonly ImageSource Library = Load("Library");
-		public static readonly ImageSource Namespace = Load("Namespace");
+		public static readonly IImage Library = Load("Library");
+		public static readonly IImage Namespace = Load("Namespace");
 
-		public static readonly ImageSource ReferenceFolder = Load("ReferenceFolder");
-		public static readonly ImageSource NuGet = Load(null, "Images/NuGet.png");
+		public static readonly IImage ReferenceFolder = Load("ReferenceFolder");
+		public static readonly IImage NuGet = Load(null, "Images/NuGet.png");
 
-		public static readonly ImageSource SubTypes = Load("SubTypes");
-		public static readonly ImageSource SuperTypes = Load("SuperTypes");
+		public static readonly IImage SubTypes = Load("SubTypes");
+		public static readonly IImage SuperTypes = Load("SuperTypes");
 
-		public static readonly ImageSource FolderOpen = Load("Folder.Open");
-		public static readonly ImageSource FolderClosed = Load("Folder.Closed");
+		public static readonly IImage FolderOpen = Load("Folder.Open");
+		public static readonly IImage FolderClosed = Load("Folder.Closed");
 
-		public static readonly ImageSource Resource = Load("Resource");
-		public static readonly ImageSource ResourceImage = Load("ResourceImage");
-		public static readonly ImageSource ResourceResourcesFile = Load("ResourceResourcesFile");
-		public static readonly ImageSource ResourceXml = Load("ResourceXml");
-		public static readonly ImageSource ResourceXsd = Load("ResourceXslt");
-		public static readonly ImageSource ResourceXslt = Load("ResourceXslt");
+		public static readonly IImage Resource = Load("Resource");
+		public static readonly IImage ResourceImage = Load("ResourceImage");
+		public static readonly IImage ResourceResourcesFile = Load("ResourceResourcesFile");
+		public static readonly IImage ResourceXml = Load("ResourceXml");
+		public static readonly IImage ResourceXsd = Load("ResourceXslt");
+		public static readonly IImage ResourceXslt = Load("ResourceXslt");
 
-		public static readonly ImageSource Class = Load("Class");
-		public static readonly ImageSource Struct = Load("Struct");
-		public static readonly ImageSource Interface = Load("Interface");
-		public static readonly ImageSource Delegate = Load("Delegate");
-		public static readonly ImageSource Enum = Load("Enum");
+		public static readonly IImage Class = Load("Class");
+		public static readonly IImage Struct = Load("Struct");
+		public static readonly IImage Interface = Load("Interface");
+		public static readonly IImage Delegate = Load("Delegate");
+		public static readonly IImage Enum = Load("Enum");
 
-		public static readonly ImageSource Field = Load("Field");
-		public static readonly ImageSource FieldReadOnly = Load("FieldReadOnly");
-		public static readonly ImageSource Literal = Load("Literal");
-		public static readonly ImageSource EnumValue = Load("EnumValue");
+		public static readonly IImage Field = Load("Field");
+		public static readonly IImage FieldReadOnly = Load("FieldReadOnly");
+		public static readonly IImage Literal = Load("Literal");
+		public static readonly IImage EnumValue = Load("EnumValue");
 
-		public static readonly ImageSource Method = Load("Method");
-		public static readonly ImageSource Constructor = Load("Constructor");
-		public static readonly ImageSource VirtualMethod = Load("VirtualMethod");
-		public static readonly ImageSource Operator = Load("Operator");
-		public static readonly ImageSource ExtensionMethod = Load("ExtensionMethod");
-		public static readonly ImageSource PInvokeMethod = Load("PInvokeMethod");
+		public static readonly IImage Method = Load("Method");
+		public static readonly IImage Constructor = Load("Constructor");
+		public static readonly IImage VirtualMethod = Load("VirtualMethod");
+		public static readonly IImage Operator = Load("Operator");
+		public static readonly IImage ExtensionMethod = Load("ExtensionMethod");
+		public static readonly IImage PInvokeMethod = Load("PInvokeMethod");
 
-		public static readonly ImageSource Property = Load("Property");
-		public static readonly ImageSource Indexer = Load("Indexer");
+		public static readonly IImage Property = Load("Property");
+		public static readonly IImage Indexer = Load("Indexer");
 
-		public static readonly ImageSource Event = Load("Event");
+		public static readonly IImage Event = Load("Event");
 
-		private static readonly ImageSource OverlayProtected = Load("OverlayProtected");
-		private static readonly ImageSource OverlayInternal = Load("OverlayInternal");
-		private static readonly ImageSource OverlayProtectedInternal = Load("OverlayProtectedInternal");
-		private static readonly ImageSource OverlayPrivate = Load("OverlayPrivate");
-		private static readonly ImageSource OverlayPrivateProtected = Load("OverlayPrivateProtected");
-		private static readonly ImageSource OverlayCompilerControlled = Load("OverlayCompilerControlled");
+		private static readonly IImage OverlayProtected = Load("OverlayProtected");
+		private static readonly IImage OverlayInternal = Load("OverlayInternal");
+		private static readonly IImage OverlayProtectedInternal = Load("OverlayProtectedInternal");
+		private static readonly IImage OverlayPrivate = Load("OverlayPrivate");
+		private static readonly IImage OverlayPrivateProtected = Load("OverlayPrivateProtected");
+		private static readonly IImage OverlayCompilerControlled = Load("OverlayCompilerControlled");
 
-		private static readonly ImageSource OverlayStatic = Load("OverlayStatic");
+		private static readonly IImage OverlayStatic = Load("OverlayStatic");
 
-		public static ImageSource Load(object part, string icon)
+		public static IImage Load(object part, string icon)
 		{
 			if (icon.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
 				return LoadImage(part, icon);
@@ -110,29 +114,30 @@ namespace ICSharpCode.ILSpy
 			if (ResourceExists(uri))
 			{
 				var image = new DrawingImage(LoadDrawingGroup(part, icon));
-				if (image.CanFreeze)
-				{
-					image.Freeze();
-				}
+				// if (image.CanFreeze)
+				// {
+				// 	image.Freeze();
+				// }
 				return image;
 			}
 			return LoadImage(part, icon + ".png");
 		}
 
-		static BitmapImage LoadImage(object part, string icon)
+		static Bitmap LoadImage(object part, string icon)
 		{
 			Uri uri = GetUri(part, icon);
-			BitmapImage image = new BitmapImage(uri);
-			if (image.CanFreeze)
-			{
-				image.Freeze();
-			}
+			Bitmap image = new Bitmap(AssetLoader.Open(uri));
+			// if (image.CanFreeze)
+			// {
+			// 	image.Freeze();
+			// }
 			return image;
 		}
 
 		public static Drawing LoadDrawingGroup(object part, string icon)
 		{
-			return (Drawing)Application.LoadComponent(GetUri(part, icon + ".xaml", absolute: false));
+			// TODO IT'S NOT AOT FRIENDLY AT ALL, revisit.
+			return (Drawing)AvaloniaXamlLoader.Load(GetUri(part, icon + ".xaml", absolute: false));
 		}
 
 		private static Uri GetUri(object part, string icon, bool absolute = true)
@@ -168,8 +173,7 @@ namespace ICSharpCode.ILSpy
 		{
 			try
 			{
-				Application.GetResourceStream(uri);
-				return true;
+				return AssetLoader.Exists(uri);
 			}
 			catch (IOException)
 			{
@@ -180,13 +184,13 @@ namespace ICSharpCode.ILSpy
 		private static readonly TypeIconCache typeIconCache = new TypeIconCache();
 		private static readonly MemberIconCache memberIconCache = new MemberIconCache();
 
-		public static ImageSource GetIcon(TypeIcon icon, AccessOverlayIcon overlay, bool isStatic = false)
+		public static IImage GetIcon(TypeIcon icon, AccessOverlayIcon overlay, bool isStatic = false)
 		{
 			lock (typeIconCache)
 				return typeIconCache.GetIcon(icon, overlay, isStatic);
 		}
 
-		public static ImageSource GetIcon(MemberIcon icon, AccessOverlayIcon overlay, bool isStatic)
+		public static IImage GetIcon(MemberIcon icon, AccessOverlayIcon overlay, bool isStatic)
 		{
 			lock (memberIconCache)
 				return memberIconCache.GetIcon(icon, overlay, isStatic);
@@ -205,9 +209,9 @@ namespace ICSharpCode.ILSpy
 				PreloadPublicIconToCache(TypeIcon.Delegate, Images.Delegate);
 			}
 
-			protected override ImageSource GetBaseImage(TypeIcon icon)
+			protected override IImage GetBaseImage(TypeIcon icon)
 			{
-				ImageSource baseImage;
+				IImage baseImage;
 				switch (icon)
 				{
 					case TypeIcon.Class:
@@ -252,9 +256,9 @@ namespace ICSharpCode.ILSpy
 				PreloadPublicIconToCache(MemberIcon.Event, Images.Event);
 			}
 
-			protected override ImageSource GetBaseImage(MemberIcon icon)
+			protected override IImage GetBaseImage(MemberIcon icon)
 			{
-				ImageSource baseImage;
+				IImage baseImage;
 				switch (icon)
 				{
 					case MemberIcon.Field:
@@ -306,15 +310,15 @@ namespace ICSharpCode.ILSpy
 
 		private abstract class IconCache<T>
 		{
-			private readonly Dictionary<(T, AccessOverlayIcon, bool), ImageSource> cache = new Dictionary<(T, AccessOverlayIcon, bool), ImageSource>();
+			private readonly Dictionary<(T, AccessOverlayIcon, bool), IImage> cache = new Dictionary<(T, AccessOverlayIcon, bool), IImage>();
 
-			protected void PreloadPublicIconToCache(T icon, ImageSource image)
+			protected void PreloadPublicIconToCache(T icon, IImage image)
 			{
 				var iconKey = (icon, AccessOverlayIcon.Public, false);
 				cache.Add(iconKey, image);
 			}
 
-			public ImageSource GetIcon(T icon, AccessOverlayIcon overlay, bool isStatic)
+			public IImage GetIcon(T icon, AccessOverlayIcon overlay, bool isStatic)
 			{
 				var iconKey = (icon, overlay, isStatic);
 				if (cache.ContainsKey(iconKey))
@@ -323,25 +327,25 @@ namespace ICSharpCode.ILSpy
 				}
 				else
 				{
-					ImageSource result = BuildMemberIcon(icon, overlay, isStatic);
+					IImage result = BuildMemberIcon(icon, overlay, isStatic);
 					cache.Add(iconKey, result);
 					return result;
 				}
 			}
 
-			private ImageSource BuildMemberIcon(T icon, AccessOverlayIcon overlay, bool isStatic)
+			private IImage BuildMemberIcon(T icon, AccessOverlayIcon overlay, bool isStatic)
 			{
-				ImageSource baseImage = GetBaseImage(icon);
-				ImageSource overlayImage = GetOverlayImage(overlay);
+				IImage baseImage = GetBaseImage(icon);
+				IImage overlayImage = GetOverlayImage(overlay);
 
 				return CreateOverlayImage(baseImage, overlayImage, isStatic);
 			}
 
-			protected abstract ImageSource GetBaseImage(T icon);
+			protected abstract IImage GetBaseImage(T icon);
 
-			private static ImageSource GetOverlayImage(AccessOverlayIcon overlay)
+			private static IImage GetOverlayImage(AccessOverlayIcon overlay)
 			{
-				ImageSource overlayImage;
+				IImage overlayImage;
 				switch (overlay)
 				{
 					case AccessOverlayIcon.Public:
@@ -373,18 +377,24 @@ namespace ICSharpCode.ILSpy
 
 			private static readonly Rect iconRect = new Rect(0, 0, 16, 16);
 
-			private static ImageSource CreateOverlayImage(ImageSource baseImage, ImageSource overlay, bool isStatic)
+			private static IImage CreateOverlayImage(IImage baseImage, IImage overlay, bool isStatic)
 			{
 				var group = new DrawingGroup();
 
-				Drawing baseDrawing = new ImageDrawing(baseImage, iconRect);
+				Drawing baseDrawing = new ImageDrawing {
+					ImageSource = baseImage,
+					Rect = iconRect
+				};
 
 				if (overlay != null)
 				{
 					var nestedGroup = new DrawingGroup { Transform = new ScaleTransform(0.8, 0.8) };
 					nestedGroup.Children.Add(baseDrawing);
 					group.Children.Add(nestedGroup);
-					group.Children.Add(new ImageDrawing(overlay, iconRect));
+					group.Children.Add(new ImageDrawing {
+						ImageSource = overlay,
+						Rect = iconRect
+					});
 				}
 				else
 				{
@@ -393,14 +403,18 @@ namespace ICSharpCode.ILSpy
 
 				if (isStatic)
 				{
-					group.Children.Add(new ImageDrawing(Images.OverlayStatic, iconRect));
+					group.Children.Add(new ImageDrawing {
+						ImageSource = Images.OverlayStatic,
+						Rect = iconRect
+					});
 				}
 
 				var image = new DrawingImage(group);
-				if (image.CanFreeze)
-				{
-					image.Freeze();
-				}
+				// TODO: Avalonia, there should be something like .ToImmutable()
+				// if (image.CanFreeze)
+				// {
+				// 	image.Freeze();
+				// }
 				return image;
 			}
 		}

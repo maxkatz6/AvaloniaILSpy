@@ -16,8 +16,11 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System.Windows;
+
 using System.Windows.Input;
+
+using Avalonia.Input;
+using Avalonia.Markup.Xaml.Templates;
 
 namespace ICSharpCode.ILSpy.ViewModels
 {

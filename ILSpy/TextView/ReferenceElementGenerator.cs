@@ -17,10 +17,9 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows.Input;
 
-using ICSharpCode.AvalonEdit.Document;
-using ICSharpCode.AvalonEdit.Rendering;
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Rendering;
 
 namespace ICSharpCode.ILSpy.TextView
 {

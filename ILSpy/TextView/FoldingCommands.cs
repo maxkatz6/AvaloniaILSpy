@@ -18,8 +18,8 @@
 
 using System.Linq;
 
-using ICSharpCode.AvalonEdit;
-using ICSharpCode.AvalonEdit.Folding;
+using AvaloniaEdit;
+using AvaloniaEdit.Folding;
 using ICSharpCode.ILSpy.Properties;
 
 namespace ICSharpCode.ILSpy.TextView

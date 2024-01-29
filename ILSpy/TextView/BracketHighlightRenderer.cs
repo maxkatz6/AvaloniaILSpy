@@ -17,10 +17,11 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Windows.Media;
 
-using ICSharpCode.AvalonEdit.Document;
-using ICSharpCode.AvalonEdit.Rendering;
+using Avalonia.Media;
+
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Rendering;
 
 namespace ICSharpCode.ILSpy.TextView
 {
@@ -74,7 +75,7 @@ namespace ICSharpCode.ILSpy.TextView
 		BracketSearchResult result;
 		Pen borderPen;
 		Brush backgroundBrush;
-		ICSharpCode.AvalonEdit.Rendering.TextView textView;
+		AvaloniaEdit.Rendering.TextView textView;
 
 		public void SetHighlight(BracketSearchResult result)
 		{
@@ -87,7 +88,7 @@ namespace ICSharpCode.ILSpy.TextView
 			}
 		}
 
-		public BracketHighlightRenderer(ICSharpCode.AvalonEdit.Rendering.TextView textView)
+		public BracketHighlightRenderer(AvaloniaEdit.Rendering.TextView textView)
 		{
 			if (textView == null)
 				throw new ArgumentNullException("textView");
@@ -106,7 +107,7 @@ namespace ICSharpCode.ILSpy.TextView
 			}
 		}
 
-		public void Draw(ICSharpCode.AvalonEdit.Rendering.TextView textView, DrawingContext drawingContext)
+		public void Draw(AvaloniaEdit.Rendering.TextView textView, DrawingContext drawingContext)
 		{
 			if (this.result == null)
 				return;

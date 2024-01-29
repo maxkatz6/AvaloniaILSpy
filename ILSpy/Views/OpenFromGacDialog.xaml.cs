@@ -23,9 +23,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Threading;
+
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Controls;

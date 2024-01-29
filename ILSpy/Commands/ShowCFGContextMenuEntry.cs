@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows;
 
 using ICSharpCode.Decompiler.FlowAnalysis;
 using ICSharpCode.Decompiler.IL;

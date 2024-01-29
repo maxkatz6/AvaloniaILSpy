@@ -27,15 +27,19 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Navigation;
-using System.Windows.Threading;
 
 using AvalonDock.Layout.Serialization;
+
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml.Templates;
+using Avalonia.Media;
+using Avalonia.Threading;
+
+using AvaloniaEdit;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Documentation;

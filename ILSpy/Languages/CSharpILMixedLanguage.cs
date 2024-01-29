@@ -19,15 +19,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Threading;
-using System.Windows;
-using System.Windows.Media;
 
-using ICSharpCode.AvalonEdit.Highlighting;
+using Avalonia.Media;
+
+using AvaloniaEdit.Highlighting;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;

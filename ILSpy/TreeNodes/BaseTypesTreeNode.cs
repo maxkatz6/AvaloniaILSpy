@@ -19,7 +19,8 @@
 using System;
 using System.Linq;
 using System.Reflection.Metadata;
-using System.Windows.Threading;
+
+using Avalonia.Threading;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;

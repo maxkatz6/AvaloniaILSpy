@@ -3,7 +3,6 @@
 
 using System.ComponentModel.Composition;
 using System.Reflection.Metadata;
-using System.Windows.Controls;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
