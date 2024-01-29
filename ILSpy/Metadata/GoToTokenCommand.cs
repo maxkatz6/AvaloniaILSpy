@@ -21,6 +21,11 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.VisualTree;
+
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Metadata;
 using ICSharpCode.ILSpy.Properties;
@@ -70,7 +75,7 @@ namespace ICSharpCode.ILSpy.Commands
 		public void Execute(TextViewContext context)
 		{
 			string content = GetSelectedCellContent(context.DataGrid, context.MousePosition);
-			Clipboard.SetText(content);
+			_ = context.TopLevel?.Clipboard?.SetTextAsync(content);
 		}
 
 		public bool IsEnabled(TextViewContext context)
@@ -84,13 +89,15 @@ namespace ICSharpCode.ILSpy.Commands
 				&& GetSelectedCellContent(context.DataGrid, context.MousePosition) != null;
 		}
 
-		private string GetSelectedCellContent(DataGrid grid, Point position)
+		private string GetSelectedCellContent(DataGrid grid, PixelPoint? position)
 		{
-			position = grid.PointFromScreen(position);
-			var hit = VisualTreeHelper.HitTest(grid, position);
+			if (position == null)
+				return null;
+			var point = grid.PointToClient(position.Value);
+			var hit = grid.InputHitTest(point) as Visual;
 			if (hit == null)
 				return null;
-			var cell = hit.VisualHit.GetParent<DataGridCell>();
+			var cell = hit.FindAncestorOfType<DataGridCell>();
 			if (cell == null)
 				return null;
 			return cell.DataContext.GetType()

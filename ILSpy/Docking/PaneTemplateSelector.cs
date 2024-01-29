@@ -20,6 +20,8 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Markup.Xaml.Templates;
 
 namespace ICSharpCode.ILSpy.Docking
@@ -30,19 +32,18 @@ namespace ICSharpCode.ILSpy.Docking
 		public DataTemplate Template { get; set; }
 	}
 
-	public class PaneTemplateSelector : DataTemplateSelector
+	public class PaneTemplateSelector : IDataTemplate
 	{
 		public Collection<TemplateMapping> Mappings { get; set; } = new Collection<TemplateMapping>();
 
-		public override DataTemplate SelectTemplate(object item, DependencyObject container)
+		public Control Build(object param)
 		{
-			if (item == null)
-			{
-				return base.SelectTemplate(item, container);
-			}
+			return Mappings.FirstOrDefault(m => m.Type == param?.GetType())?.Template.Build(param);
+		}
 
-			return Mappings.FirstOrDefault(m => m.Type == item.GetType())?.Template
-				?? base.SelectTemplate(item, container);
+		public bool Match(object data)
+		{
+			return Mappings.FirstOrDefault(m => m.Type == data?.GetType())?.Template.Match(data) ?? false;
 		}
 	}
 }

@@ -21,17 +21,17 @@ namespace ICSharpCode.ILSpy.Themes
 {
 	public static class ResourceKeys
 	{
-		public static ResourceKey TextBackgroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(TextBackgroundBrush));
-		public static ResourceKey TextForegroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(TextForegroundBrush));
-		public static ResourceKey TextMarkerBackgroundColor = new ComponentResourceKey(typeof(ResourceKeys), nameof(TextMarkerBackgroundColor));
-		public static ResourceKey TextMarkerDefinitionBackgroundColor = new ComponentResourceKey(typeof(ResourceKeys), nameof(TextMarkerDefinitionBackgroundColor));
-		public static ResourceKey SearchResultBackgroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(SearchResultBackgroundBrush));
-		public static ResourceKey LinkTextForegroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(LinkTextForegroundBrush));
-		public static ResourceKey BracketHighlightBackgroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(BracketHighlightBackgroundBrush));
-		public static ResourceKey BracketHighlightBorderPen = new ComponentResourceKey(typeof(ResourceKeys), nameof(BracketHighlightBorderPen));
-		public static ResourceKey LineNumbersForegroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(LineNumbersForegroundBrush));
-		public static ResourceKey CurrentLineBackgroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(CurrentLineBackgroundBrush));
-		public static ResourceKey CurrentLineBorderPen = new ComponentResourceKey(typeof(ResourceKeys), nameof(CurrentLineBorderPen));
-		public static ResourceKey ThemeAwareButtonEffect = new ComponentResourceKey(typeof(ResourceKeys), nameof(ThemeAwareButtonEffect));
+		public static string TextBackgroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(TextBackgroundBrush));
+		public static string TextForegroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(TextForegroundBrush));
+		public static string TextMarkerBackgroundColor = new ComponentResourceKey(typeof(ResourceKeys), nameof(TextMarkerBackgroundColor));
+		public static string TextMarkerDefinitionBackgroundColor = new ComponentResourceKey(typeof(ResourceKeys), nameof(TextMarkerDefinitionBackgroundColor));
+		public static string SearchResultBackgroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(SearchResultBackgroundBrush));
+		public static string LinkTextForegroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(LinkTextForegroundBrush));
+		public static string BracketHighlightBackgroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(BracketHighlightBackgroundBrush));
+		public static string BracketHighlightBorderPen = new ComponentResourceKey(typeof(ResourceKeys), nameof(BracketHighlightBorderPen));
+		public static string LineNumbersForegroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(LineNumbersForegroundBrush));
+		public static string CurrentLineBackgroundBrush = new ComponentResourceKey(typeof(ResourceKeys), nameof(CurrentLineBackgroundBrush));
+		public static string CurrentLineBorderPen = new ComponentResourceKey(typeof(ResourceKeys), nameof(CurrentLineBorderPen));
+		public static string ThemeAwareButtonEffect = new ComponentResourceKey(typeof(ResourceKeys), nameof(ThemeAwareButtonEffect));
 	}
 }

@@ -18,6 +18,7 @@
 
 using System;
 
+using Avalonia.Controls;
 using Avalonia.Media;
 
 using AvaloniaEdit.Document;

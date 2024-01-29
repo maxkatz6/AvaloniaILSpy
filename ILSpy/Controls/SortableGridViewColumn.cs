@@ -73,7 +73,7 @@ namespace ICSharpCode.ILSpy.Controls
 			listView.SetValue(SortDirectionProperty, value);
 		}
 
-		static void OnSortDirectionChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
+		static void OnSortDirectionChanged(AvaloniaObject sender, DependencyPropertyChangedEventArgs args)
 		{
 			ListView grid = sender as ListView;
 			if (grid != null)
@@ -101,7 +101,7 @@ namespace ICSharpCode.ILSpy.Controls
 			listView.SetValue(CurrentSortColumnProperty, value);
 		}
 
-		static void OnCurrentSortColumnChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
+		static void OnCurrentSortColumnChanged(AvaloniaObject sender, DependencyPropertyChangedEventArgs args)
 		{
 			ListView grid = sender as ListView;
 			if (grid != null)
@@ -134,7 +134,7 @@ namespace ICSharpCode.ILSpy.Controls
 			listView.SetValue(SortModeProperty, value);
 		}
 
-		static void OnSortModeChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
+		static void OnSortModeChanged(AvaloniaObject sender, DependencyPropertyChangedEventArgs args)
 		{
 			ListView grid = sender as ListView;
 			if (grid != null)

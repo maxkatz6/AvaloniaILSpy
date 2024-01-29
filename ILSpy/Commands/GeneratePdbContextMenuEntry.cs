@@ -45,7 +45,7 @@ namespace ICSharpCode.ILSpy
 			var assembly = (context.SelectedTreeNodes?.FirstOrDefault() as AssemblyTreeNode)?.LoadedAssembly;
 			if (assembly == null)
 				return;
-			GeneratePdbForAssembly(assembly);
+			GeneratePdbForAssembly(context.TopLevel, assembly);
 		}
 
 		public bool IsEnabled(TextViewContext context) => true;
@@ -57,12 +57,12 @@ namespace ICSharpCode.ILSpy
 				&& tn.LoadedAssembly.IsLoadedAsValidAssembly;
 		}
 
-		internal static void GeneratePdbForAssembly(LoadedAssembly assembly)
+		internal static void GeneratePdbForAssembly(TopLevel topLevel, LoadedAssembly assembly)
 		{
 			var file = assembly.GetPEFileOrNull();
 			if (!PortablePdbWriter.HasCodeViewDebugDirectoryEntry(file))
 			{
-				MessageBox.Show(string.Format(Resources.CannotCreatePDBFile, Path.GetFileName(assembly.FileName)));
+				MessageBox.Show(topLevel, string.Format(Resources.CannotCreatePDBFile, Path.GetFileName(assembly.FileName)));
 				return;
 			}
 			SaveFileDialog dlg = new SaveFileDialog();
@@ -117,7 +117,7 @@ namespace ICSharpCode.ILSpy
 			var assembly = (MainWindow.Instance.SelectedNodes?.FirstOrDefault() as AssemblyTreeNode)?.LoadedAssembly;
 			if (assembly == null)
 				return;
-			GeneratePdbContextMenuEntry.GeneratePdbForAssembly(assembly);
+			GeneratePdbContextMenuEntry.GeneratePdbForAssembly(MainWindow.Instance, assembly);
 		}
 	}
 }

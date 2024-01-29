@@ -20,8 +20,11 @@ using System;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
@@ -51,14 +54,14 @@ namespace ICSharpCode.ILSpy.Metadata
 		protected void ScrollItemIntoView(DataGrid view, object item)
 		{
 			view.Loaded += View_Loaded;
-			view.Dispatcher.BeginInvoke((Action)(() => view.SelectItem(item)), DispatcherPriority.Background);
+			Dispatcher.UIThread.InvokeAsync(() => view.SelectItem(item), DispatcherPriority.Background);
 		}
 
-		private void View_Loaded(object sender, System.Windows.RoutedEventArgs e)
+		private void View_Loaded(object sender, RoutedEventArgs e)
 		{
 			DataGrid view = (DataGrid)sender;
-			var sv = view.FindVisualChild<ScrollViewer>();
-			sv.ScrollToVerticalOffset(scrollTarget - 1);
+			var sv = view.FindDescendantOfType<ScrollViewer>();
+			sv.Offset = new Vector(sv.Offset.X, scrollTarget - 1);
 			view.Loaded -= View_Loaded;
 			this.scrollTarget = default;
 		}

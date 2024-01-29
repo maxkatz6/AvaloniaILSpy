@@ -74,7 +74,7 @@ namespace ICSharpCode.ILSpy.Metadata
 				DataGridFilter.SetContentFilterFactory(view, new RegexContentFilterFactory());
 			}
 			DataGridFilter.GetFilter(view).Clear();
-			view.RowDetailsTemplateSelector = null;
+			view.RowDetailsTemplate = null;
 			view.RowDetailsVisibilityMode = DataGridRowDetailsVisibilityMode.Collapsed;
 			view.EnableColumnVirtualization = true;
 			view.EnableRowVirtualization = true;

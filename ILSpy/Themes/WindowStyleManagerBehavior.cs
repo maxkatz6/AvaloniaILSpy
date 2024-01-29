@@ -26,10 +26,6 @@ using Avalonia.Xaml.Interactivity;
 
 using ICSharpCode.ILSpy.Options;
 
-using TomsToolbox.Essentials;
-using TomsToolbox.Wpf;
-using TomsToolbox.Wpf.Interactivity;
-
 namespace ICSharpCode.ILSpy.Themes
 {
 	public class WindowStyleManagerBehavior : Behavior<Window>

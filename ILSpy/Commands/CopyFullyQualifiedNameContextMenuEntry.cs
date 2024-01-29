@@ -36,7 +36,7 @@ namespace ICSharpCode.ILSpy
 			var member = GetMemberNodeFromContext(context)?.Member;
 			if (member == null)
 				return;
-			Clipboard.SetText(member.ReflectionName);
+			context.TopLevel?.Clipboard?.SetTextAsync(member.ReflectionName);
 		}
 
 		private IMemberTreeNode GetMemberNodeFromContext(TextViewContext context)

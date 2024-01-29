@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
+using Avalonia.Interactivity;
+
 using ICSharpCode.Decompiler;
 using ICSharpCode.ILSpyX;
 
@@ -89,7 +91,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			return DerivedTypesTreeNode.FindDerivedTypes(list, type, ct);
 		}
 
-		public override void ActivateItem(System.Windows.RoutedEventArgs e)
+		public override void ActivateItem(RoutedEventArgs e)
 		{
 			e.Handled = BaseTypesEntryNode.ActivateItem(this, type);
 		}

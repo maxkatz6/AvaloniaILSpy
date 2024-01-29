@@ -119,7 +119,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			var loadChildrenTask = this.loadChildrenTask;
 			if (loadChildrenTask == null)
 			{
-				App.Current.Dispatcher.Invoke(DispatcherPriority.Normal, ensureLazyChildren);
+				Dispatcher.UIThread.Invoke(ensureLazyChildren, DispatcherPriority.Normal);
 				loadChildrenTask = this.loadChildrenTask;
 			}
 			if (loadChildrenTask != null)

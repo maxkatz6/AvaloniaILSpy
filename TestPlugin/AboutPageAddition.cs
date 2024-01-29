@@ -1,10 +1,16 @@
 ﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
 // This code is distributed under MIT X11 license (for details please see \doc\license.txt)
 
-using System.ComponentModel.Composition;
+
+using System.Composition;
+using System.Windows;
+
+using Avalonia.Media;
 
 using AvaloniaEdit.Highlighting;
 using ICSharpCode.ILSpy;
+
+using FontStyle = Avalonia.Media.FontStyle;
 
 namespace TestPlugin
 {
@@ -19,7 +25,7 @@ namespace TestPlugin
 			textOutput.WriteLine();
 			textOutput.BeginSpan(new HighlightingColor {
 				Background = new SimpleHighlightingBrush(Colors.Black),
-				FontStyle = FontStyles.Italic,
+				FontStyle = FontStyle.Italic,
 				Foreground = new SimpleHighlightingBrush(Colors.Aquamarine)
 			});
 			textOutput.Write("DO NOT PRESS THIS BUTTON --> ");

@@ -84,7 +84,7 @@ namespace ICSharpCode.ILSpy.Commands
 				return;
 
 			MainWindow.Instance.SelectNodes(nodes, inNewTabPage: true);
-			MainWindow.Instance.Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)MainWindow.Instance.RefreshDecompiledView);
+			Dispatcher.UIThread.InvokeAsync(MainWindow.Instance.RefreshDecompiledView, DispatcherPriority.Background);
 		}
 	}
 }

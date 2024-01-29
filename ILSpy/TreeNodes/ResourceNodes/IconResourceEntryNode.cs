@@ -17,9 +17,11 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.ComponentModel.Composition;
 using System.Composition;
 using System.IO;
+
+using Avalonia.Controls;
+using Avalonia.Media;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Properties;
@@ -79,7 +81,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			}
 		}
 
-		private static void AddIcon(AvalonEditTextOutput output, BitmapFrame frame)
+		private static void AddIcon(AvalonEditTextOutput output, IImage frame)
 		{
 			output.AddUIElement(() => new Image { Source = frame });
 		}

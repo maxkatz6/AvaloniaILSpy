@@ -44,7 +44,7 @@ namespace ICSharpCode.ILSpy.Controls
 			set { SetValue(CurrentZoomProperty, value); }
 		}
 
-		static object CoerceZoom(DependencyObject d, object baseValue)
+		static object CoerceZoom(AvaloniaObject d, object baseValue)
 		{
 			var zoom = (double)baseValue;
 			ZoomScrollViewer sv = (ZoomScrollViewer)d;
@@ -98,7 +98,7 @@ namespace ICSharpCode.ILSpy.Controls
 			private set { SetValue(ComputedZoomButtonCollapsedPropertyKey, value); }
 		}
 
-		static void CalculateZoomButtonCollapsed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		static void CalculateZoomButtonCollapsed(AvaloniaObject d, DependencyPropertyChangedEventArgs e)
 		{
 			ZoomScrollViewer z = d as ZoomScrollViewer;
 			if (z != null)

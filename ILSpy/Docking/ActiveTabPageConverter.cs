@@ -32,7 +32,7 @@ namespace ICSharpCode.ILSpy.Docking
 			if (value is TabPageModel)
 				return value;
 
-			return Binding.DoNothing;
+			return BindingOperations.DoNothing;
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -40,7 +40,7 @@ namespace ICSharpCode.ILSpy.Docking
 			if (value is TabPageModel)
 				return value;
 
-			return Binding.DoNothing;
+			return BindingOperations.DoNothing;
 		}
 	}
 }

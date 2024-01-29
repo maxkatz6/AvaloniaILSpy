@@ -24,6 +24,8 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Markup.Xaml.Templates;
 
 using ICSharpCode.Decompiler;
@@ -56,7 +58,7 @@ namespace ICSharpCode.ILSpy.Metadata
 			var view = Helpers.PrepareDataGrid(tabPage, this);
 
 			view.RowDetailsVisibilityMode = DataGridRowDetailsVisibilityMode.VisibleWhenSelected;
-			view.RowDetailsTemplateSelector = new CustomDebugInformationDetailsTemplateSelector();
+			view.RowDetailsTemplate = new CustomDebugInformationDetailsTemplateSelector();
 
 			var list = new List<CustomDebugInformationEntry>();
 			CustomDebugInformationEntry scrollTargetEntry = default;
@@ -83,21 +85,26 @@ namespace ICSharpCode.ILSpy.Metadata
 			return true;
 		}
 
-		class CustomDebugInformationDetailsTemplateSelector : DataTemplateSelector
+		class CustomDebugInformationDetailsTemplateSelector : IDataTemplate
 		{
-			public override DataTemplate SelectTemplate(object item, DependencyObject container)
+			public Control Build(object param)
 			{
-				var entry = (CustomDebugInformationEntry)item;
+				var entry = (CustomDebugInformationEntry)param;
 				switch (entry.kind)
 				{
 					case CustomDebugInformationEntry.CustomDebugInformationKind.StateMachineHoistedLocalScopes:
 					case CustomDebugInformationEntry.CustomDebugInformationKind.CompilationMetadataReferences:
 					case CustomDebugInformationEntry.CustomDebugInformationKind.CompilationOptions:
 					case CustomDebugInformationEntry.CustomDebugInformationKind.TupleElementNames:
-						return (DataTemplate)MetadataTableViews.Instance["CustomDebugInformationDetailsDataGrid"];
+						return ((IDataTemplate)MetadataTableViews.Instance["CustomDebugInformationDetailsDataGrid"]).Build(param);
 					default:
-						return (DataTemplate)MetadataTableViews.Instance["CustomDebugInformationDetailsTextBlob"];
+						return ((IDataTemplate)MetadataTableViews.Instance["CustomDebugInformationDetailsTextBlob"]).Build(param);
 				}
+			}
+
+			public bool Match(object data)
+			{
+				return data is CustomDebugInformationEntry;
 			}
 		}
 

@@ -142,7 +142,7 @@ namespace ICSharpCode.ILSpy.Search
 			set { SetValue(SearchTermProperty, value); }
 		}
 
-		static void OnSearchTermChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+		static void OnSearchTermChanged(AvaloniaObject o, DependencyPropertyChangedEventArgs e)
 		{
 			((SearchPane)o).StartSearch((string)e.NewValue);
 		}

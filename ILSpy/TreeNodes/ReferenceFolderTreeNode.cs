@@ -62,7 +62,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			language.WriteCommentLine(output, $"Detected TargetFramework-Id: {targetFramework}");
 			language.WriteCommentLine(output, $"Detected RuntimePack: {runtimePack}");
 
-			App.Current.Dispatcher.Invoke(DispatcherPriority.Normal, new Action(EnsureLazyChildren));
+			Dispatcher.UIThread.Invoke(EnsureLazyChildren, DispatcherPriority.Normal);
 			output.WriteLine();
 			language.WriteCommentLine(output, "Referenced assemblies (in metadata order):");
 			// Show metadata order of references

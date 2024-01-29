@@ -19,6 +19,8 @@
 using System;
 using System.Reflection.Metadata;
 
+using Avalonia.Interactivity;
+
 using ICSharpCode.Decompiler;
 
 namespace ICSharpCode.ILSpy.TreeNodes
@@ -66,7 +68,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override object Icon => Images.Library;
 
-		public override void ActivateItem(System.Windows.RoutedEventArgs e)
+		public override void ActivateItem(RoutedEventArgs e)
 		{
 			var assemblyListNode = parentAssembly.Parent as AssemblyListTreeNode;
 			if (assemblyListNode != null && containsMetadata)

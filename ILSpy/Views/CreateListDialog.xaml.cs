@@ -24,7 +24,7 @@ namespace ICSharpCode.ILSpy
 		{
 			if (!string.IsNullOrWhiteSpace(ListNameBox.Text))
 			{
-				this.DialogResult = true;
+				Close(true);
 			}
 		}
 

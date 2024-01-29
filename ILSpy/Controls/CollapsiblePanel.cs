@@ -103,7 +103,7 @@ namespace ICSharpCode.ILSpy.Controls
 			set { SetValue(AnimationProgressYProperty, value); }
 		}
 
-		static void OnIsCollapsedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		static void OnIsCollapsedChanged(AvaloniaObject d, DependencyPropertyChangedEventArgs e)
 		{
 			((CollapsiblePanel)d).SetupAnimation((bool)e.NewValue);
 		}
@@ -172,7 +172,7 @@ namespace ICSharpCode.ILSpy.Controls
 			set { SetValue(CanCollapseProperty, value); }
 		}
 
-		static void OnCanCollapseChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		static void OnCanCollapseChanged(AvaloniaObject d, DependencyPropertyChangedEventArgs e)
 		{
 			SelfCollapsingPanel panel = (SelfCollapsingPanel)d;
 			if ((bool)e.NewValue)

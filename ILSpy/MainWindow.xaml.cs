@@ -195,7 +195,7 @@ namespace ICSharpCode.ILSpy
 					DecompileSelectedNodes(DockWorkspace.Instance.ActiveTabPage.GetState() as DecompilerTextViewState);
 					break;
 				case nameof(SessionSettings.CurrentCulture):
-					MessageBox.Show(Properties.Resources.SettingsChangeRestartRequired, "ILSpy");
+					this.ShowMessageBox(Properties.Resources.SettingsChangeRestartRequired, "ILSpy");
 					break;
 			}
 		}
@@ -639,7 +639,7 @@ namespace ICSharpCode.ILSpy
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
 			base.OnKeyDown(e);
-			if (!e.Handled && e.KeyboardDevice.Modifiers == ModifierKeys.Alt && e.Key == Key.System)
+			if (!e.Handled && (e.KeyModifiers & KeyModifiers.Alt) != 0 && e.Key == Key.System)
 			{
 				switch (e.SystemKey)
 				{

@@ -21,6 +21,7 @@ using System.Collections.Specialized;
 using System.Linq;
 
 using Avalonia.Input;
+using Avalonia.Threading;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
@@ -180,7 +181,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		{
 			if (asm == null)
 				return null;
-			App.Current.Dispatcher.VerifyAccess();
+			Dispatcher.UIThread.VerifyAccess();
 			if (asm.ParentBundle != null)
 			{
 				var bundle = FindAssemblyNode(asm.ParentBundle);

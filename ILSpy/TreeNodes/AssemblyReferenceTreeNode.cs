@@ -18,6 +18,7 @@
 
 using System;
 
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 
 using ICSharpCode.Decompiler;
@@ -58,13 +59,13 @@ namespace ICSharpCode.ILSpy.TreeNodes
 					// while the list of references is updated causes problems with WPF's ListView rendering.
 					// Moving the assembly resolving out of the "add assembly reference"-loop by using the
 					// dispatcher fixes the issue.
-					Dispatcher.CurrentDispatcher.BeginInvoke((Action)EnsureLazyChildren, DispatcherPriority.Normal);
+					Dispatcher.UIThread.InvokeAsync(EnsureLazyChildren, DispatcherPriority.Normal);
 				}
 				return base.ShowExpander;
 			}
 		}
 
-		public override void ActivateItem(System.Windows.RoutedEventArgs e)
+		public override void ActivateItem(RoutedEventArgs e)
 		{
 			if (parentAssembly.Parent is AssemblyListTreeNode assemblyListNode)
 			{

@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Markup.Xaml.Templates;
 
@@ -50,7 +52,7 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			var dataGrid = Helpers.PrepareDataGrid(tabPage, this);
 
-			dataGrid.RowDetailsTemplateSelector = new CharacteristicsDataTemplateSelector("Characteristics");
+			dataGrid.RowDetailsTemplate = new CharacteristicsDataTemplateSelector("Characteristics");
 			dataGrid.RowDetailsVisibilityMode = DataGridRowDetailsVisibilityMode.Collapsed;
 
 			dataGrid.Columns.Clear();
@@ -108,7 +110,7 @@ namespace ICSharpCode.ILSpy.Metadata
 		}
 	}
 
-	public class CharacteristicsDataTemplateSelector : DataTemplateSelector
+	public class CharacteristicsDataTemplateSelector : IDataTemplate
 	{
 		string detailsFieldName;
 
@@ -116,12 +118,17 @@ namespace ICSharpCode.ILSpy.Metadata
 		{
 			this.detailsFieldName = detailsFieldName;
 		}
-
-		public override DataTemplate SelectTemplate(object item, DependencyObject container)
+		
+		public Control Build(object param)
 		{
-			if (((Entry)item).Member == detailsFieldName)
-				return (DataTemplate)MetadataTableViews.Instance["HeaderFlagsDetailsDataGrid"];
+			if (((Entry)param).Member == detailsFieldName)
+				return ((DataTemplate)MetadataTableViews.Instance["HeaderFlagsDetailsDataGrid"]).Build(param);
 			return null;
+		}
+
+		public bool Match(object data)
+		{
+			return (data as Entry)?.Member == detailsFieldName;
 		}
 	}
 }

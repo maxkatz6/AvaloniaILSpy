@@ -57,7 +57,7 @@ namespace ICSharpCode.ILSpy.Metadata
 		public List<FlagGroup> Groups { get; } = new List<FlagGroup>();
 	}
 
-	class FlagActiveConverter : DependencyObject, IValueConverter
+	class FlagActiveConverter : AvaloniaObject, IValueConverter
 	{
 		public int Value {
 			get { return (int)GetValue(ValueProperty); }

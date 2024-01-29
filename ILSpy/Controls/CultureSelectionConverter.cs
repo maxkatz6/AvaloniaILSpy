@@ -37,7 +37,7 @@ namespace ICSharpCode.ILSpy.Controls
 		{
 			if ((bool)value)
 				return parameter;
-			return Binding.DoNothing;
+			return BindingOperations.DoNothing;
 		}
 	}
 }

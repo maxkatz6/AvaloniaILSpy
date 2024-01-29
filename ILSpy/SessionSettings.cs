@@ -60,7 +60,7 @@ namespace ICSharpCode.ILSpy
 			}
 			this.ActiveAutoLoadedAssembly = (string)doc.Element("ActiveAutoLoadedAssembly");
 
-			this.WindowState = FromString((string)doc.Element("WindowState"), this.WindowState.Normal);
+			this.WindowState = FromString((string)doc.Element("WindowState"), WindowState.Normal);
 			this.WindowBounds = FromString((string)doc.Element("WindowBounds"), DefaultWindowBounds);
 			this.SplitterPosition = FromString((string)doc.Element("SplitterPosition"), 0.4);
 			this.TopPaneSplitterPosition = FromString((string)doc.Element("TopPaneSplitterPosition"), 0.3);
@@ -118,7 +118,7 @@ namespace ICSharpCode.ILSpy
 			}
 		}
 
-		public WindowState WindowState = this.WindowState.Normal;
+		public WindowState WindowState = WindowState.Normal;
 		public Rect WindowBounds;
 		internal static Rect DefaultWindowBounds = new Rect(10, 10, 750, 550);
 		/// <summary>

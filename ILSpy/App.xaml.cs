@@ -78,7 +78,8 @@ namespace ICSharpCode.ILSpy
 			if (!System.Diagnostics.Debugger.IsAttached)
 			{
 				AppDomain.CurrentDomain.UnhandledException += ShowErrorBox;
-				Dispatcher.CurrentDispatcher.UnhandledException += Dispatcher_UnhandledException;
+				// https://github.com/AvaloniaUI/Avalonia/issues/8418
+				// Dispatcher.CurrentDispatcher.UnhandledException += Dispatcher_UnhandledException;
 			}
 			TaskScheduler.UnobservedTaskException += DotNet40_UnobservedTaskException;
 			InitializeMef().GetAwaiter().GetResult();

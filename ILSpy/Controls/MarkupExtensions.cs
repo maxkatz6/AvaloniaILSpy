@@ -23,8 +23,7 @@ using Avalonia.Markup.Xaml;
 
 namespace ICSharpCode.ILSpy.Controls
 {
-	[MarkupExtensionReturnType(typeof(Color))]
-	class ControlColor : MarkupExtension
+	internal class ControlColor
 	{
 		readonly float val;
 
@@ -43,7 +42,7 @@ namespace ICSharpCode.ILSpy.Controls
 			this.val = val;
 		}
 
-		public override object ProvideValue(IServiceProvider serviceProvider)
+		public Color ProvideValue(IServiceProvider serviceProvider)
 		{
 			if (val > 227)
 			{

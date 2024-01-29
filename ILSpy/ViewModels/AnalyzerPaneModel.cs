@@ -32,7 +32,7 @@ namespace ICSharpCode.ILSpy.ViewModels
 		{
 			ContentId = PaneContentId;
 			Title = Properties.Resources.Analyze;
-			ShortcutKey = new KeyGesture(Key.R, ModifierKeys.Control);
+			ShortcutKey = new KeyGesture(Key.R, KeyModifiers.Control);
 			AssociatedCommand = ILSpyCommands.Analyze;
 		}
 

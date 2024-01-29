@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Composition;
 using System.Linq;
 
@@ -61,6 +60,13 @@ namespace ICSharpCode.ILSpy
 		public DecompilerTextView TextView { get; private set; }
 
 		/// <summary>
+		/// Returns Avalonia TopLevel, usually a Window.
+		/// Can be used to access Window-specific services like 
+		/// Returns null, if context menu is not assigned to a tree view.
+		/// </summary>
+		public TopLevel TopLevel { get; private set; }
+		
+		/// <summary>
 		/// Returns the list box the context menu is assigned to.
 		/// Returns null, if context menu is not assigned to a list box.
 		/// </summary>
@@ -84,9 +90,9 @@ namespace ICSharpCode.ILSpy
 		/// </summary>
 		public TextViewPosition? Position { get; private set; }
 
-		public Point MousePosition { get; private set; }
+		public PixelPoint? MousePosition { get; private set; }
 
-		public static TextViewContext Create(SharpTreeView treeView = null, DecompilerTextView textView = null, ListBox listBox = null, DataGrid dataGrid = null)
+		public static TextViewContext Create(ContextRequestedEventArgs args, SharpTreeView treeView = null, DecompilerTextView textView = null, ListBox listBox = null, DataGrid dataGrid = null)
 		{
 			ReferenceSegment reference;
 			if (textView != null)
@@ -105,15 +111,17 @@ namespace ICSharpCode.ILSpy
 				reference = null;
 			var position = textView != null ? textView.GetPositionFromMousePosition() : null;
 			var selectedTreeNodes = treeView != null ? treeView.GetTopLevelSelection().ToArray() : null;
+			var topLevel = treeView != null ? TopLevel.GetTopLevel(treeView) : null;
 			return new TextViewContext {
 				ListBox = listBox,
 				DataGrid = dataGrid,
 				TreeView = treeView,
 				SelectedTreeNodes = selectedTreeNodes,
 				TextView = textView,
+				TopLevel = topLevel,
 				Reference = reference,
 				Position = position,
-				MousePosition = ((Visual)textView ?? treeView ?? (Visual)listBox ?? dataGrid).PointToScreen(Mouse.GetPosition((IInputElement)textView ?? treeView ?? (IInputElement)listBox ?? dataGrid))
+				MousePosition = args.TryGetPosition(null, out var point) ? topLevel?.PointToScreen(point) : null
 			};
 		}
 	}
@@ -172,7 +180,7 @@ namespace ICSharpCode.ILSpy
 		public static void Add(SharpTreeView treeView)
 		{
 			var provider = new ContextMenuProvider(treeView);
-			treeView.ContextMenuOpening += provider.treeView_ContextMenuOpening;
+			treeView.ContextRequested += provider.treeView_ContextMenuOpening;
 			// Context menu is shown only when the ContextMenu property is not null before the
 			// ContextMenuOpening event handler is called.
 			treeView.ContextMenu = new ContextMenu();
@@ -181,7 +189,7 @@ namespace ICSharpCode.ILSpy
 		public static void Add(DecompilerTextView textView)
 		{
 			var provider = new ContextMenuProvider(textView);
-			textView.ContextMenuOpening += provider.textView_ContextMenuOpening;
+			textView.ContextRequested += provider.textView_ContextMenuOpening;
 			// Context menu is shown only when the ContextMenu property is not null before the
 			// ContextMenuOpening event handler is called.
 			textView.ContextMenu = new ContextMenu();
@@ -190,14 +198,14 @@ namespace ICSharpCode.ILSpy
 		public static void Add(ListBox listBox)
 		{
 			var provider = new ContextMenuProvider(listBox);
-			listBox.ContextMenuOpening += provider.listBox_ContextMenuOpening;
+			listBox.ContextRequested += provider.listBox_ContextMenuOpening;
 			listBox.ContextMenu = new ContextMenu();
 		}
 
 		public static void Add(DataGrid dataGrid)
 		{
 			var provider = new ContextMenuProvider(dataGrid);
-			dataGrid.ContextMenuOpening += provider.dataGrid_ContextMenuOpening;
+			dataGrid.ContextRequested += provider.dataGrid_ContextMenuOpening;
 			dataGrid.ContextMenu = new ContextMenu();
 		}
 
@@ -236,9 +244,9 @@ namespace ICSharpCode.ILSpy
 			this.dataGrid = dataGrid ?? throw new ArgumentNullException(nameof(dataGrid));
 		}
 
-		void treeView_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+		void treeView_ContextMenuOpening(object sender, ContextRequestedEventArgs e)
 		{
-			TextViewContext context = TextViewContext.Create(treeView);
+			TextViewContext context = TextViewContext.Create(e, treeView);
 			if (context.SelectedTreeNodes.Length == 0)
 			{
 				e.Handled = true; // don't show the menu
@@ -252,9 +260,9 @@ namespace ICSharpCode.ILSpy
 				e.Handled = true;
 		}
 
-		void textView_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+		void textView_ContextMenuOpening(object sender, ContextRequestedEventArgs e)
 		{
-			TextViewContext context = TextViewContext.Create(textView: textView);
+			TextViewContext context = TextViewContext.Create(e, textView: textView);
 			ContextMenu menu;
 			if (ShowContextMenu(context, out menu))
 				textView.ContextMenu = menu;
@@ -263,9 +271,9 @@ namespace ICSharpCode.ILSpy
 				e.Handled = true;
 		}
 
-		void listBox_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+		void listBox_ContextMenuOpening(object sender, ContextRequestedEventArgs e)
 		{
-			TextViewContext context = TextViewContext.Create(listBox: listBox);
+			TextViewContext context = TextViewContext.Create(e, listBox: listBox);
 			ContextMenu menu;
 			if (ShowContextMenu(context, out menu))
 				listBox.ContextMenu = menu;
@@ -274,9 +282,9 @@ namespace ICSharpCode.ILSpy
 				e.Handled = true;
 		}
 
-		void dataGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+		void dataGrid_ContextMenuOpening(object sender, ContextRequestedEventArgs e)
 		{
-			TextViewContext context = TextViewContext.Create(dataGrid: dataGrid);
+			TextViewContext context = TextViewContext.Create(e, dataGrid: dataGrid);
 			ContextMenu menu;
 			if (ShowContextMenu(context, out menu))
 				dataGrid.ContextMenu = menu;
@@ -321,7 +329,7 @@ namespace ICSharpCode.ILSpy
 							}
 							MenuItem menuItem = new MenuItem();
 							menuItem.Header = MainWindow.GetResourceString(entryPair.Metadata.Header);
-							menuItem.InputGestureText = entryPair.Metadata.InputGestureText;
+							menuItem.InputGesture = KeyGesture.Parse(entryPair.Metadata.InputGestureText);
 							if (!string.IsNullOrEmpty(entryPair.Metadata.Icon))
 							{
 								menuItem.Icon = new Image {

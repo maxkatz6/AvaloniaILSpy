@@ -22,11 +22,10 @@ namespace ICSharpCode.ILSpy
 	[ExportMainMenuCommand(ParentMenuID = nameof(Resources._File), Header = nameof(Resources.OpenFrom_GAC), MenuIcon = "Images/AssemblyListGAC", MenuCategory = nameof(Resources.Open), MenuOrder = 1)]
 	sealed class OpenFromGacCommand : SimpleCommand
 	{
-		public override void Execute(object parameter)
+		public override async void Execute(object parameter)
 		{
 			OpenFromGacDialog dlg = new OpenFromGacDialog();
-			dlg.Owner = MainWindow.Instance;
-			if (dlg.ShowDialog() == true)
+			if (await dlg.ShowDialog<bool>(MainWindow.Instance))
 				MainWindow.Instance.OpenFiles(dlg.SelectedFileNames);
 		}
 	}

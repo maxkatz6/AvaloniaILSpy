@@ -10,7 +10,6 @@
 		<Style x:Key="DialogWindow" TargetType="{x:Type Window}">
 			<Setter Property="ShowInTaskbar" Value="False"/>
 			<Setter Property="UseLayoutRounding" Value="True"/>
-			<Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
 			<Setter Property="toms:StyleBindings.Behaviors">
 				<Setter.Value>
 					<toms:BehaviorCollection>
@@ -19,11 +18,5 @@
 				</Setter.Value>
 			</Setter>
 		</Style>
-
-		<Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static styles:ResourceKeys.ButtonStyle}}">
-			<Setter Property="MinWidth" Value="73" />
-			<Setter Property="Padding" Value="9,1,9,1" />
-		</Style>
-
 	</Application.Resources>
 </Application>

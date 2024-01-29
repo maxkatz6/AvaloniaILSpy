@@ -18,6 +18,8 @@
 
 using System.Linq;
 
+using Avalonia.Interactivity;
+
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.TreeView;
@@ -37,7 +39,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override object Icon => type.Kind == TypeKind.Interface ? Images.Interface : Images.Class;
 
-		public override void ActivateItem(System.Windows.RoutedEventArgs e)
+		public override void ActivateItem(RoutedEventArgs e)
 		{
 			e.Handled = ActivateItem(this, type);
 		}

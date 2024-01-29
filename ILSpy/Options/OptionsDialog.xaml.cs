@@ -17,13 +17,14 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.ComponentModel.Composition;
 using System.Composition;
 using System.Linq;
 using System.Xml.Linq;
 
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+
+using AvaloniaEdit.Highlighting;
 
 using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpyX.Settings;
@@ -32,14 +33,14 @@ namespace ICSharpCode.ILSpy.Options
 {
 	public class TabItemViewModel
 	{
-		public TabItemViewModel(string header, UIElement content)
+		public TabItemViewModel(string header, Control content)
 		{
 			Header = header;
 			Content = content;
 		}
 
 		public string Header { get; }
-		public UIElement Content { get; }
+		public Control Content { get; }
 	}
 
 	/// <summary>
@@ -48,7 +49,7 @@ namespace ICSharpCode.ILSpy.Options
 	public partial class OptionsDialog : Window
 	{
 
-		readonly Lazy<UIElement, IOptionsMetadata>[] optionPages;
+		readonly Lazy<Control, IOptionsMetadata>[] optionPages;
 
 		public OptionsDialog()
 		{
@@ -57,7 +58,7 @@ namespace ICSharpCode.ILSpy.Options
 			// ExportProvider instance.
 			// FIXME: Ideally, the export provider should be disposed when it's no longer needed.
 			var ep = App.ExportProviderFactory.CreateExportProvider();
-			this.optionPages = ep.GetExports<UIElement, IOptionsMetadata>("OptionPages").ToArray();
+			this.optionPages = ep.GetExports<Control, IOptionsMetadata>("OptionPages").ToArray();
 			ILSpySettings settings = ILSpySettings.Load();
 			foreach (var optionPage in optionPages.OrderBy(p => p.Metadata.Order))
 			{
@@ -82,13 +83,12 @@ namespace ICSharpCode.ILSpy.Options
 							page.Save(root);
 					}
 				});
-			this.DialogResult = true;
-			Close();
+			Close(true);
 		}
 
-		private void DefaultsButton_Click(object sender, RoutedEventArgs e)
+		private async void DefaultsButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (MessageBox.Show(Properties.Resources.ResetToDefaultsConfirmationMessage, "ILSpy", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			if (await MessageBox.Show(this, Properties.Resources.ResetToDefaultsConfirmationMessage, "ILSpy", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 			{
 				var page = tabControl.SelectedValue as IOptionPage;
 				if (page != null)

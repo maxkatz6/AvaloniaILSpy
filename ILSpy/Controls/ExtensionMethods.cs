@@ -18,6 +18,7 @@
 
 using System;
 
+using Avalonia;
 using Avalonia.Markup.Xaml;
 
 namespace ICSharpCode.ILSpy.Controls
@@ -32,7 +33,7 @@ namespace ICSharpCode.ILSpy.Controls
 		/// </summary>
 		/// <remarks>This method does not support markup extensions like x:Static that depend on
 		/// having a XAML file as context.</remarks>
-		public static void SetValueToExtension(this DependencyObject targetObject, DependencyProperty property, MarkupExtension markupExtension)
+		public static void SetValueToExtension(this AvaloniaObject targetObject, AvaloniaProperty property, MarkupExtension markupExtension)
 		{
 			// This method was copied from ICSharpCode.Core.Presentation (with permission to switch license to X11)
 
@@ -51,10 +52,10 @@ namespace ICSharpCode.ILSpy.Controls
 		{
 			// This class was copied from ICSharpCode.Core.Presentation (with permission to switch license to X11)
 
-			readonly DependencyObject targetObject;
-			readonly DependencyProperty targetProperty;
+			readonly AvaloniaObject targetObject;
+			readonly AvaloniaProperty targetProperty;
 
-			public SetValueToExtensionServiceProvider(DependencyObject targetObject, DependencyProperty property)
+			public SetValueToExtensionServiceProvider(AvaloniaObject targetObject, AvaloniaProperty property)
 			{
 				this.targetObject = targetObject;
 				this.targetProperty = property;

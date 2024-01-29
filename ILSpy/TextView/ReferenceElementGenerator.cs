@@ -18,6 +18,8 @@
 
 using System;
 
+using Avalonia.Input;
+
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 
@@ -90,12 +92,16 @@ namespace ICSharpCode.ILSpy.TextView
 			this.parent = parent;
 			this.referenceSegment = referenceSegment;
 		}
-
+		
 		/// <inheritdoc/>
-		protected override void OnQueryCursor(QueryCursorEventArgs e)
+		protected override void OnQueryCursor(PointerEventArgs e)
 		{
-			e.Handled = true;
-			e.Cursor = referenceSegment.IsLocal ? Cursors.Arrow : Cursors.Hand;
+			e.Handled = true;		
+			
+			if(e.Source is InputElement inputElement)
+			{
+				inputElement.Cursor = new Cursor(referenceSegment.IsLocal ? StandardCursorType.Arrow : StandardCursorType.Hand);
+			}
 		}
 
 		/// <inheritdoc/>

@@ -63,7 +63,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
 		{
-			App.Current.Dispatcher.Invoke(DispatcherPriority.Normal, new Action(EnsureLazyChildren));
+			Dispatcher.UIThread.Invoke(EnsureLazyChildren, DispatcherPriority.Normal);
 			foreach (ILSpyTreeNode child in this.Children)
 			{
 				child.Decompile(language, output, options);

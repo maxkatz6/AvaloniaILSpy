@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Input;
 using Avalonia.Layout;
 
 using AvaloniaEdit.Rendering;
@@ -124,7 +125,7 @@ namespace ICSharpCode.ILSpy
 		{
 			Button button = ThemeManager.Current.CreateButton();
 			button.Content = Resources.CheckUpdates;
-			button.Cursor = Cursors.Arrow;
+			button.Cursor = new Cursor(StandardCursorType.Arrow);
 			stackPanel.Children.Add(button);
 
 			button.Click += async delegate {
@@ -174,7 +175,7 @@ namespace ICSharpCode.ILSpy
 				{
 					Button button = ThemeManager.Current.CreateButton();
 					button.Content = Resources.Download;
-					button.Cursor = Cursors.Arrow;
+					button.Cursor = new Cursor(StandardCursorType.Arrow);
 					button.Click += delegate {
 						MainWindow.OpenLink(availableVersion.DownloadUrl);
 					};

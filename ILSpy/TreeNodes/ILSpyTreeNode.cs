@@ -81,7 +81,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		public override void ActivateItemSecondary(RoutedEventArgs e)
 		{
 			MainWindow.Instance.SelectNode(this, inNewTabPage: true);
-			MainWindow.Instance.Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)MainWindow.Instance.RefreshDecompiledView);
+			Dispatcher.UIThread.InvokeAsync(MainWindow.Instance.RefreshDecompiledView, DispatcherPriority.Background);
 		}
 
 		/// <summary>

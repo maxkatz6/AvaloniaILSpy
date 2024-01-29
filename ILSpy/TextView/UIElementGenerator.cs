@@ -19,11 +19,13 @@
 using System;
 using System.Collections.Generic;
 
+using Avalonia.Controls;
+
 using AvaloniaEdit.Rendering;
 
 namespace ICSharpCode.ILSpy.TextView
 {
-	using Pair = KeyValuePair<int, Lazy<UIElement>>;
+	using Pair = KeyValuePair<int, Lazy<Control>>;
 
 	/// <summary>
 	/// Embeds UIElements in the text output.
@@ -65,7 +67,7 @@ namespace ICSharpCode.ILSpy.TextView
 
 		int IComparer<Pair>.Compare(Pair x, Pair y)
 		{
-			// Compare (offset,Lazy<UIElement>) pairs by the offset.
+			// Compare (offset,Lazy<Control>) pairs by the offset.
 			// Used in BinarySearch()
 			return x.Key.CompareTo(y.Key);
 		}

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Input;
@@ -122,27 +123,27 @@ namespace ICSharpCode.ILSpy.TreeNodes
 					var metadata = module?.Metadata;
 					if (metadata?.IsAssembly == true && metadata.TryGetFullAssemblyName(out var assemblyName))
 					{
-						tooltip.Inlines.Add(new Bold(new Run("Name: ")));
+						tooltip.Inlines.Add(new Bold{Inlines = {new Run("Name: ")}});
 						tooltip.Inlines.Add(new Run(assemblyName));
 						tooltip.Inlines.Add(new LineBreak());
 					}
-					tooltip.Inlines.Add(new Bold(new Run("Location: ")));
+					tooltip.Inlines.Add(new Bold{Inlines = {new Run("Location: ")}});
 					tooltip.Inlines.Add(new Run(LoadedAssembly.FileName));
 					if (module != null)
 					{
 						tooltip.Inlines.Add(new LineBreak());
-						tooltip.Inlines.Add(new Bold(new Run("Architecture: ")));
+						tooltip.Inlines.Add(new Bold{Inlines = {new Run("Architecture: ")}});
 						tooltip.Inlines.Add(new Run(Language.GetPlatformDisplayName(module)));
 						string runtimeName = Language.GetRuntimeDisplayName(module);
 						if (runtimeName != null)
 						{
 							tooltip.Inlines.Add(new LineBreak());
-							tooltip.Inlines.Add(new Bold(new Run("Runtime: ")));
+							tooltip.Inlines.Add(new Bold{Inlines = {new Run("Runtime: ")}});
 							tooltip.Inlines.Add(new Run(runtimeName));
 						}
 						var debugInfo = LoadedAssembly.GetDebugInfoOrNull();
 						tooltip.Inlines.Add(new LineBreak());
-						tooltip.Inlines.Add(new Bold(new Run("Debug info: ")));
+						tooltip.Inlines.Add(new Bold{Inlines = {new Run("Debug info: ")}});
 						tooltip.Inlines.Add(new Run(debugInfo?.Description ?? "none"));
 					}
 				}
@@ -313,9 +314,9 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			return nodes.All(n => n is AssemblyTreeNode { PackageEntry: null });
 		}
 
-		public override void StartDrag(DependencyObject dragSource, SharpTreeNode[] nodes)
+		public override void StartDrag(PointerEventArgs args, AvaloniaObject dragSource, SharpTreeNode[] nodes)
 		{
-			DragDrop.DoDragDrop(dragSource, Copy(nodes), DragDropEffects.All);
+			DragDrop.DoDragDrop(args, Copy(nodes), DragDropEffects.Copy | DragDropEffects.Link | DragDropEffects.Move);
 		}
 
 		public override bool CanDelete()
@@ -339,7 +340,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		public override IDataObject Copy(SharpTreeNode[] nodes)
 		{
 			DataObject dataObject = new DataObject();
-			dataObject.SetData(DataFormat, nodes.OfType<AssemblyTreeNode>().Select(n => n.LoadedAssembly.FileName).ToArray());
+			dataObject.Set(DataFormat, nodes.OfType<AssemblyTreeNode>().Select(n => n.LoadedAssembly.FileName).ToArray());
 			return dataObject;
 		}
 

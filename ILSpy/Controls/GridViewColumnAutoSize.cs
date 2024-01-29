@@ -40,17 +40,17 @@ namespace ICSharpCode.ILSpy.Controls
 			DependencyProperty.RegisterAttached("AutoWidth", typeof(string), typeof(GridViewColumnAutoSize),
 												new FrameworkPropertyMetadata(null, AutoWidthPropertyChanged));
 
-		public static string GetAutoWidth(DependencyObject obj)
+		public static string GetAutoWidth(AvaloniaObject obj)
 		{
 			return (string)obj.GetValue(AutoWidthProperty);
 		}
 
-		public static void SetAutoWidth(DependencyObject obj, string value)
+		public static void SetAutoWidth(AvaloniaObject obj, string value)
 		{
 			obj.SetValue(AutoWidthProperty, value);
 		}
 
-		static void AutoWidthPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
+		static void AutoWidthPropertyChanged(AvaloniaObject sender, DependencyPropertyChangedEventArgs args)
 		{
 			ListView grid = sender as ListView;
 			if (grid == null)

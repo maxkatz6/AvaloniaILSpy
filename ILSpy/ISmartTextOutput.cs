@@ -20,6 +20,8 @@ using System;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 
@@ -37,7 +39,7 @@ namespace ICSharpCode.ILSpy
 		/// <summary>
 		/// Inserts an interactive UI element at the current position in the text output.
 		/// </summary>
-		void AddUIElement(Func<UIElement> element);
+		void AddUIElement(Func<Control> element);
 
 		void BeginSpan(HighlightingColor highlightingColor);
 		void EndSpan();
@@ -53,12 +55,12 @@ namespace ICSharpCode.ILSpy
 		/// <summary>
 		/// Creates a button.
 		/// </summary>
-		public static void AddButton(this ISmartTextOutput output, IImage icon, string text, RoutedEventHandler click)
+		public static void AddButton(this ISmartTextOutput output, IImage icon, string text, EventHandler<RoutedEventArgs> click)
 		{
 			output.AddUIElement(
 				delegate {
 					Button button = ThemeManager.Current.CreateButton();
-					button.Cursor = Cursors.Arrow;
+					button.Cursor = new Cursor(StandardCursorType.Arrow);
 					button.Margin = new Thickness(2);
 					button.Padding = new Thickness(9, 1, 9, 1);
 					button.MinWidth = 73;

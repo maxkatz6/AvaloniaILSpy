@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -28,7 +27,9 @@ using System.Reflection.PortableExecutable;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 
 using AvaloniaEdit.Highlighting;
 using ICSharpCode.Decompiler;
@@ -357,7 +358,7 @@ namespace ICSharpCode.ILSpy
 		}
 
 		void AddWarningMessage(PEFile module, ITextOutput output, string line1, string line2 = null,
-			string buttonText = null, System.Windows.Media.IImage buttonImage = null, RoutedEventHandler buttonClickHandler = null)
+			string buttonText = null, IImage buttonImage = null, EventHandler<RoutedEventArgs> buttonClickHandler = null)
 		{
 			if (output is ISmartTextOutput fancyOutput)
 			{

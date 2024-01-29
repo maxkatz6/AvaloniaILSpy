@@ -19,6 +19,7 @@
 using System;
 
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -75,9 +76,9 @@ namespace ICSharpCode.ILSpy.Controls
 
 		#region Handlers
 
-		private void IconBorder_MouseLeftButtonUp(object obj, MouseButtonEventArgs e)
+		private void IconBorder_MouseLeftButtonUp(object obj, PointerReleasedEventArgs e)
 		{
-			if (this.HasText)
+			if (e.GetCurrentPoint(this).Properties.PointerUpdateKind == PointerUpdateKind.LeftButtonReleased && this.HasText)
 				this.Text = string.Empty;
 		}
 
@@ -128,20 +129,20 @@ namespace ICSharpCode.ILSpy.Controls
 			base.OnLostFocus(e);
 		}
 
-		protected override void OnGotFocus(RoutedEventArgs e)
+		protected override void OnGotFocus(GotFocusEventArgs e)
 		{
 			UpdateWatermarkLabel();
 			base.OnGotFocus(e);
 		}
 
-		public override void OnApplyTemplate()
+		protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
 		{
-			base.OnApplyTemplate();
+			base.OnApplyTemplate(e);
 
-			Border iconBorder = GetTemplateChild("PART_IconBorder") as Border;
+			Border iconBorder = e.NameScope.Get<Border>("PART_IconBorder");
 			if (iconBorder != null)
 			{
-				iconBorder.MouseLeftButtonUp += IconBorder_MouseLeftButtonUp;
+				iconBorder.PointerReleased += IconBorder_MouseLeftButtonUp;
 			}
 		}
 

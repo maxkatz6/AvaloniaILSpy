@@ -51,7 +51,7 @@ namespace ICSharpCode.ILSpy.Analyzers
 					}
 				}
 			}
-			Clipboard.SetText(sb.ToString());
+			context.TopLevel?.Clipboard?.SetTextAsync(sb.ToString());
 		}
 	}
 }

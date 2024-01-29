@@ -14,7 +14,6 @@
 	MinWidth="250"
 	MinHeight="200"
 	UseLayoutRounding="True"
-	TextOptions.TextFormattingMode="Display"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d:DesignHeight="500" d:DesignWidth="500"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
 	xmlns:styles="urn:TomsToolbox.Wpf.Styles"
@@ -24,7 +23,6 @@
 	d:DataContext="{d:DesignInstance local:MainWindowViewModel}"
 >
 	<Window.Resources>
-		<controls:BoolToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 		<docking:ActiveTabPageConverter x:Key="ActiveTabPageConverter"/>
 
 		<tv:SharpTreeView x:Key="AssemblyTreeView"
@@ -32,9 +30,9 @@
 				SelectionChanged="TreeView_SelectionChanged"
 				ShowRoot="False"
 				AllowDropOrder="True"
-				AllowDrop="True"
-				BorderThickness="0" Visibility="Visible">
-			<tv:SharpTreeView.ItemContainerStyle>
+				DragDrop.AllowDrop="True"
+				BorderThickness="0" IsVisible="True">
+			<tv:SharpTreeView.ItemContainerTheme>
 				<Style TargetType="tv:SharpTreeViewItem">
 
 					<Setter Property="Template">
@@ -64,7 +62,7 @@
 						</Setter.Value>
 					</Setter>
 				</Style>
-			</tv:SharpTreeView.ItemContainerStyle>
+			</tv:SharpTreeView.ItemContainerTheme>
 		</tv:SharpTreeView>
 
 		<DataTemplate x:Key="AssemblyListPaneTemplate">
@@ -215,8 +213,8 @@
 					  IsEnabled="{Binding Workspace.ActiveTabPage.SupportsLanguageSwitching}"
 			          ItemsSource="{x:Static local:Languages.AllLanguages}" ToolTip="{x:Static properties:Resources.SelectLanguageDropdownTooltip}"
 			          SelectedItem="{Binding Workspace.ActiveTabPage.FilterSettings.Language}"/>
-			<ComboBox Name="languageVersionComboBox" DisplayMemberPath="DisplayName" Width="120" MaxDropDownHeight="Auto" ToolTip="{x:Static properties:Resources.SelectVersionDropdownTooltip}"
-			          Visibility="{Binding SelectedItem.HasLanguageVersions, ElementName=languageComboBox, Converter={StaticResource BooleanToVisibilityConverter}}"
+			<ComboBox Name="languageVersionComboBox" DisplayMemberPath="DisplayName" Width="120" MaxDropDownHeight="Auto" ToolTip.Tip="{x:Static properties:Resources.SelectVersionDropdownTooltip}"
+			          IsVisible="{Binding SelectedItem.HasLanguageVersions, ElementName=languageComboBox}"
 					  IsEnabled="{Binding Workspace.ActiveTabPage.SupportsLanguageSwitching}"
 			          ItemsSource="{Binding SelectedItem.LanguageVersions, ElementName=languageComboBox, UpdateSourceTrigger=PropertyChanged}"
 			          SelectedItem="{Binding Workspace.ActiveTabPage.FilterSettings.LanguageVersion, UpdateSourceTrigger=PropertyChanged}"/>
@@ -264,7 +262,7 @@
 					<docking:PaneStyleSelector.ToolPaneStyle>
 						<Style TargetType="{x:Type avalondock:LayoutAnchorableItem}">
 							<Setter Property="Title" Value="{Binding Model.Title}"/>
-							<Setter Property="Visibility" Value="{Binding Model.IsVisible, Mode=TwoWay, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter={x:Static Visibility.Hidden}}"/>
+							<Setter Property="IsVisible" Value="{Binding Model.IsVisible, Mode=TwoWay}"/>
 							<Setter Property="ContentId" Value="{Binding Model.ContentId}"/>
 							<Setter Property="IsSelected" Value="{Binding Model.IsSelected, Mode=TwoWay}"/>
 							<Setter Property="IsActive" Value="{Binding Model.IsActive, Mode=TwoWay}"/>
@@ -277,7 +275,7 @@
 					<docking:PaneStyleSelector.TabPageStyle>
 						<Style TargetType="{x:Type avalondock:LayoutItem}">
 							<Setter Property="Title" Value="{Binding Model.Title}"/>
-							<Setter Property="Visibility" Value="{Binding Model.IsVisible, Mode=TwoWay, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter={x:Static Visibility.Hidden}}"/>
+							<Setter Property="IsVisible" Value="{Binding Model.IsVisible, Mode=TwoWay}"/>
 							<Setter Property="ContentId" Value="{Binding Model.ContentId}"/>
 							<Setter Property="IsSelected" Value="{Binding Model.IsSelected, Mode=TwoWay}"/>
 							<Setter Property="IsActive" Value="{Binding Model.IsActive, Mode=TwoWay}"/>

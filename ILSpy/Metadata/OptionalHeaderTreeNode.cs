@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Reflection.PortableExecutable;
 
+using Avalonia.Controls;
 using Avalonia.Data;
 
 using ICSharpCode.Decompiler;
@@ -48,7 +49,7 @@ namespace ICSharpCode.ILSpy.Metadata
 
 			var dataGrid = Helpers.PrepareDataGrid(tabPage, this);
 
-			dataGrid.RowDetailsTemplateSelector = new CharacteristicsDataTemplateSelector("DLL Characteristics");
+			dataGrid.RowDetailsTemplate = new CharacteristicsDataTemplateSelector("DLL Characteristics");
 			dataGrid.RowDetailsVisibilityMode = DataGridRowDetailsVisibilityMode.Collapsed;
 
 			dataGrid.Columns.Clear();

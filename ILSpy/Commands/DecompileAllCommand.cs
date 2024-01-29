@@ -29,8 +29,6 @@ using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpy.TextView;
 using ICSharpCode.ILSpyX;
 
-using TomsToolbox.Essentials;
-
 namespace ICSharpCode.ILSpy
 {
 	[ExportMainMenuCommand(ParentMenuID = nameof(Resources._File), Header = nameof(Resources.DEBUGDecompile), MenuCategory = nameof(Resources.Open), MenuOrder = 2.5)]

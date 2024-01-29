@@ -17,9 +17,11 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.ComponentModel.Composition;
 using System.Composition;
 using System.IO;
+
+using Avalonia.Controls;
+using Avalonia.Media.Imaging;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Properties;
@@ -60,7 +62,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			try
 			{
 				AvalonEditTextOutput output = new AvalonEditTextOutput();
-				BitmapImage image = new BitmapImage();
+				Bitmap image;
 				byte[] curData;
 				using (var data = OpenStream())
 				{
@@ -78,12 +80,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 					curData = s.ToArray();
 				}
 				curData[2] = 1;
-				using (Stream stream = new MemoryStream(curData))
-				{
-					image.BeginInit();
-					image.StreamSource = stream;
-					image.EndInit();
-				}
+				image = new Bitmap(new MemoryStream(curData));
 
 				output.AddUIElement(() => new Image { Source = image });
 				output.WriteLine();

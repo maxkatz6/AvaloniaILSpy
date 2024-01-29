@@ -28,7 +28,7 @@ namespace ICSharpCode.ILSpy.Docking
 
 		public Style TabPageStyle { get; set; }
 
-		public override Style SelectStyle(object item, DependencyObject container)
+		public override Style SelectStyle(object item, AvaloniaObject container)
 		{
 			if (item is TabPageModel)
 				return TabPageStyle;
