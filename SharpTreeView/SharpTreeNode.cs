@@ -22,9 +22,10 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
+
+using Avalonia;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 
 namespace ICSharpCode.TreeView
 {
@@ -614,12 +615,12 @@ namespace ICSharpCode.TreeView
 			return false;
 		}
 
-		public virtual void StartDrag(DependencyObject dragSource, SharpTreeNode[] nodes)
+		public virtual async void StartDrag(PointerEventArgs args, AvaloniaObject dragSource, SharpTreeNode[] nodes)
 		{
-			DragDropEffects effects = DragDropEffects.All;
+			DragDropEffects effects = DragDropEffects.Move | DragDropEffects.Link | DragDropEffects.Copy;
 			if (!nodes.All(n => n.CanDelete()))
 				effects &= ~DragDropEffects.Move;
-			DragDropEffects result = DragDrop.DoDragDrop(dragSource, Copy(nodes), effects);
+			DragDropEffects result = await DragDrop.DoDragDrop(args, Copy(nodes), effects);
 			if (result == DragDropEffects.Move)
 			{
 				foreach (SharpTreeNode node in nodes)

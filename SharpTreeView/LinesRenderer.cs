@@ -16,27 +16,29 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using System.Diagnostics;
-using System.Windows;
-using System.Windows.Media;
+
+using Avalonia.Media.Immutable;
 
 namespace ICSharpCode.TreeView
 {
-	class LinesRenderer : FrameworkElement
+	class LinesRenderer : Control
 	{
 		static LinesRenderer()
 		{
-			pen = new Pen(Brushes.LightGray, 1);
-			pen.Freeze();
+			pen = new ImmutablePen(Brushes.LightGray, 1);
 		}
 
-		static Pen pen;
+		static ImmutablePen pen;
 
 		SharpTreeNodeView NodeView {
 			get { return TemplatedParent as SharpTreeNodeView; }
 		}
 
-		protected override void OnRender(DrawingContext dc)
+		public override void Render(DrawingContext dc)
 		{
 			if (NodeView.Node == null)
 			{
@@ -50,7 +52,7 @@ namespace ICSharpCode.TreeView
 
 			if (!NodeView.Node.IsRoot || NodeView.ParentTreeView.ShowRootExpander)
 			{
-				dc.DrawLine(pen, new Point(p.X, ActualHeight / 2), new Point(p.X + 10, ActualHeight / 2));
+				dc.DrawLine(pen, new Point(p.X, Bounds.Height / 2), new Point(p.X + 10, Bounds.Height / 2));
 			}
 
 			if (NodeView.Node.IsRoot)
@@ -58,23 +60,23 @@ namespace ICSharpCode.TreeView
 
 			if (NodeView.Node.IsLast)
 			{
-				dc.DrawLine(pen, p, new Point(p.X, ActualHeight / 2));
+				dc.DrawLine(pen, p, new Point(p.X, Bounds.Height / 2));
 			}
 			else
 			{
-				dc.DrawLine(pen, p, new Point(p.X, ActualHeight));
+				dc.DrawLine(pen, p, new Point(p.X, Bounds.Height));
 			}
 
 			var current = NodeView.Node;
 			while (true)
 			{
-				p.X -= 19;
+				p = p.WithX(p.X - 19);
 				current = current.Parent;
 				if (p.X < 0)
 					break;
 				if (!current.IsLast)
 				{
-					dc.DrawLine(pen, p, new Point(p.X, ActualHeight));
+					dc.DrawLine(pen, p, new Point(p.X, Bounds.Height));
 				}
 			}
 		}

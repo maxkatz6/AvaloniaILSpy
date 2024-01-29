@@ -16,19 +16,18 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia;
+using Avalonia.Interactivity;
+using System;
+using Avalonia.Controls.Primitives;
 
 namespace ICSharpCode.TreeView
 {
-	class EditTextBox : TextBox
+	internal class EditTextBox : TextBox
 	{
-		static EditTextBox()
-		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(EditTextBox),
-				new FrameworkPropertyMetadata(typeof(EditTextBox)));
-		}
+		protected override Type StyleKeyOverride => typeof(EditTextBox);
 
 		public EditTextBox()
 		{
@@ -60,7 +59,7 @@ namespace ICSharpCode.TreeView
 			}
 		}
 
-		protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
+		protected override void OnLostFocus(RoutedEventArgs e)
 		{
 			if (Node.IsEditing)
 			{

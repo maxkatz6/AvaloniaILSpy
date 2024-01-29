@@ -1,10 +1,9 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:Default="clr-namespace:ICSharpCode.TreeView"
-                    xmlns:styles="urn:TomsToolbox.Wpf.Styles">
+                    xmlns:Default="using:ICSharpCode.TreeView">
 
-    <Style x:Key="ExpandCollapseToggleStyle"
-           TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource {x:Type ToggleButton}}">
+    <ControlTheme x:Key="ExpandCollapseToggleStyle"
+                  TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource {x:Type ToggleButton}}">
         <Setter Property="Focusable"
                 Value="False" />
         <Setter Property="Template">
@@ -13,12 +12,12 @@
                     <Border Width="9"
                             Height="9"
                             BorderThickness="1"
-                            BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
+                            BorderBrush="{DynamicResource SystemColorsControlLightBrush}"
                             CornerRadius="1"
-                            SnapsToDevicePixels="True">
+                            UseLayoutRounding="True">
                         <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0"
-                                                 EndPoint="1,1">
+                            <LinearGradientBrush StartPoint="0%,0%"
+                                                 EndPoint="100%,100%">
                                 <LinearGradientBrush.GradientStops>
                                     <GradientStop Color="White"
                                                   Offset=".2" />
@@ -29,23 +28,22 @@
                         </Border.Background>
                         <Path Name="ExpandPath"
                               Margin="1,1,1,1"
-                              Fill="Black"
-                              Data="M 0 2 L 0 3 L 2 3 L 2 5 L 3 5 L 3 3 L 5 3 L 5 2 L 3 2 L 3 0 L 2 0 L 2 2 Z" />
+                              Fill="Black" />
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsChecked"
-                                 Value="True">
-                            <Setter Property="Data"
-                                    TargetName="ExpandPath"
-                                    Value="M 0 2 L 0 3 L 5 3 L 5 2 Z" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
 
-    <Style TargetType="{x:Type Default:InsertMarker}">
+        <Style Selector="^ /template/ Path#ExpandPath">
+	        <Setter Property="Data" Value="M 0 2 L 0 3 L 2 3 L 2 5 L 3 5 L 3 3 L 5 3 L 5 2 L 3 2 L 3 0 L 2 0 L 2 2 Z" />
+        </Style>
+        <Style Selector="^:checked /template/ Path#ExpandPath">
+	        <Setter Property="Data" Value="M 0 2 L 0 3 L 5 3 L 5 2 Z" />
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type Default:InsertMarker}"
+                  TargetType="{x:Type Default:InsertMarker}">
         <Setter Property="IsHitTestVisible"
                 Value="False" />
         <Setter Property="Template">
@@ -54,124 +52,59 @@
                     <Grid>
                         <Border VerticalAlignment="Center"
                                 Height="2"
-                                Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                                Background="{DynamicResource SystemColorsHighlightBrush}" />
                         <Path Data="m 0 0 l 3 3 l -3 3"
-                              Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"
+                              Fill="{DynamicResource SystemColorsHighlightBrush}"
                               HorizontalAlignment="Left" />
                         <Path Data="m 0 0 l -3 3 l 3 3"
-                              Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"
+                              Fill="{DynamicResource SystemColorsHighlightBrush}"
                               HorizontalAlignment="Right" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
+    </ControlTheme>
 
-    <Style TargetType="{x:Type Default:EditTextBox}">
-        <Setter Property="Foreground"
-                Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-        <Setter Property="KeyboardNavigation.TabNavigation"
-                Value="None" />
-        <Setter Property="HorizontalContentAlignment"
-                Value="Left" />
-        <Setter Property="FocusVisualStyle"
-                Value="{x:Null}" />
-        <Setter Property="AllowDrop"
-                Value="True" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type Default:EditTextBox}">
-                    <Border Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
-                            Padding="0 1 2 0">
-                        <ScrollViewer Name="PART_ContentHost" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
+    <!-- <ControlTheme TargetType="{x:Type Default:EditTextBox}"> -->
+    <!--     <Setter Property="Foreground" -->
+    <!--             Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" /> -->
+    <!--     <Setter Property="KeyboardNavigation.TabNavigation" -->
+    <!--             Value="None" /> -->
+    <!--     <Setter Property="HorizontalContentAlignment" -->
+    <!--             Value="Left" /> -->
+    <!--     <Setter Property="FocusVisualStyle" -->
+    <!--             Value="{x:Null}" /> -->
+    <!--     <Setter Property="AllowDrop" -->
+    <!--             Value="True" /> -->
+    <!--     <Setter Property="Template"> -->
+    <!--         <Setter.Value> -->
+    <!--             <ControlTemplate TargetType="{x:Type Default:EditTextBox}"> -->
+    <!--                 <Border Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" -->
+    <!--                         BorderThickness="1" -->
+    <!--                         BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" -->
+    <!--                         Padding="0 1 2 0"> -->
+    <!--                     <ScrollViewer Name="PART_ContentHost" /> -->
+    <!--                 </Border> -->
+    <!--             </ControlTemplate> -->
+    <!--         </Setter.Value> -->
+    <!--     </Setter> -->
+    <!-- </ControlTheme> -->
     
-    <Style TargetType="{x:Type Default:SharpTreeView}"
-           BasedOn="{StaticResource {x:Static styles:ResourceKeys.ListBoxStyle}}">
-        <Style.Triggers>
-            <Trigger Property="ShowRoot"
-                     Value="False">
-                <Setter Property="Padding"
-                        Value="5 0 0 0" />
-            </Trigger>
-        </Style.Triggers>
-    </Style>
+    <ControlTheme x:Key="{x:Type Default:SharpTreeView}"
+                  TargetType="{x:Type Default:SharpTreeView}"
+                  BasedOn="{StaticResource {x:Type ListBox}}">
+        <!-- <Style.Triggers> -->
+        <!--     <Trigger Property="ShowRoot" -->
+        <!--              Value="False"> -->
+        <!--         <Setter Property="Padding" -->
+        <!--                 Value="5 0 0 0" /> -->
+        <!--     </Trigger> -->
+        <!-- </Style.Triggers> -->
+    </ControlTheme>
 
-    <Style x:Key="{x:Static Default:SharpTreeView.DefaultItemContainerStyleKey}"
-           TargetType="{x:Type Default:SharpTreeViewItem}">
-        <Style.Triggers>
-            <MultiTrigger>
-                <MultiTrigger.Conditions>
-                    <Condition Property="ItemsControl.AlternationIndex"
-                               Value="1" />
-                    <Condition Property="Default:SharpTreeView.ShowAlternation"
-                               Value="True" />
-                </MultiTrigger.Conditions>
-                <Setter Property="Background"
-                        Value="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" />
-            </MultiTrigger>
-        </Style.Triggers>
-    </Style>
-
-    <Style x:Key="{x:Static Default:SharpGridView.ItemContainerStyleKey}"
-           TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource {x:Type ListViewItem}}">
-        <Setter Property="Background"
-                Value="Transparent" />
-        <Setter Property="VerticalContentAlignment"
-                Value="Center" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type ListViewItem}">
-                    <Border Name="Bd"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="true">
-                        <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsSelected"
-                                 Value="true">
-                            <Setter TargetName="Bd"
-                                    Property="Background"
-                                    Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                            <Setter Property="Foreground"
-                                    Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
-                        </Trigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="IsSelected"
-                                           Value="true" />
-                                <Condition Property="Selector.IsSelectionActive"
-                                           Value="false" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="Bd"
-                                    Property="Background"
-                                    Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
-                            <Setter Property="Foreground"
-                                    Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-                        </MultiTrigger>
-                        <Trigger Property="IsEnabled"
-                                 Value="false">
-                            <Setter Property="Foreground"
-                                    Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <Style TargetType="{x:Type Default:SharpTreeViewItem}">
-        <Setter Property="FocusVisualStyle"
+    <ControlTheme x:Key="{x:Type Default:SharpTreeViewItem}"
+                  TargetType="{x:Type Default:SharpTreeViewItem}">
+        <Setter Property="FocusAdorner"
                 Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
@@ -182,73 +115,55 @@
                                                        HorizontalAlignment="Left" />
                         </Border>
                     </Border>
-                    <ControlTemplate.Triggers>
-	                    <Trigger Property="IsSelected"
-	                             Value="True">
-                            <Setter TargetName="nodeView"
-                                    Property="TextBackground"
-                                    Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                            <Setter TargetName="nodeView"
-                                    Property="Foreground"
-                                    Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
-                        </Trigger>
-                        <!--<MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="IsSelected"
-                                           Value="True" />
-                                <Condition Property="Selector.IsSelectionActive"
-                                           Value="False" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="nodeView"
-                                    Property="TextBackground"
-                                    Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
-                            <Setter TargetName="nodeView"
-                                    Property="Foreground"
-                                    Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-                        </MultiTrigger>-->
-                        <Trigger Property="IsEnabled"
-                                 Value="False">
-                            <Setter TargetName="nodeView"
-                                    Property="Foreground"
-                                    Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
+        <Style Selector="^:selected /template/ Default|SharpTreeNodeView#nodeView">
+	        <Setter Property="TextBackground"
+	                Value="{DynamicResource SystemColorsHighlightBrush}" />
+	        <Setter Property="Foreground"
+	                Value="{DynamicResource SystemColorsHighlightTextBrush}" />
+        </Style>
+        <Style Selector="^:disabled /template/ Default|SharpTreeNodeView#nodeView">
+	        <Setter Property="Foreground"
+	                Value="{DynamicResource SystemColorsGrayTextBrushKey}" />
+        </Style>
+    </ControlTheme>
 
-    <Style TargetType="{x:Type Default:SharpTreeNodeView}">
+    <ControlTheme x:Key="{x:Type Default:SharpTreeNodeView}"
+                  TargetType="{x:Type Default:SharpTreeNodeView}">
         <Setter Property="Focusable"
                 Value="False" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Default:SharpTreeNodeView}">
-                    <Grid>
+                    <Grid x:Name="RootGrid"
+                          Classes.expanded="{Binding IsExpanded}"
+                          Classes.isCut="{Binding IsCut}">
                         <Default:LinesRenderer x:Name="linesRenderer"
                                                ClipToBounds="True"
-                                               Visibility="{Binding ShowLines, RelativeSource={RelativeSource AncestorType={x:Type Default:SharpTreeView}}, Converter={Default:CollapsedWhenFalse}}" />
+                                               IsVisible="{Binding $parent[Default:SharpTreeView].ShowLines}" />
                         <StackPanel Orientation="Horizontal">
-                            <FrameworkElement Name="spacer" />
+                            <Control Name="spacer" />
                             <ToggleButton Name="expander"
-                                          Style="{StaticResource ExpandCollapseToggleStyle}"
+                                          Theme="{StaticResource ExpandCollapseToggleStyle}"
                                           IsChecked="{Binding IsExpanded}"
-                                          Visibility="Hidden"
+                                          IsVisible="{Binding ShowExpander}"
                                           Margin="0 0 7 0"
                                           VerticalAlignment="Center" />
                             <Border Name="checkBoxContainer"
                                     Width="16"
                                     Margin="0 0 3 0"
-                                    Visibility="Collapsed">
+                                    IsVisible="{Binding IsCheckable}">
                                 <CheckBox IsChecked="{Binding IsChecked}"
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center" />
                             </Border>
                             <StackPanel Orientation="Horizontal"
                                         Background="Transparent"
-                                        ToolTip="{Binding ToolTip}">
+                                        ToolTip.Tip="{Binding ToolTip}">
 								<ContentPresenter Name="icon"
-                                                  Content="{Binding Icon}"
+                                                  IsVisible="{Binding ShowIcon}"
                                                   Width="16"
                                                   Height="16"
                                                   Margin="0 0 5 1"
@@ -261,6 +176,7 @@
 									</ContentPresenter.ContentTemplate>
 								</ContentPresenter>
 								<Border Name="textContainer"
+								        IsVisible="{Binding !IsEditing}"
                                         Background="{TemplateBinding TextBackground}">
                                     <ContentPresenter Content="{Binding Text}"
                                                       Margin="2 0 6 0"
@@ -271,47 +187,18 @@
                             </StackPanel>
                         </StackPanel>
                     </Grid>
-                    <ControlTemplate.Triggers>
-                        <DataTrigger Binding="{Binding IsEditing}"
-                                     Value="True">
-                            <Setter TargetName="textContainer"
-                                    Property="Visibility"
-                                    Value="Collapsed" />
-                        </DataTrigger>
-                    	  <DataTrigger Binding="{Binding ShowIcon}"
-                                     Value="False">
-                    		  <Setter TargetName="icon"
-                                    Property="Visibility"
-                                   Value="Collapsed" />
- 						  </DataTrigger>
-                        <DataTrigger Binding="{Binding IsExpanded}"
-                                     Value="True">
-                            <Setter TargetName="icon"
-                                    Property="Content"
-                                    Value="{Binding ExpandedIcon}" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding ShowExpander}"
-                                     Value="True">
-                            <Setter TargetName="expander"
-                                    Property="Visibility"
-                                    Value="Visible" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding IsCheckable}"
-                                     Value="True">
-                            <Setter TargetName="checkBoxContainer"
-                                    Property="Visibility"
-                                    Value="Visible" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding IsCut}"
-                                     Value="True">
-                            <Setter TargetName="icon"
-                                    Property="Opacity"
-                                    Value="0.5" />
-                        </DataTrigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
+        <Style Selector="^/template/ Grid ContentPresenter#icon">
+	        <Setter Property="Content" Value="{Binding Icon}" />
+        </Style>
+        <Style Selector="^/template/ Grid.expanded ContentPresenter#icon">
+	        <Setter Property="Content" Value="{Binding ExpandedIcon}" />
+        </Style>
+        <Style Selector="^/template/ Grid.isCut ContentPresenter#icon">
+	        <Setter Property="Opacity" Value="0.5" />
+        </Style>
+    </ControlTheme>
 
 </ResourceDictionary>

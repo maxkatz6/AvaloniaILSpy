@@ -16,20 +16,23 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using System;
 using System.ComponentModel;
-using System.Windows;
-using System.Windows.Automation;
-using System.Windows.Automation.Peers;
-using System.Windows.Automation.Provider;
+
+using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 
 namespace ICSharpCode.TreeView
 {
-	class SharpTreeViewItemAutomationPeer : FrameworkElementAutomationPeer, IExpandCollapseProvider
+	class SharpTreeViewItemAutomationPeer : ControlAutomationPeer, IExpandCollapseProvider
 	{
 		internal SharpTreeViewItemAutomationPeer(SharpTreeViewItem owner)
 			: base(owner)
 		{
-			SharpTreeViewItem.DataContextChanged += OnDataContextChanged;
+			SharpTreeViewItem.PropertyChanged += OnDataContextChanged;
 			SharpTreeNode node = SharpTreeViewItem.DataContext as SharpTreeNode;
 			if (node == null)
 				return;
@@ -42,12 +45,12 @@ namespace ICSharpCode.TreeView
 			return AutomationControlType.TreeItem;
 		}
 
-		public override object GetPattern(PatternInterface patternInterface)
-		{
-			if (patternInterface == PatternInterface.ExpandCollapse)
-				return this;
-			return base.GetPattern(patternInterface);
-		}
+		// public override object GetPattern(PatternInterface patternInterface)
+		// {
+		// 	if (patternInterface == PatternInterface.ExpandCollapse)
+		// 		return this;
+		// 	return base.GetPattern(patternInterface);
+		// }
 
 		public void Collapse()
 		{
@@ -66,6 +69,8 @@ namespace ICSharpCode.TreeView
 			}
 		}
 
+		public bool ShowsMenu => false;
+
 		private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			if (e.PropertyName != "IsExpanded")
@@ -81,14 +86,16 @@ namespace ICSharpCode.TreeView
 				newValue ? ExpandCollapseState.Expanded : ExpandCollapseState.Collapsed);
 		}
 
-		private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+		private void OnDataContextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
 		{
-			SharpTreeNode oldNode = e.OldValue as SharpTreeNode;
-			if (oldNode != null)
-				oldNode.PropertyChanged -= OnPropertyChanged;
-			SharpTreeNode newNode = e.NewValue as SharpTreeNode;
-			if (newNode != null)
-				newNode.PropertyChanged += OnPropertyChanged;
+			if (e.Property == StyledElement.DataContextProperty)
+			{
+				var (oldNode, newNode) = e.GetOldAndNewValue<SharpTreeNode>();
+				if (oldNode != null)
+					oldNode.PropertyChanged -= OnPropertyChanged;
+				if (newNode != null)
+					newNode.PropertyChanged += OnPropertyChanged;
+			}
 		}
 	}
 }

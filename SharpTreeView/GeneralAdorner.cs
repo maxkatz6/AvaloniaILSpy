@@ -1,77 +1,33 @@
-﻿// Copyright (c) 2020 AlphaSierraPapa for the SharpDevelop Team
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this
-// software and associated documentation files (the "Software"), to deal in the Software
-// without restriction, including without limitation the rights to use, copy, modify, merge,
-// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
-// to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or
-// substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
+﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
+// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
 
-using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Media;
+using Avalonia.Controls.Primitives;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace ICSharpCode.TreeView
 {
-	public class GeneralAdorner : Adorner
+	public class GeneralAdorner : Decorator
 	{
-		public GeneralAdorner(UIElement target)
-			: base(target)
+		public GeneralAdorner()
 		{
-		}
-
-		FrameworkElement child;
-
-		public FrameworkElement Child {
-			get {
-				return child;
-			}
-			set {
-				if (child != value)
-				{
-					RemoveVisualChild(child);
-					RemoveLogicalChild(child);
-					child = value;
-					AddLogicalChild(value);
-					AddVisualChild(value);
-					InvalidateMeasure();
-				}
-			}
-		}
-
-		protected override int VisualChildrenCount {
-			get { return child == null ? 0 : 1; }
-		}
-
-		protected override Visual GetVisualChild(int index)
-		{
-			return child;
 		}
 
 		protected override Size MeasureOverride(Size constraint)
 		{
-			if (child != null)
+			if (Child != null)
 			{
-				child.Measure(constraint);
-				return child.DesiredSize;
+				Child.Measure(constraint);
+				return Child.DesiredSize;
 			}
 			return new Size();
 		}
 
 		protected override Size ArrangeOverride(Size finalSize)
 		{
-			if (child != null)
+			if (Child != null)
 			{
-				child.Arrange(new Rect(finalSize));
+				Child.Arrange(new Rect(finalSize));
 				return finalSize;
 			}
 			return new Size();

@@ -16,11 +16,11 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System.Windows.Automation.Peers;
+using Avalonia.Automation.Peers;
 
 namespace ICSharpCode.TreeView
 {
-	class SharpTreeViewAutomationPeer : FrameworkElementAutomationPeer
+	class SharpTreeViewAutomationPeer : ControlAutomationPeer
 	{
 		internal SharpTreeViewAutomationPeer(SharpTreeView owner) : base(owner)
 		{

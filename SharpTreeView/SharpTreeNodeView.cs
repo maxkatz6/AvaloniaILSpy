@@ -16,42 +16,52 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System;
+using Avalonia.Controls;
+using Avalonia;
+using Avalonia.Controls.Primitives;
+using Avalonia.Media;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media;
+using Avalonia.VisualTree;
 
 namespace ICSharpCode.TreeView
 {
-	public class SharpTreeNodeView : Control
+	public class SharpTreeNodeView : TemplatedControl
 	{
-		static SharpTreeNodeView()
+		public static readonly StyledProperty<IBrush> TextBackgroundProperty =
+			AvaloniaProperty.Register<SharpTreeNodeView, IBrush>(nameof(TextBackground));
+
+		public IBrush TextBackground
 		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(SharpTreeNodeView),
-													 new FrameworkPropertyMetadata(typeof(SharpTreeNodeView)));
-		}
-
-		public static readonly DependencyProperty TextBackgroundProperty =
-			DependencyProperty.Register("TextBackground", typeof(Brush), typeof(SharpTreeNodeView));
-
-		public Brush TextBackground {
-			get { return (Brush)GetValue(TextBackgroundProperty); }
+			get { return GetValue(TextBackgroundProperty); }
 			set { SetValue(TextBackgroundProperty, value); }
 		}
 
-		public SharpTreeNode Node {
+		public static readonly DirectProperty<SharpTreeNodeView, object> IconProperty =
+			AvaloniaProperty.RegisterDirect<SharpTreeNodeView, object>(nameof(Icon), (owner) => owner.Node);
+
+		public object Icon
+		{
+			get {
+				var expanded = Node?.IsExpanded;
+				if (!expanded.HasValue) {
+					return null;
+				}
+				return expanded.Value ? Node?.ExpandedIcon : Node?.Icon;
+			}
+		}
+
+
+		public SharpTreeNode Node
+		{
 			get { return DataContext as SharpTreeNode; }
 		}
 
 		public SharpTreeViewItem ParentItem { get; private set; }
-
-		public static readonly DependencyProperty CellEditorProperty =
-			DependencyProperty.Register("CellEditor", typeof(Control), typeof(SharpTreeNodeView),
-										new FrameworkPropertyMetadata());
-
+		
+		public static readonly StyledProperty<Control> CellEditorProperty =
+			AvaloniaProperty.Register<SharpTreeNodeView, Control>("CellEditor");
+		
 		public Control CellEditor {
 			get { return (Control)GetValue(CellEditorProperty); }
 			set { SetValue(CellEditorProperty, value); }
@@ -62,22 +72,30 @@ namespace ICSharpCode.TreeView
 		}
 
 		internal LinesRenderer LinesRenderer { get; private set; }
+		private Border textEditorContainer;
+		private Control spacer;
+		private ToggleButton expander;
 
-		public override void OnApplyTemplate()
+		protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
 		{
-			base.OnApplyTemplate();
-			LinesRenderer = Template.FindName("linesRenderer", this) as LinesRenderer;
+			base.OnApplyTemplate(e);
+			LinesRenderer = e.NameScope.Get<LinesRenderer>("linesRenderer");
+			textEditorContainer = e.NameScope.Get<Border>("textEditorContainer");
+			textEditorContainer = e.NameScope.Get<Border>("textEditorContainer");
+			spacer = e.NameScope.Get<Control>("spacer");
+			expander = e.NameScope.Get<ToggleButton>("expander");
+
 			UpdateTemplate();
 		}
 
-		protected override void OnVisualParentChanged(DependencyObject oldParent)
+		protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
 		{
-			base.OnVisualParentChanged(oldParent);
-			ParentItem = this.FindAncestor<SharpTreeViewItem>();
+			base.OnAttachedToVisualTree(e);
+			ParentItem = this.FindAncestorOfType<SharpTreeViewItem>()!;
 			ParentItem.NodeView = this;
 		}
 
-		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+		protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs e)
 		{
 			base.OnPropertyChanged(e);
 			if (e.Property == DataContextProperty)
@@ -114,7 +132,7 @@ namespace ICSharpCode.TreeView
 				{
 					foreach (var child in Node.VisibleDescendantsAndSelf())
 					{
-						var container = ParentTreeView.ItemContainerGenerator.ContainerFromItem(child) as SharpTreeViewItem;
+						var container = ParentTreeView.ContainerFromItem(child) as SharpTreeViewItem;
 						if (container != null && container.NodeView != null)
 						{
 							container.NodeView.LinesRenderer.InvalidateVisual();
@@ -131,7 +149,6 @@ namespace ICSharpCode.TreeView
 
 		void OnIsEditingChanged()
 		{
-			var textEditorContainer = Template.FindName("textEditorContainer", this) as Border;
 			if (Node.IsEditing)
 			{
 				if (CellEditor == null)
@@ -147,17 +164,15 @@ namespace ICSharpCode.TreeView
 
 		void UpdateTemplate()
 		{
-			var spacer = Template.FindName("spacer", this) as FrameworkElement;
 			spacer.Width = CalculateIndent();
 
-			var expander = Template.FindName("expander", this) as ToggleButton;
 			if (ParentTreeView.Root == Node && !ParentTreeView.ShowRootExpander)
 			{
-				expander.Visibility = Visibility.Collapsed;
+				expander.IsVisible = false;
 			}
 			else
 			{
-				expander.ClearValue(VisibilityProperty);
+				expander.ClearValue(IsVisibleProperty);
 			}
 		}
 

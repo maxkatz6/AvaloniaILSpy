@@ -18,18 +18,21 @@
 
 using System;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia;
+using Avalonia.Automation.Peers;
+using Avalonia.Input;
 
 namespace ICSharpCode.TreeView
 {
-	public class SharpTreeViewItem : ListViewItem
+	public class SharpTreeViewItem : ListBoxItem
 	{
 		static SharpTreeViewItem()
 		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(SharpTreeViewItem),
-													 new FrameworkPropertyMetadata(typeof(SharpTreeViewItem)));
+			DragDrop.DragEnterEvent.AddClassHandler<SharpTreeViewItem>((x, e) => x.OnDragEnter(e));
+			DragDrop.DragLeaveEvent.AddClassHandler<SharpTreeViewItem>((x, e) => x.OnDragLeave(e));
+			DragDrop.DragOverEvent.AddClassHandler<SharpTreeViewItem>((x, e) => x.OnDragOver(e));
+			DragDrop.DropEvent.AddClassHandler<SharpTreeViewItem>((x, e) => x.OnDrop(e));
 		}
 
 		public SharpTreeNode Node {
@@ -60,7 +63,7 @@ namespace ICSharpCode.TreeView
 			}
 		}
 
-		protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
+		protected override AutomationPeer OnCreateAutomationPeer()
 		{
 			return new SharpTreeViewItemAutomationPeer(this);
 		}
@@ -71,45 +74,51 @@ namespace ICSharpCode.TreeView
 		bool wasSelected;
 		bool wasDoubleClick;
 
-		protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+		protected override void OnPointerPressed(PointerPressedEventArgs e)
 		{
 			wasSelected = IsSelected;
 			if (!IsSelected)
 			{
-				base.OnMouseLeftButtonDown(e);
+				base.OnPointerPressed(e);
 			}
 
-			if (Mouse.LeftButton == MouseButtonState.Pressed)
+			if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
 			{
-				startPoint = e.GetPosition(null);
-				CaptureMouse();
+				startPoint = e.GetPosition(this);
+				e.Pointer.Capture(this);
 
 				if (e.ClickCount == 2)
 				{
+					// TODO-Avalonia: Handle Double tapped instead.
 					wasDoubleClick = true;
 				}
 			}
 		}
 
-		protected override void OnMouseMove(MouseEventArgs e)
+		protected override void OnPointerMoved(PointerEventArgs e)
 		{
-			if (IsMouseCaptured)
+			if (e.Pointer.Captured == this)
 			{
-				var currentPoint = e.GetPosition(null);
-				if (Math.Abs(currentPoint.X - startPoint.X) >= SystemParameters.MinimumHorizontalDragDistance ||
-					Math.Abs(currentPoint.Y - startPoint.Y) >= SystemParameters.MinimumVerticalDragDistance)
+				var currentPoint = e.GetPosition(this);
+				const double MinimumDragDistance = 2.0;
+				if (Math.Abs(currentPoint.X - startPoint.X) >= MinimumDragDistance ||
+					Math.Abs(currentPoint.Y - startPoint.Y) >= MinimumDragDistance)
 				{
 
 					var selection = ParentTreeView.GetTopLevelSelection().ToArray();
 					if (Node.CanDrag(selection))
 					{
-						Node.StartDrag(this, selection);
+						Node.StartDrag(e, this, selection);
 					}
 				}
 			}
+			else
+			{
+				base.OnPointerMoved(e);
+			}
 		}
 
-		protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+		protected override void OnPointerReleased(PointerReleasedEventArgs e)
 		{
 			if (wasDoubleClick)
 			{
@@ -124,22 +133,15 @@ namespace ICSharpCode.TreeView
 				}
 			}
 
-			ReleaseMouseCapture();
-			if (wasSelected)
-			{
-				base.OnMouseLeftButtonDown(e);
-			}
-		}
-
-		protected override void OnMouseUp(MouseButtonEventArgs e)
-		{
-			if (e.ChangedButton == MouseButton.Middle)
+			if (e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
 			{
 				Node.ActivateItemSecondary(e);
 			}
-			else
+
+			e.Pointer.Capture(null);
+			if (wasSelected)
 			{
-				base.OnMouseUp(e);
+				base.OnPointerReleased(e);
 			}
 		}
 
@@ -147,22 +149,22 @@ namespace ICSharpCode.TreeView
 
 		#region Drag and Drop
 
-		protected override void OnDragEnter(DragEventArgs e)
+		protected virtual void OnDragEnter(DragEventArgs e)
 		{
 			ParentTreeView.HandleDragEnter(this, e);
 		}
 
-		protected override void OnDragOver(DragEventArgs e)
+		protected virtual void OnDragOver(DragEventArgs e)
 		{
 			ParentTreeView.HandleDragOver(this, e);
 		}
 
-		protected override void OnDrop(DragEventArgs e)
+		protected virtual void OnDrop(DragEventArgs e)
 		{
 			ParentTreeView.HandleDrop(this, e);
 		}
 
-		protected override void OnDragLeave(DragEventArgs e)
+		protected virtual void OnDragLeave(DragEventArgs e)
 		{
 			ParentTreeView.HandleDragLeave(this, e);
 		}

@@ -17,10 +17,13 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Windows;
-using System.Windows.Threading;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Threading;
 
 namespace ICSharpCode.TreeView
 {
@@ -28,14 +31,9 @@ namespace ICSharpCode.TreeView
 	/// Custom TextSearch-implementation.
 	/// Fixes #67 - Moving to class member in tree view by typing in first character of member name selects parent assembly
 	/// </summary>
-	public class SharpTreeViewTextSearch : DependencyObject
+	public class SharpTreeViewTextSearch : AvaloniaObject
 	{
-		[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-		static extern int GetDoubleClickTime();
-
-		static readonly DependencyPropertyKey TextSearchInstancePropertyKey = DependencyProperty.RegisterAttachedReadOnly("TextSearchInstance",
-			typeof(SharpTreeViewTextSearch), typeof(SharpTreeViewTextSearch), new FrameworkPropertyMetadata(null));
-		static readonly DependencyProperty TextSearchInstanceProperty = TextSearchInstancePropertyKey.DependencyProperty;
+		static readonly AttachedProperty<SharpTreeViewTextSearch> TextSearchInstanceProperty = AvaloniaProperty.RegisterAttached<SharpTreeView, SharpTreeViewTextSearch, SharpTreeViewTextSearch>("TextSearchInstance");
 
 		DispatcherTimer timer;
 
@@ -61,7 +59,7 @@ namespace ICSharpCode.TreeView
 			if (textSearch == null)
 			{
 				textSearch = new SharpTreeViewTextSearch(sharpTreeView);
-				sharpTreeView.SetValue(TextSearchInstancePropertyKey, textSearch);
+				sharpTreeView.SetValue(TextSearchInstanceProperty, textSearch);
 			}
 			return textSearch;
 		}
@@ -167,7 +165,11 @@ namespace ICSharpCode.TreeView
 			{
 				timer.Stop();
 			}
-			timer.Interval = TimeSpan.FromMilliseconds(GetDoubleClickTime() * 2);
+
+			var doubleClickTime =
+				TopLevel.GetTopLevel(treeView)?.PlatformSettings?.GetDoubleTapTime(PointerType.Mouse) ??
+				TimeSpan.FromMicroseconds(100);
+			timer.Interval = doubleClickTime * 2;
 			timer.Start();
 		}
 	}
