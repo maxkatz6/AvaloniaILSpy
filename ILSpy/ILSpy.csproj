@@ -18,11 +18,8 @@
     <PackageReference Include="AvaloniaEdit" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Controls.DataGrid" />
-<!--    <PackageReference Include="Dirkster.AvalonDock.Themes.VS2013" />-->
-<!--    <PackageReference Include="Microsoft.VisualStudio.Composition" />-->
-<!--    <PackageReference Include="DataGridExtensions" />-->
+    <PackageReference Include="Microsoft.VisualStudio.Composition" />
     <PackageReference Include="Avalonia.Xaml.Behaviors" />
-<!--    <PackageReference Include="TomsToolbox.Wpf.Styles" />-->
   </ItemGroup>
 
   <ItemGroup>
