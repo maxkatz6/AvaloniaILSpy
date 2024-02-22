@@ -41,10 +41,7 @@ namespace ICSharpCode.ILSpy
 	{
 		public override void Execute(object parameter)
 		{
-			MainWindow.Instance.NavigateTo(
-				new RequestNavigateEventArgs(new Uri("resource://aboutpage"), null),
-				inNewTabPage: true
-			);
+			MainWindow.Instance.NavigateTo(new Uri("resource://aboutpage"), inNewTabPage: true);
 		}
 
 		public static void Display(DecompilerTextView textView)
@@ -76,10 +73,10 @@ namespace ICSharpCode.ILSpy
 				checkBox.Margin = new Thickness(4);
 				checkBox.Content = Resources.AutomaticallyCheckUpdatesEveryWeek;
 				UpdateSettings settings = new UpdateSettings(ILSpySettings.Load());
-				checkBox.SetBinding(CheckBox.IsCheckedProperty, new Binding("AutomaticUpdateCheckEnabled") { Source = settings });
+				checkBox.Bind(CheckBox.IsCheckedProperty, new Binding("AutomaticUpdateCheckEnabled") { Source = settings });
 				return new StackPanel {
 					Margin = new Thickness(0, 4, 0, 0),
-					Cursor = Cursors.Arrow,
+					Cursor = new Cursor(StandardCursorType.Arrow),
 					Children = { stackPanel, checkBox }
 				};
 			});

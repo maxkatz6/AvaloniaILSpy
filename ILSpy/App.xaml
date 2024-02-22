@@ -7,16 +7,16 @@
              xmlns:themes="clr-namespace:ICSharpCode.ILSpy.Themes"
              StartupUri="MainWindow.xaml">
 	<Application.Resources>
-		<Style x:Key="DialogWindow" TargetType="{x:Type Window}">
+		<ControlTheme x:Key="DialogWindow" TargetType="{x:Type Window}" BasedOn="{StaticResource {x:Type Window}}">
 			<Setter Property="ShowInTaskbar" Value="False"/>
 			<Setter Property="UseLayoutRounding" Value="True"/>
-			<Setter Property="toms:StyleBindings.Behaviors">
-				<Setter.Value>
-					<toms:BehaviorCollection>
+			<Setter Property="(Interaction.Behaviors)">
+				<BehaviorCollectionTemplate>
+					<BehaviorCollection>
 						<themes:WindowStyleManagerBehavior />
-					</toms:BehaviorCollection>
-				</Setter.Value>
+					</BehaviorCollection>
+				</BehaviorCollectionTemplate>
 			</Setter>
-		</Style>
+		</ControlTheme>
 	</Application.Resources>
 </Application>

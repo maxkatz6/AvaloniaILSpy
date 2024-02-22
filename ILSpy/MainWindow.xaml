@@ -94,9 +94,9 @@
 		<controls:CultureSelectionConverter x:Key="cultureSelectionConverter" />
 
 	</Window.Resources>
-	<b:Interaction.Behaviors>
+	<Interaction.Behaviors>
 		<themes:WindowStyleManagerBehavior />
-	</b:Interaction.Behaviors>
+	</Interaction.Behaviors>
 
 	<Window.CommandBindings>
 		<CommandBinding

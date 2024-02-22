@@ -1513,7 +1513,7 @@ namespace ICSharpCode.ILSpy
 			}
 			if (newState?.ViewedUri != null)
 			{
-				NavigateTo(new RequestNavigateEventArgs(newState.ViewedUri, null), recordHistory: false);
+				NavigateTo(newState.ViewedUri, recordHistory: false);
 				return;
 			}
 			var options = MainWindow.Instance.CreateDecompilationOptions();
@@ -1614,9 +1614,9 @@ namespace ICSharpCode.ILSpy
 		}
 		#endregion
 
-		internal void NavigateTo(RequestNavigateEventArgs e, bool recordHistory = true, bool inNewTabPage = false)
+		internal bool NavigateTo(Uri url, bool recordHistory = true, bool inNewTabPage = false)
 		{
-			if (e.Uri.Scheme == "resource")
+			if (url.Scheme == "resource")
 			{
 				if (inNewTabPage)
 				{
@@ -1627,19 +1627,18 @@ namespace ICSharpCode.ILSpy
 					DockWorkspace.Instance.ActiveTabPage = DockWorkspace.Instance.TabPages.Last();
 				}
 
-				if (e.Uri.Host == "aboutpage")
+				if (url.Host == "aboutpage")
 				{
 					RecordHistory();
 					DockWorkspace.Instance.ActiveTabPage.ShowTextView(AboutPage.Display);
-					e.Handled = true;
-					return;
+					return true;
 				}
 				AvalonEditTextOutput output = new AvalonEditTextOutput {
-					Address = e.Uri,
-					Title = e.Uri.AbsolutePath,
+					Address = url,
+					Title = url.AbsolutePath,
 					EnableHyperlinks = true
 				};
-				using (Stream s = typeof(App).Assembly.GetManifestResourceStream(typeof(App), e.Uri.AbsolutePath))
+				using (Stream s = typeof(App).Assembly.GetManifestResourceStream(typeof(App), url.AbsolutePath))
 				{
 					using (StreamReader r = new StreamReader(s))
 					{
@@ -1653,7 +1652,7 @@ namespace ICSharpCode.ILSpy
 				}
 				RecordHistory();
 				DockWorkspace.Instance.ShowText(output);
-				e.Handled = true;
+				return true;
 			}
 
 			void RecordHistory()

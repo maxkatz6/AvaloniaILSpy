@@ -136,7 +136,7 @@ namespace ICSharpCode.ILSpy.Docking
 						}
 						else
 						{
-							MainWindow.Instance.NavigateTo(new RequestNavigateEventArgs(state.ViewedUri, null));
+							MainWindow.Instance.NavigateTo(state.ViewedUri);
 						}
 					}
 
