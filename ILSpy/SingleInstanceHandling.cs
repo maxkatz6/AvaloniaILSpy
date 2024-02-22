@@ -93,6 +93,8 @@ namespace ICSharpCode.ILSpy
 		#region Pass Command Line Arguments to previous instance
 		internal static bool SendToPreviousInstance(string message, bool activate)
 		{
+			// TODO Avalonia: need to replace this whole thing with NamedPipes that work on Windows and macOS.
+			// Also, is it necessary to keep ILSpy single instanced?
 			string ownProcessName;
 			using (var ownProcess = Process.GetCurrentProcess())
 			{
@@ -100,12 +102,12 @@ namespace ICSharpCode.ILSpy
 			}
 
 			bool success = false;
-			NativeMethods.EnumWindows(
+			CommandLineHelpers.EnumWindows(
 				(hWnd, lParam) => {
-					string windowTitle = NativeMethods.GetWindowText(hWnd, 100);
+					string windowTitle = CommandLineHelpers.GetWindowText(hWnd, 100);
 					if (windowTitle.StartsWith("ILSpy", StringComparison.Ordinal))
 					{
-						string processName = NativeMethods.GetProcessNameFromWindow(hWnd);
+						string processName = CommandLineHelpers.GetProcessNameFromWindow(hWnd);
 						Debug.WriteLine("Found {0:x4}: '{1}' in '{2}'", hWnd, windowTitle, processName);
 						if (string.Equals(processName, ownProcessName, StringComparison.OrdinalIgnoreCase))
 						{
@@ -114,7 +116,7 @@ namespace ICSharpCode.ILSpy
 							if (result == (IntPtr)1)
 							{
 								if (activate)
-									NativeMethods.SetForegroundWindow(hWnd);
+									CommandLineHelpers.SetForegroundWindow(hWnd);
 								success = true;
 								return false; // stop enumeration
 							}
@@ -137,8 +139,8 @@ namespace ICSharpCode.ILSpy
 				lParam.Buffer = (IntPtr)buffer;
 				IntPtr result;
 				// SendMessage with 3s timeout (e.g. when the target process is stopped in the debugger)
-				if (NativeMethods.SendMessageTimeout(
-					hWnd, NativeMethods.WM_COPYDATA, IntPtr.Zero, ref lParam,
+				if (CommandLineHelpers.SendMessageTimeout(
+					hWnd, CommandLineHelpers.WM_COPYDATA, IntPtr.Zero, ref lParam,
 					SMTO_NORMAL, 3000, out result) != IntPtr.Zero)
 				{
 					return result;

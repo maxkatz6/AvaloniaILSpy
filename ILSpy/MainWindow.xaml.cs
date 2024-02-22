@@ -607,7 +607,7 @@ namespace ICSharpCode.ILSpy
 
 		unsafe IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
-			if (msg == NativeMethods.WM_COPYDATA)
+			if (msg == CommandLineHelpers.WM_COPYDATA)
 			{
 				CopyDataStruct* copyData = (CopyDataStruct*)lParam;
 				string data = new string((char*)copyData->Buffer, 0, copyData->Size / sizeof(char));
