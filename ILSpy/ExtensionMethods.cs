@@ -101,6 +101,9 @@ namespace ICSharpCode.ILSpy
 			return color?.R * 0.3 + color?.G * 0.6 + color?.B * 0.1 ?? 0.0;
 		}
 
+		/// <summary>
+		/// Safe alternative to Wait/GetResult Task methods, but only supported on Desktop.
+		/// </summary>
 		[UnsupportedOSPlatform("browser")]
 		internal static T WaitOnDispatcherFrame<T>(
 			this Task<T> task)
@@ -108,20 +111,23 @@ namespace ICSharpCode.ILSpy
 			if (!task.IsCompleted)
 			{
 				var frame = new DispatcherFrame();
-				task.ContinueWith(static (_, s) => ((DispatcherFrame)s).Continue = false, frame);
+				task.ContinueWith(static (_, s) => ((DispatcherFrame)s!).Continue = false, frame);
 				Dispatcher.UIThread.PushFrame(frame);
 			}
             
 			return task.GetAwaiter().GetResult();
 		}
 
+		/// <summary>
+		/// Safe alternative to Wait/GetResult Task methods, but only supported on Desktop.
+		/// </summary>
 		[UnsupportedOSPlatform("browser")]
 		internal static void WaitOnDispatcherFrame(this Task task)
 		{
 			if (!task.IsCompleted)
 			{
 				var frame = new DispatcherFrame();
-				task.ContinueWith(static (_, s) => ((DispatcherFrame)s).Continue = false, frame);
+				task.ContinueWith(static (_, s) => ((DispatcherFrame)s!).Continue = false, frame);
 				Dispatcher.UIThread.PushFrame(frame);
 			}
 			task.GetAwaiter().GetResult();

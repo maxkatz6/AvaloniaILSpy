@@ -74,15 +74,15 @@ namespace ICSharpCode.ILSpy.TreeNodes
 					{
 						ct.ThrowIfCancellationRequested();
 						result.Add(child);
-						App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action<SharpTreeNode>(
-							delegate (SharpTreeNode newChild) {
-								// don't access "child" here,
-								// the background thread might already be running the next loop iteration
-								if (loadChildrenTask == thisTask)
-								{
-									node.Children.Insert(node.Children.Count - 1, newChild);
-								}
-							}), child);
+						var newChild = child;
+						Dispatcher.UIThread.InvokeAsync(() => {
+							// don't access "child" here,
+							// the background thread might already be running the next loop iteration
+							if (loadChildrenTask == thisTask)
+							{
+								node.Children.Insert(node.Children.Count - 1, newChild);
+							}
+						}, DispatcherPriority.Normal);
 					}
 					return result;
 				}, ct);
@@ -90,23 +90,22 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			thisTask.Start();
 			thisTask.ContinueWith(
 				delegate (Task continuation) {
-					App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(
-						delegate {
-							if (loadChildrenTask == thisTask)
-							{
-								stopwatch.Stop();
-								node.Children.RemoveAt(node.Children.Count - 1); // remove 'Loading...'
-								node.RaisePropertyChanged(nameof(node.Text));
+					Dispatcher.UIThread.InvokeAsync(() => {
+						if (loadChildrenTask == thisTask)
+						{
+							stopwatch.Stop();
+							node.Children.RemoveAt(node.Children.Count - 1); // remove 'Loading...'
+							node.RaisePropertyChanged(nameof(node.Text));
 
-								if (continuation.Exception != null)
+							if (continuation.Exception != null)
+							{
+								foreach (Exception ex in continuation.Exception.InnerExceptions)
 								{
-									foreach (Exception ex in continuation.Exception.InnerExceptions)
-									{
-										node.Children.Add(new ErrorTreeNode(ex.ToString()));
-									}
+									node.Children.Add(new ErrorTreeNode(ex.ToString()));
 								}
 							}
-						}));
+						}
+					}, DispatcherPriority.Normal);
 				});
 
 			// Give the task a bit time to complete before we return to WPF - this keeps "Loading..."
@@ -195,7 +194,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 						builder.AppendLine(node.Text.ToString());
 					}
 				}
-				Clipboard.SetText(builder.ToString());
+				_ = context.TopLevel.Clipboard?.SetTextAsync(builder.ToString());
 			}
 		}
 	}

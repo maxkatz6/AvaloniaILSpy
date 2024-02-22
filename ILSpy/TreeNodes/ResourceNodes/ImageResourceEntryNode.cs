@@ -20,6 +20,9 @@ using System;
 using System.Composition;
 using System.IO;
 
+using Avalonia.Controls;
+using Avalonia.Media.Imaging;
+
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpy.TextView;
@@ -59,10 +62,8 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			try
 			{
 				AvalonEditTextOutput output = new AvalonEditTextOutput();
-				BitmapImage image = new BitmapImage();
-				image.BeginInit();
-				image.StreamSource = OpenStream();
-				image.EndInit();
+				using var stream = OpenStream();
+				var image = new Bitmap(stream);
 				output.AddUIElement(() => new Image { Source = image });
 				output.WriteLine();
 				output.AddButton(Images.Save, Resources.Save, delegate {

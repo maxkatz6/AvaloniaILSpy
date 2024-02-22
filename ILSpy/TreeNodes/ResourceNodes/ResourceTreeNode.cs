@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Text;
 
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Utils;
@@ -109,15 +110,21 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override bool Save(TabPageModel tabPage)
 		{
-			Stream s = Resource.TryOpenStream();
+			using Stream s = Resource.TryOpenStream();
 			if (s == null)
 				return false;
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(Resource.Name));
-			if (dlg.ShowDialog() == true)
+			
+			var topLevel = TopLevel.GetTopLevel(tabPage.Content as Control) ?? MainWindow.Instance;
+
+			var result = topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			{
+				SuggestedFileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(Resource.Name))
+			}).WaitOnDispatcherFrame();
+			
+			if (result is not null)
 			{
 				s.Position = 0;
-				using (var fs = dlg.OpenFile())
+				using (var fs = result.OpenWriteAsync().WaitOnDispatcherFrame())
 				{
 					s.CopyTo(fs);
 				}

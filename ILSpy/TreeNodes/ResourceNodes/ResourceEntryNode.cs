@@ -20,10 +20,12 @@ using System;
 using System.IO;
 
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
 using ICSharpCode.Decompiler.Metadata;
+using ICSharpCode.ILSpy.ViewModels;
 using ICSharpCode.ILSpyX.Abstractions;
 
 using Microsoft.Win32;
@@ -80,14 +82,20 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			language.WriteCommentLine(output, string.Format("{0} = {1}", key, data));
 		}
 
+		// TODO Avalonia+ILSpy - should be async in upstream 
 		public override bool Save(ViewModels.TabPageModel tabPage)
 		{
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(key));
-			if (dlg.ShowDialog() == true)
+			var topLevel = TopLevel.GetTopLevel(tabPage.Content as Control) ?? MainWindow.Instance;
+
+			var result = topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			{
+				SuggestedFileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(key))
+			}).WaitOnDispatcherFrame();
+
+			if (result is not null)
 			{
 				using var data = OpenStream();
-				using var fs = dlg.OpenFile();
+				using var fs = result.OpenWriteAsync().WaitOnDispatcherFrame();
 				data.CopyTo(fs);
 			}
 			return true;

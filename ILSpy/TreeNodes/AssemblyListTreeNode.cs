@@ -85,23 +85,26 @@ namespace ICSharpCode.ILSpy.TreeNodes
 
 		public override bool CanDrop(DragEventArgs e, int index)
 		{
-			e.Effects = DragDropEffects.Move | DragDropEffects.Copy | DragDropEffects.Link;
-			if (e.Data.GetDataPresent(AssemblyTreeNode.DataFormat))
+			e.DragEffects = DragDropEffects.Move | DragDropEffects.Copy | DragDropEffects.Link;
+			if (e.Data.GetDataFormats().Contains(AssemblyTreeNode.DataFormat))
 				return true;
-			else if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			else if (e.Data.GetDataFormats().Contains(DataFormats.Files))
 				return true;
 			else
 			{
-				e.Effects = DragDropEffects.None;
+				e.DragEffects = DragDropEffects.None;
 				return false;
 			}
 		}
 
 		public override void Drop(DragEventArgs e, int index)
 		{
-			string[] files = e.Data.GetData(AssemblyTreeNode.DataFormat) as string[];
+			string[] files = e.Data.Get(AssemblyTreeNode.DataFormat) as string[];
 			if (files == null)
-				files = e.Data.GetData(DataFormats.FileDrop) as string[];
+#pragma warning disable CS0618 // Type or member is obsolete
+				// TODO Avalonia, should we use GetFiles here instead, to get browser support in the future?
+				files = e.Data.GetFileNames()?.ToArray();
+#pragma warning restore CS0618 // Type or member is obsolete
 			if (files != null)
 			{
 				var assemblies = files

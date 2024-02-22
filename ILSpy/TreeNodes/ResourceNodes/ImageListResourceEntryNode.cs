@@ -26,59 +26,60 @@ using ICSharpCode.ILSpyX.Abstractions;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
-	[Export(typeof(IResourceNodeFactory))]
-	sealed class ImageListResourceEntryNodeFactory : IResourceNodeFactory
-	{
-		public ITreeNode CreateNode(Resource resource)
-		{
-			return null;
-		}
-
-		public ILSpyTreeNode CreateNode(string key, object data)
-		{
-			if (data is ImageListStreamer)
-				return new ImageListResourceEntryNode(key, (ImageListStreamer)data);
-			return null;
-		}
-	}
-
-	sealed class ImageListResourceEntryNode : ILSpyTreeNode
-	{
-		private readonly string key;
-		private readonly ImageList data;
-
-		public ImageListResourceEntryNode(string key, ImageListStreamer data)
-		{
-			this.LazyLoading = true;
-			this.key = key;
-			this.data = new ImageList();
-			this.data.ImageStream = data;
-		}
-
-		public override object Text {
-			get { return key; }
-		}
-
-		public override object Icon => Images.ResourceImage;
-
-		protected override void LoadChildren()
-		{
-			int i = 0;
-			foreach (Image image in this.data.Images)
-			{
-				using var s = new MemoryStream();
-				image.Save(s, System.Drawing.Imaging.ImageFormat.Bmp);
-				var node = ResourceEntryNode.Create("Image" + i.ToString(), s.ToArray());
-				if (node != null)
-					Children.Add(node);
-				++i;
-			}
-		}
-
-
-		public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
-		{
-			EnsureLazyChildren();
-		}
-	}
+	// TODO Avalonia: ImageListStreamer? Does it require upstream changes?
+	// [Export(typeof(IResourceNodeFactory))]
+	// sealed class ImageListResourceEntryNodeFactory : IResourceNodeFactory
+	// {
+	// 	public ITreeNode CreateNode(Resource resource)
+	// 	{
+	// 		return null;
+	// 	}
+	//
+	// 	public ILSpyTreeNode CreateNode(string key, object data)
+	// 	{
+	// 		if (data is ImageListStreamer)
+	// 			return new ImageListResourceEntryNode(key, (ImageListStreamer)data);
+	// 		return null;
+	// 	}
+	// }
+	//
+	// sealed class ImageListResourceEntryNode : ILSpyTreeNode
+	// {
+	// 	private readonly string key;
+	// 	private readonly ImageList data;
+	//
+	// 	public ImageListResourceEntryNode(string key, ImageListStreamer data)
+	// 	{
+	// 		this.LazyLoading = true;
+	// 		this.key = key;
+	// 		this.data = new ImageList();
+	// 		this.data.ImageStream = data;
+	// 	}
+	//
+	// 	public override object Text {
+	// 		get { return key; }
+	// 	}
+	//
+	// 	public override object Icon => Images.ResourceImage;
+	//
+	// 	protected override void LoadChildren()
+	// 	{
+	// 		int i = 0;
+	// 		foreach (Image image in this.data.Images)
+	// 		{
+	// 			using var s = new MemoryStream();
+	// 			image.Save(s, System.Drawing.Imaging.ImageFormat.Bmp);
+	// 			var node = ResourceEntryNode.Create("Image" + i.ToString(), s.ToArray());
+	// 			if (node != null)
+	// 				Children.Add(node);
+	// 			++i;
+	// 		}
+	// 	}
+	//
+	//
+	// 	public override void Decompile(Language language, ITextOutput output, DecompilationOptions options)
+	// 	{
+	// 		EnsureLazyChildren();
+	// 	}
+	// }
 }

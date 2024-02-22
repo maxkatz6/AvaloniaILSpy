@@ -1076,21 +1076,21 @@ namespace ICSharpCode.ILSpy.TextView
 			}
 		}
 
-		public void SaveToDisk(ILSpy.Language language, IEnumerable<ILSpyTreeNode> treeNodes, DecompilationOptions options, string fileName)
+		public void SaveToDisk(ILSpy.Language language, IEnumerable<ILSpyTreeNode> treeNodes, DecompilationOptions options, Stream stream)
 		{
-			SaveToDisk(new DecompilationContext(language, treeNodes.ToArray(), options), fileName);
+			SaveToDisk(new DecompilationContext(language, treeNodes.ToArray(), options), stream);
 		}
 
 		/// <summary>
 		/// Starts the decompilation of the given nodes.
 		/// The result will be saved to the given file name.
 		/// </summary>
-		void SaveToDisk(DecompilationContext context, string fileName)
+		void SaveToDisk(DecompilationContext context, Stream stream)
 		{
 			RunWithCancellation(
 				delegate (CancellationToken ct) {
 					context.Options.CancellationToken = ct;
-					return SaveToDiskAsync(context, fileName);
+					return SaveToDiskAsync(context, stream);
 				})
 				.Then(output => ShowOutput(output))
 				.Catch((Exception ex) => {
@@ -1104,7 +1104,7 @@ namespace ICSharpCode.ILSpy.TextView
 				}).HandleExceptions();
 		}
 
-		Task<AvalonEditTextOutput> SaveToDiskAsync(DecompilationContext context, string fileName)
+		Task<AvalonEditTextOutput> SaveToDiskAsync(DecompilationContext context, Stream stream)
 		{
 			TaskCompletionSource<AvalonEditTextOutput> tcs = new TaskCompletionSource<AvalonEditTextOutput>();
 			Thread thread = new Thread(new ThreadStart(
@@ -1122,7 +1122,8 @@ namespace ICSharpCode.ILSpy.TextView
 						stopwatch.Start();
 						try
 						{
-							using (StreamWriter w = new StreamWriter(fileName))
+							using (stream)
+							using (StreamWriter w = new(stream))
 							{
 								try
 								{

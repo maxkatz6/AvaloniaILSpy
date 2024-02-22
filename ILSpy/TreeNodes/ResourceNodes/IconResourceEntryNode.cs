@@ -22,6 +22,7 @@ using System.IO;
 
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.ILSpy.Properties;
@@ -61,13 +62,21 @@ namespace ICSharpCode.ILSpy.TreeNodes
 				using var data = OpenStream();
 				if (data == null)
 					return false;
-				IconBitmapDecoder decoder = new IconBitmapDecoder(data, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-				foreach (var frame in decoder.Frames)
-				{
-					output.Write(String.Format("{0}x{1}, {2} bit: ", frame.PixelHeight, frame.PixelWidth, frame.Thumbnail.Format.BitsPerPixel));
-					AddIcon(output, frame);
-					output.WriteLine();
-				}
+
+				// TODO Avalonia: find third party decoder to get multiple frames
+				var bitmap = new Bitmap(data);
+				output.Write(String.Format("{0}x{1}, {2} bit: ", bitmap.PixelSize.Height, bitmap.PixelSize.Width, bitmap.Format?.BitsPerPixel));
+				AddIcon(output, bitmap);
+				output.WriteLine();
+				
+				// IconBitmapDecoder decoder = new IconBitmapDecoder(data, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+				// foreach (var frame in decoder.Frames)
+				// {
+				// 	output.Write(String.Format("{0}x{1}, {2} bit: ", frame.PixelHeight, frame.PixelWidth, frame.Thumbnail.Format.BitsPerPixel));
+				// 	AddIcon(output, frame);
+				// 	output.WriteLine();
+				// }
+
 				output.AddButton(Images.Save, Resources.Save, delegate {
 					Save(null);
 				});

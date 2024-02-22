@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
@@ -132,41 +133,45 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			Stream s = Resource.TryOpenStream();
 			if (s == null)
 				return false;
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(Resource.Name));
-			dlg.Filter = Resources.ResourcesFileFilter;
-			if (dlg.ShowDialog() == true)
+			
+			var topLevel = TopLevel.GetTopLevel(tabPage.Content as Control) ?? MainWindow.Instance;
+
+			var result = topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			{
+				SuggestedFileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(Resource.Name)),
+				DefaultExtension = ".resources"
+				// TODO Avalonia, map to FileTypeChoices 
+				// FileTypeChoices = Resources.ResourcesFileFilter
+			}).WaitOnDispatcherFrame();
+
+			if (result is not null)
 			{
 				s.Position = 0;
-				switch (dlg.FilterIndex)
+				using var stream = result.OpenWriteAsync().WaitOnDispatcherFrame();
+				if (result.Name.EndsWith(".resx"))
 				{
-					case 1:
-						using (var fs = dlg.OpenFile())
+					try
+					{
+						using (var writer = new ResXResourceWriter(stream))
 						{
-							s.CopyTo(fs);
-						}
-						break;
-					case 2:
-						try
-						{
-							using (var fs = dlg.OpenFile())
-							using (var writer = new ResXResourceWriter(fs))
+							foreach (var entry in new ResourcesFile(s))
 							{
-								foreach (var entry in new ResourcesFile(s))
-								{
-									writer.AddResource(entry.Key, entry.Value);
-								}
+								writer.AddResource(entry.Key, entry.Value);
 							}
 						}
-						catch (BadImageFormatException)
-						{
-							// ignore errors
-						}
-						catch (EndOfStreamException)
-						{
-							// ignore errors
-						}
-						break;
+					}
+					catch (BadImageFormatException)
+					{
+						// ignore errors
+					}
+					catch (EndOfStreamException)
+					{
+						// ignore errors
+					}
+				}
+				else
+				{
+					s.CopyTo(stream);
 				}
 			}
 

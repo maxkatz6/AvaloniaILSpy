@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	    xmlns:properties="clr-namespace:ICSharpCode.ILSpy.Properties"
 	    xmlns:options="clr-namespace:ICSharpCode.ILSpy.Options"
-	    Style="{DynamicResource DialogWindow}"
+        Theme="{DynamicResource DialogWindow}"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="CanResizeWithGrip"
+        CanResize="True"
         Title="{x:Static properties:Resources.Options}" Height="500" Width="600">
 	<Grid>
 		<Grid.RowDefinitions>

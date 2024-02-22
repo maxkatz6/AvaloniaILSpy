@@ -26,6 +26,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Input;
+using Avalonia.Platform.Storage;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
@@ -426,31 +427,44 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			Language language = this.Language;
 			if (string.IsNullOrEmpty(language.ProjectFileExtension))
 				return false;
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = WholeProjectDecompiler.CleanUpFileName(LoadedAssembly.ShortName) + language.ProjectFileExtension;
-			dlg.Filter = language.Name + " project|*" + language.ProjectFileExtension + "|" + language.Name + " single file|*" + language.FileExtension + "|All files|*.*";
-			if (dlg.ShowDialog() == true)
+			
+			var topLevel = TopLevel.GetTopLevel(tabPage.Content as Control) ?? MainWindow.Instance;
+
+			var file = topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			{
+				SuggestedFileName = WholeProjectDecompiler.CleanUpFileName(LoadedAssembly.ShortName) + language.ProjectFileExtension,
+				// TODO Avalonia: map to FileTypeChoices 
+				// FileTypeChoices = language.Name + " project|*" + language.ProjectFileExtension + "|" + language.Name + " single file|*" + language.FileExtension + "|All files|*.*"; 
+			}).WaitOnDispatcherFrame();
+			
+			if (file is not null)
 			{
 				DecompilationOptions options = MainWindow.Instance.CreateDecompilationOptions();
 				options.FullDecompilation = true;
-				if (dlg.FilterIndex == 1)
+				if (file.Name.Contains(language.ProjectFileExtension))
 				{
-					options.SaveAsProjectDirectory = Path.GetDirectoryName(dlg.FileName);
-					foreach (string entry in Directory.GetFileSystemEntries(options.SaveAsProjectDirectory))
+					if (file.TryGetLocalPath() is { } path)
 					{
-						if (!string.Equals(entry, dlg.FileName, StringComparison.OrdinalIgnoreCase))
+						options.SaveAsProjectDirectory = Path.GetDirectoryName(path);
+						foreach (string entry in Directory.GetFileSystemEntries(options.SaveAsProjectDirectory))
 						{
-							var result = MessageBox.Show(
-								Resources.AssemblySaveCodeDirectoryNotEmpty,
-								Resources.AssemblySaveCodeDirectoryNotEmptyTitle,
-								MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-							if (result == MessageBoxResult.No)
-								return true; // don't save, but mark the Save operation as handled
-							break;
+							if (!string.Equals(entry, path, StringComparison.OrdinalIgnoreCase))
+							{
+								var result = MessageBox.Show(
+									topLevel,
+									Resources.AssemblySaveCodeDirectoryNotEmpty,
+									Resources.AssemblySaveCodeDirectoryNotEmptyTitle,
+									MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No)
+									.WaitOnDispatcherFrame();
+								if (result == MessageBoxResult.No)
+									return true; // don't save, but mark the Save operation as handled
+								break;
+							}
 						}
 					}
 				}
-				tabPage.ShowTextView(textView => textView.SaveToDisk(language, new[] { this }, options, dlg.FileName));
+				tabPage.ShowTextView(textView => textView.SaveToDisk(language, new[] { this }, options,
+					file.OpenWriteAsync().WaitOnDispatcherFrame()));
 			}
 			return true;
 		}
