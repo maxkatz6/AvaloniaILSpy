@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 
+using Avalonia.Collections;
 using Avalonia.Controls;
 
 using AvaloniaEdit;
@@ -33,10 +34,10 @@ namespace ICSharpCode.ILSpy.Controls
 	/// </summary>
 	public partial class ResourceStringTable : UserControl
 	{
-		ICollectionView filteredView;
+		DataGridCollectionView filteredView;
 		string filter;
 
-		public ResourceStringTable(IEnumerable strings, FrameworkElement container)
+		public ResourceStringTable(IEnumerable strings, Control container)
 		{
 			InitializeComponent();
 			// set size to fit decompiler window
@@ -45,7 +46,7 @@ namespace ICSharpCode.ILSpy.Controls
 				Width = Math.Max(container.Bounds.Width - 45, 0);
 			MaxHeight = container.Bounds.Height;
 
-			filteredView = CollectionViewSource.GetDefaultView(strings);
+			filteredView = new DataGridCollectionView(strings);
 			filteredView.Filter = OnResourceFilter;
 			resourceListView.ItemsSource = filteredView;
 		}
@@ -100,7 +101,7 @@ namespace ICSharpCode.ILSpy.Controls
 				}
 				sb.AppendLine(item.ToString());
 			}
-			Clipboard.SetText(sb.ToString());
+			_ = TopLevel.GetTopLevel(this)!.Clipboard?.SetTextAsync(sb.ToString());
 		}
 
 		void CanExecuteCopy(object sender, CanExecuteRoutedEventArgs args)
