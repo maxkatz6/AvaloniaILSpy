@@ -24,7 +24,7 @@
 // using Avalonia.Data.Converters;
 // using Avalonia.Interactivity;
 // using Avalonia.Markup.Xaml.MarkupExtensions;
-// TODO: Avalonia - replace with DataGrid or TreeDataGrid
+// TODO Avalonia - replace with DataGrid or TreeDataGrid
 // namespace ICSharpCode.ILSpy.Controls
 // {
 // 	/// <summary>

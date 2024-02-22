@@ -9,7 +9,7 @@
 	
 	<!-- SortableGridViewColumn.
 		Displays an up arrow or down arrow in the column header when the grid is sorted using that column.
-		TODO: Avalonia - replace with DataGrid or TreeDataGrid
+		TODO Avalonia - replace with DataGrid or TreeDataGrid
 	-->
 	<!-- <controls:ColumnSortDirectionToVisibilityConverter x:Key="ColumnSortDirectionToVisibilityConverter"/> -->
 	<!-- -->

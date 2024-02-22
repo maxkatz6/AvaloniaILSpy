@@ -410,7 +410,7 @@ namespace ICSharpCode.ILSpy
 				}
 
 				var image = new DrawingImage(group);
-				// TODO: Avalonia, there should be something like .ToImmutable()
+				// TODO Avalonia, there should be something like .ToImmutable()
 				// if (image.CanFreeze)
 				// {
 				// 	image.Freeze();
