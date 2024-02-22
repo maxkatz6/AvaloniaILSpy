@@ -305,6 +305,7 @@ namespace ICSharpCode.ILSpy.Options
 
 		private bool styleWindowTitleBar;
 
+		// TODO: Avalonia remove this setting
 		public bool StyleWindowTitleBar {
 			get { return styleWindowTitleBar; }
 			set {

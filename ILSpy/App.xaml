@@ -10,13 +10,6 @@
 		<ControlTheme x:Key="DialogWindow" TargetType="{x:Type Window}" BasedOn="{StaticResource {x:Type Window}}">
 			<Setter Property="ShowInTaskbar" Value="False"/>
 			<Setter Property="UseLayoutRounding" Value="True"/>
-			<Setter Property="(Interaction.Behaviors)">
-				<BehaviorCollectionTemplate>
-					<BehaviorCollection>
-						<themes:WindowStyleManagerBehavior />
-					</BehaviorCollection>
-				</BehaviorCollectionTemplate>
-			</Setter>
 		</ControlTheme>
 	</Application.Resources>
 </Application>
