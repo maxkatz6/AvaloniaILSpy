@@ -23,6 +23,8 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
+using Avalonia;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data.Converters;
 
 using ICSharpCode.Decompiler.Util;
@@ -32,7 +34,7 @@ namespace ICSharpCode.ILSpy.Metadata
 	/// <summary>
 	/// Interaction logic for FlagsTooltip.xaml
 	/// </summary>
-	public partial class FlagsTooltip : IEnumerable<FlagGroup>
+	public partial class FlagsTooltip : TemplatedControl, IEnumerable<FlagGroup>
 	{
 		public FlagsTooltip(int value = 0, Type flagsType = null)
 		{
@@ -64,7 +66,7 @@ namespace ICSharpCode.ILSpy.Metadata
 			set { SetValue(ValueProperty, value); }
 		}
 
-		public static readonly StyledProperty<int> ValueProperty = AvaloniaProperty.Register<FlagActiveConverter, int>(nameof(Value), , new PropertyMetadata(0));
+		public static readonly StyledProperty<int> ValueProperty = AvaloniaProperty.Register<FlagActiveConverter, int>(nameof(Value));
 
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
@@ -152,20 +154,5 @@ namespace ICSharpCode.ILSpy.Metadata
 		}
 
 		public Flag SelectedFlag { get; set; }
-	}
-
-	class NullVisibilityConverter : IValueConverter
-	{
-		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-		{
-			if (value == null)
-				return Visibility.Collapsed;
-			return Visibility.Visible;
-		}
-
-		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-		{
-			throw new NotImplementedException();
-		}
 	}
 }

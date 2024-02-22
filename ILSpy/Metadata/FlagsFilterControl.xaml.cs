@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Markup.Xaml.Templates;
 
 using DataGridExtensions;
@@ -13,7 +15,7 @@ namespace ICSharpCode.ILSpy.Metadata
 	/// <summary>
 	/// Interaction logic for FlagsFilterControl.xaml
 	/// </summary>
-	public partial class FlagsFilterControl
+	public partial class FlagsFilterControl : TemplatedControl
 	{
 		ListBox listBox;
 
@@ -32,15 +34,15 @@ namespace ICSharpCode.ILSpy.Metadata
 		/// <summary>
 		/// Identifies the Filter dependency property
 		/// </summary>
-		public static readonly StyledProperty<FlagsContentFilter> FilterProperty = AvaloniaProperty.Register<FlagsFilterControl, FlagsContentFilter>(nameof(Filter), ,
+		public static readonly StyledProperty<FlagsContentFilter> FilterProperty = AvaloniaProperty.Register<FlagsFilterControl, FlagsContentFilter>(nameof(Filter),
 				new FrameworkPropertyMetadata(new FlagsContentFilter(-1), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, (sender, e) => ((FlagsFilterControl)sender).Filter_Changed()));
 
 		/// <summary>When overridden in a derived class, is invoked whenever application code or internal processes call <see cref="M:System.Windows.FrameworkElement.ApplyTemplate" />.</summary>
-		public override void OnApplyTemplate()
+		protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
 		{
-			base.OnApplyTemplate();
+			base.OnApplyTemplate(e);
 
-			listBox = Template.FindName("ListBox", this) as ListBox;
+			listBox = e.NameScope.Find<ListBox>("ListBox");
 			if (listBox != null)
 			{
 				listBox.ItemsSource = FlagGroup.GetFlags(FlagsType, neutralItem: "<All>");

@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Markup.Xaml.Templates;
 
 using DataGridExtensions;
@@ -14,7 +16,7 @@ namespace ICSharpCode.ILSpy.Metadata
 	/// <summary>
 	/// Interaction logic for HexFilterControl.xaml
 	/// </summary>
-	public partial class HexFilterControl
+	public partial class HexFilterControl : TemplatedControl
 	{
 		TextBox textBox;
 
@@ -23,10 +25,10 @@ namespace ICSharpCode.ILSpy.Metadata
 			InitializeComponent();
 		}
 
-		public override void OnApplyTemplate()
+		protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
 		{
-			base.OnApplyTemplate();
-			textBox = Template.FindName("textBox", this) as TextBox;
+			base.OnApplyTemplate(e);
+			textBox = e.NameScope.Find<TextBox>("textBox");
 		}
 
 		private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -43,7 +45,7 @@ namespace ICSharpCode.ILSpy.Metadata
 		/// <summary>
 		/// Identifies the Filter dependency property
 		/// </summary>
-		public static readonly StyledProperty<IContentFilter> FilterProperty = AvaloniaProperty.Register<HexFilterControl, IContentFilter>(nameof(Filter), ,
+		public static readonly StyledProperty<IContentFilter> FilterProperty = AvaloniaProperty.Register<HexFilterControl, IContentFilter>(nameof(Filter),
 				new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, (o, args) => ((HexFilterControl)o).Filter_Changed(args.NewValue)));
 
 		void Filter_Changed(object newValue)

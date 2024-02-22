@@ -8,7 +8,7 @@
 			 xmlns:srm="clr-namespace:System.Reflection;assembly=System.Reflection.Metadata"
 			 xmlns:dgx="urn:tom-englert.de/DataGridExtensions">
 	
-	<Style x:Key="DataGridCellStyle" TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource {x:Type DataGridCell}}">
+	<ControlTheme x:Key="DataGridCellStyle" TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource {x:Type DataGridCell}}">
 		<Setter Property="BorderThickness" Value="0" />
 		<Setter Property="Padding" Value="2" />
 		<Setter Property="VerticalContentAlignment" Value="Center" />
@@ -19,11 +19,10 @@
 							BorderBrush="{TemplateBinding BorderBrush}"
 							BorderThickness="{TemplateBinding BorderThickness}"
 							Background="{TemplateBinding Background}"
-							SnapsToDevicePixels="True">
+							UseLayoutRounding="True">
 						<ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
 										  Content="{TemplateBinding Content}"
 										  ContentStringFormat="{TemplateBinding ContentStringFormat}"
-										  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
 										  Margin="{TemplateBinding Padding}"
 										  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
 										  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
@@ -31,7 +30,7 @@
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>
-	</Style>
+	</ControlTheme>
 
 	<ControlTemplate x:Key="DefaultFilter">
 		<Grid>
