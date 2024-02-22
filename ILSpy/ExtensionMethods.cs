@@ -22,10 +22,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Versioning;
+using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
@@ -85,15 +88,43 @@ namespace ICSharpCode.ILSpy
 
 		public static void SelectItem(this DataGrid view, object item)
 		{
-			var container = (DataGridRow)view.ItemContainerGenerator.ContainerFromItem(item);
-			if (container != null)
-				container.IsSelected = true;
+			view.SelectedItem = item;
+			// TODO Avalonia what was that for?
+			// var container = (DataGridRow)view.ItemContainerGenerator.ContainerFromItem(item);
+			// if (container != null)
+			// 	container.IsSelected = true;
 			view.Focus();
 		}
 
 		public static double ToGray(this Color? color)
 		{
 			return color?.R * 0.3 + color?.G * 0.6 + color?.B * 0.1 ?? 0.0;
+		}
+
+		[UnsupportedOSPlatform("browser")]
+		internal static T WaitOnDispatcherFrame<T>(
+			this Task<T> task)
+		{
+			if (!task.IsCompleted)
+			{
+				var frame = new DispatcherFrame();
+				task.ContinueWith(static (_, s) => ((DispatcherFrame)s).Continue = false, frame);
+				Dispatcher.UIThread.PushFrame(frame);
+			}
+            
+			return task.GetAwaiter().GetResult();
+		}
+
+		[UnsupportedOSPlatform("browser")]
+		internal static void WaitOnDispatcherFrame(this Task task)
+		{
+			if (!task.IsCompleted)
+			{
+				var frame = new DispatcherFrame();
+				task.ContinueWith(static (_, s) => ((DispatcherFrame)s).Continue = false, frame);
+				Dispatcher.UIThread.PushFrame(frame);
+			}
+			task.GetAwaiter().GetResult();
 		}
 	}
 }

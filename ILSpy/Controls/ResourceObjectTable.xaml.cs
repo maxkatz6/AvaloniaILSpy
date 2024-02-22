@@ -41,9 +41,9 @@ namespace ICSharpCode.ILSpy.Controls
 			InitializeComponent();
 			// set size to fit decompiler window
 			container.SizeChanged += OnParentSizeChanged;
-			if (!double.IsNaN(container.ActualWidth))
-				Width = Math.Max(container.ActualWidth - 45, 0);
-			MaxHeight = container.ActualHeight;
+			if (!double.IsNaN(container.Bounds.Width))
+				Width = Math.Max(container.Bounds.Width - 45, 0);
+			MaxHeight = container.Bounds.Height;
 
 			filteredView = CollectionViewSource.GetDefaultView(resources);
 			filteredView.Filter = OnResourceFilter;

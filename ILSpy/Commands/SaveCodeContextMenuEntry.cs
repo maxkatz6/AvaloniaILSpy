@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Avalonia.Controls;
 
@@ -39,7 +40,7 @@ namespace ICSharpCode.ILSpy.TextView
 	{
 		public void Execute(TextViewContext context)
 		{
-			Execute(context.SelectedTreeNodes);
+			Execute(context.SelectedTreeNodes, context.TopLevel);
 		}
 
 		public bool IsEnabled(TextViewContext context) => true;
@@ -57,11 +58,11 @@ namespace ICSharpCode.ILSpy.TextView
 				|| (selectedNodes.Count > 1 && (selectedNodes.All(n => n is AssemblyTreeNode) || selectedNodes.All(n => n is IMemberTreeNode)));
 		}
 
-		public static void Execute(IReadOnlyList<SharpTreeNode> selectedNodes)
+		public static void Execute(IReadOnlyList<SharpTreeNode> selectedNodes, TopLevel topLevel)
 		{
 			var currentLanguage = MainWindow.Instance.CurrentLanguage;
 			var tabPage = Docking.DockWorkspace.Instance.ActiveTabPage;
-			tabPage.ShowTextView(textView => {
+			tabPage.ShowTextViewAsync(async textView => {
 				if (selectedNodes.Count == 1 && selectedNodes[0] is ILSpyTreeNode singleSelection)
 				{
 					// if there's only one treenode selected
@@ -71,7 +72,7 @@ namespace ICSharpCode.ILSpy.TextView
 				}
 				else if (selectedNodes.Count > 1 && selectedNodes.All(n => n is AssemblyTreeNode))
 				{
-					var selectedPath = SelectSolutionFile();
+					var selectedPath = await SelectSolutionFile(topLevel);
 
 					if (!string.IsNullOrEmpty(selectedPath))
 					{
@@ -98,7 +99,7 @@ namespace ICSharpCode.ILSpy.TextView
 		/// will be used.</param>
 		/// 
 		/// <returns>The full path of the selected target file, or <c>null</c> if the user canceled.</returns>
-		static string SelectSolutionFile()
+		static async Task<string> SelectSolutionFile(TopLevel topLevel)
 		{
 			SaveFileDialog dlg = new SaveFileDialog();
 			dlg.FileName = "Solution.sln";
@@ -117,7 +118,8 @@ namespace ICSharpCode.ILSpy.TextView
 			}
 			catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is System.Security.SecurityException)
 			{
-				MessageBox.Show(
+				await MessageBox.Show(
+					topLevel,
 					"The directory cannot be accessed. Please ensure it exists and you have sufficient rights to access it.",
 					"Solution directory not accessible",
 					MessageBoxButton.OK, MessageBoxImage.Error);
@@ -126,7 +128,8 @@ namespace ICSharpCode.ILSpy.TextView
 
 			if (directoryNotEmpty)
 			{
-				var result = MessageBox.Show(
+				var result = await MessageBox.Show(
+					topLevel,
 					Resources.AssemblySaveCodeDirectoryNotEmpty,
 					Resources.AssemblySaveCodeDirectoryNotEmptyTitle,
 					MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);

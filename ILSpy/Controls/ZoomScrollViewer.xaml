@@ -2,91 +2,97 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:Controls="clr-namespace:ICSharpCode.ILSpy.Controls">
 	
-	<Style TargetType="{x:Type Controls:ZoomScrollViewer}">
+	<ControlTheme TargetType="Controls:ZoomScrollViewer"
+	              x:Key="{x:Type Controls:ZoomScrollViewer}"
+	              BasedOn="{StaticResource {x:Type ScrollViewer}}">
 		<Setter Property="Template">
 			<Setter.Value>
-				<ControlTemplate TargetType="{x:Type Controls:ZoomScrollViewer}">
-					<Grid Background="{TemplateBinding Panel.Background}">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="*" />
-							<ColumnDefinition Width="Auto" />
-						</Grid.ColumnDefinitions>
-						<Grid.RowDefinitions>
-							<RowDefinition Height="*" />
-							<RowDefinition Height="Auto" />
-						</Grid.RowDefinitions>
-						<Controls:SelfCollapsingPanel Grid.Column="0" Grid.Row="1" CollapseOrientation="Horizontal" CanCollapse="{Binding Path=ComputedZoomButtonCollapsed, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}">
-							<Controls:ZoomButtons x:Name="zoomButtons" Value="{Binding Path=CurrentZoom, RelativeSource={RelativeSource Mode=TemplatedParent}}" Minimum="{TemplateBinding MinimumZoom}" Maximum="{TemplateBinding MaximumZoom}" />
-						</Controls:SelfCollapsingPanel>
-						<Rectangle Grid.Column="2" Grid.Row="1" Fill="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
-						<ScrollContentPresenter Name="PART_Presenter" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Margin="{TemplateBinding Control.Padding}" Content="{TemplateBinding ContentControl.Content}" ContentTemplate="{TemplateBinding ContentControl.ContentTemplate}" CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}">
-							<ScrollContentPresenter.LayoutTransform>
+				<ControlTemplate>
+					<Grid ColumnDefinitions="Auto, *,Auto"
+					      RowDefinitions="*,Auto">
+						<!-- <Controls:SelfCollapsingPanel Grid.Column="0" Grid.Row="1" CollapseOrientation="Horizontal" CanCollapse="{Binding Path=ComputedZoomButtonCollapsed, Mode=OneWay, RelativeSource={RelativeSource Mode=TemplatedParent}}"> -->
+						<Controls:ZoomButtons Grid.Column="0" Grid.Row="1" x:Name="zoomButtons" Value="{Binding Path=CurrentZoom, RelativeSource={RelativeSource Mode=TemplatedParent}}" Minimum="{TemplateBinding MinimumZoom}" Maximum="{TemplateBinding MaximumZoom}" />
+						<!-- </Controls:SelfCollapsingPanel> -->
+						<LayoutTransformControl Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0">
+							<LayoutTransformControl.LayoutTransform>
 								<ScaleTransform ScaleX="{Binding Path=CurrentZoom, RelativeSource={RelativeSource Mode=TemplatedParent}}" ScaleY="{Binding Path=CurrentZoom, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
-							</ScrollContentPresenter.LayoutTransform>
-						</ScrollContentPresenter>
-						<ScrollBar Name="PART_VerticalScrollBar" Grid.Column="2" Grid.Row="0" Minimum="0" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}" Value="{TemplateBinding VerticalOffset}" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
-						<ScrollBar Name="PART_HorizontalScrollBar" Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Minimum="0" Maximum="{TemplateBinding ScrollableWidth}" ViewportSize="{TemplateBinding ViewportWidth}" Value="{TemplateBinding HorizontalOffset}" Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" />
+							</LayoutTransformControl.LayoutTransform>
+							<ScrollContentPresenter Name="PART_ContentPresenter"
+							                        Padding="{TemplateBinding Padding}"
+							                        HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+							                        VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}"
+							                        HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
+							                        VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
+							                        Background="{TemplateBinding Background}"
+							                        ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}">
+								<ScrollContentPresenter.GestureRecognizers>
+									<ScrollGestureRecognizer CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
+									                         CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+									                         IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}"/>
+								</ScrollContentPresenter.GestureRecognizers>
+							</ScrollContentPresenter>
+						</LayoutTransformControl>
+						<ScrollBar Name="PART_HorizontalScrollBar"
+						           Grid.Column="1" Grid.Row="1"
+						           Orientation="Horizontal"/>
+						<ScrollBar Name="PART_VerticalScrollBar"
+						           Grid.Column="2" Grid.Row="0"
+						           Orientation="Vertical"/>
+						<Panel Grid.Column="2" Grid.Row="1"
+						       Background="{DynamicResource ThemeControlMidBrush}"/>
 					</Grid>
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>
-	</Style>
+	</ControlTheme>
 
 	<!-- Template for CollapsiblePanel -->
-	<Style TargetType="{x:Type Controls:CollapsiblePanel}">
-		<Setter Property="Template">
-			<Setter.Value>
-				<ControlTemplate TargetType="Controls:CollapsiblePanel">
-					<ControlTemplate.Resources>
-						<Controls:CollapsiblePanelProgressToVisibilityConverter x:Key="visibilityConverter"/>
-					</ControlTemplate.Resources>
-					<Border
-						BorderThickness="{TemplateBinding Border.BorderThickness}"
-						BorderBrush="{TemplateBinding Border.BorderBrush}"
-						Background="{TemplateBinding Panel.Background}"
-						SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
-						Name="PART_Border"
-						Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=AnimationProgress, Converter={StaticResource visibilityConverter}}"
-					>
-						<Border.LayoutTransform>
-							<ScaleTransform ScaleX="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=AnimationProgressX}"
-							                ScaleY="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=AnimationProgressY}"/>
-						</Border.LayoutTransform>
-						<ContentPresenter
-							Margin="{TemplateBinding Control.Padding}"
-							Content="{TemplateBinding ContentControl.Content}"
-							ContentTemplate="{TemplateBinding ContentControl.ContentTemplate}"
-							ContentStringFormat="{TemplateBinding ContentControl.ContentStringFormat}"
-							HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}"
-							VerticalAlignment="{TemplateBinding Control.VerticalContentAlignment}"
-							SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
-					</Border>
-				</ControlTemplate>
-			</Setter.Value>
-		</Setter>
-	</Style>
+	<!-- <Style TargetType="{x:Type Controls:CollapsiblePanel}"> -->
+	<!-- 	<Setter Property="Template"> -->
+	<!-- 		<Setter.Value> -->
+	<!-- 			<ControlTemplate TargetType="Controls:CollapsiblePanel"> -->
+	<!-- 				<ControlTemplate.Resources> -->
+	<!-- 					<Controls:CollapsiblePanelProgressToVisibilityConverter x:Key="visibilityConverter"/> -->
+	<!-- 				</ControlTemplate.Resources> -->
+	<!-- 				<Border -->
+	<!-- 					BorderThickness="{TemplateBinding Border.BorderThickness}" -->
+	<!-- 					BorderBrush="{TemplateBinding Border.BorderBrush}" -->
+	<!-- 					Background="{TemplateBinding Panel.Background}" -->
+	<!-- 					SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" -->
+	<!-- 					Name="PART_Border" -->
+	<!-- 					Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=AnimationProgress, Converter={StaticResource visibilityConverter}}" -->
+	<!-- 				> -->
+	<!-- 					<Border.LayoutTransform> -->
+	<!-- 						<ScaleTransform ScaleX="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=AnimationProgressX}" -->
+	<!-- 						                ScaleY="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=AnimationProgressY}"/> -->
+	<!-- 					</Border.LayoutTransform> -->
+	<!-- 					<ContentPresenter -->
+	<!-- 						Margin="{TemplateBinding Control.Padding}" -->
+	<!-- 						Content="{TemplateBinding ContentControl.Content}" -->
+	<!-- 						ContentTemplate="{TemplateBinding ContentControl.ContentTemplate}" -->
+	<!-- 						ContentStringFormat="{TemplateBinding ContentControl.ContentStringFormat}" -->
+	<!-- 						HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}" -->
+	<!-- 						VerticalAlignment="{TemplateBinding Control.VerticalContentAlignment}" -->
+	<!-- 						SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" /> -->
+	<!-- 				</Border> -->
+	<!-- 			</ControlTemplate> -->
+	<!-- 		</Setter.Value> -->
+	<!-- 	</Setter> -->
+	<!-- </Style> -->
 
-	<Style x:Key="ZoomButtonStyle"
-	       TargetType="RepeatButton">
+	<ControlTheme x:Key="ZoomButtonTheme"
+	              TargetType="RepeatButton"
+	              BasedOn="{StaticResource {x:Type RepeatButton}}">
 		<Setter Property="Delay" Value="0" />
 		<Setter Property="Focusable" Value="False" />
 		<Setter Property="Opacity" Value="0.5" />
-		<Setter Property="Template">
-			<Setter.Value>
-				<ControlTemplate TargetType="RepeatButton">
-					<ContentPresenter />
-					<ControlTemplate.Triggers>
-						<Trigger Property="IsMouseOver" Value="True">
-							<Setter Property="Opacity" Value="1" />
-						</Trigger>
-					</ControlTemplate.Triggers>
-				</ControlTemplate>
-			</Setter.Value>
-		</Setter>
-	</Style>
+		<Style Selector="^:pointerover">
+			<Setter Property="Opacity" Value="1" />
+		</Style>
+	</ControlTheme>
 	
-	<Style TargetType="{x:Type Controls:ZoomButtons}">
+	<ControlTheme x:Key="{x:Type Controls:ZoomButtons}"
+	              TargetType="{x:Type Controls:ZoomButtons}">
 		<Setter Property="Minimum" Value="0.2"/>
 		<Setter Property="Maximum" Value="10"/>
 		<Setter Property="Value" Value="1"/>
@@ -100,19 +106,19 @@
 						            Background="#3000">
 							<RepeatButton x:Name="uxPlus"
 							              Width="16" Height="16" Padding="0" BorderThickness="0"
-							              Style="{StaticResource ZoomButtonStyle}">
+							              Theme="{StaticResource ZoomButtonTheme}">
 								<Image Source="{Controls:XamlResource Images/ZoomIn}"
 								       Stretch="Uniform"/>
 							</RepeatButton>
 							<RepeatButton x:Name="uxMinus"
 							              Width="16" Height="16" Padding="0" BorderThickness="0"
-							              Style="{StaticResource ZoomButtonStyle}">
+							              Theme="{StaticResource ZoomButtonTheme}">
 								<Image Source="{Controls:XamlResource Images/ZoomOut}"
 								       Stretch="Uniform" />
 							</RepeatButton>
 							<RepeatButton x:Name="uxReset"
 							              Width="16" Height="16" Padding="0" BorderThickness="0"
-							              Style="{StaticResource ZoomButtonStyle}">
+							              Theme="{StaticResource ZoomButtonTheme}">
 								<Border Background="#5000">
 									<TextBlock Foreground="White"
 									           HorizontalAlignment="Center"
@@ -124,5 +130,5 @@
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>
-	</Style>
+	</ControlTheme>
 </ResourceDictionary>

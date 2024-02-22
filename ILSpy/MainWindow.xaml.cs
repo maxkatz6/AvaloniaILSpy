@@ -899,7 +899,7 @@ namespace ICSharpCode.ILSpy
 				this.assemblyList.Open(sessionSettings.ActiveAutoLoadedAssembly, true);
 			}
 
-			Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => OpenAssemblies(spySettings)));
+			Dispatcher.UIThread.InvokeAsync(() => OpenAssemblies(spySettings), DispatcherPriority.Loaded);
 		}
 
 		void OpenAssemblies(ILSpySettings spySettings)
@@ -1531,7 +1531,7 @@ namespace ICSharpCode.ILSpy
 
 		void SaveCommandExecuted(object sender, ExecutedRoutedEventArgs e)
 		{
-			SaveCodeContextMenuEntry.Execute(SelectedNodes.ToList());
+			SaveCodeContextMenuEntry.Execute(SelectedNodes.ToList(), this);
 		}
 
 		public void RefreshDecompiledView()

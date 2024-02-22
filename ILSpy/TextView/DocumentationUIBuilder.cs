@@ -123,7 +123,7 @@ namespace ICSharpCode.ILSpy.TextView
 			};
 			text.Inlines.AddRange(richText.CreateRuns(document));
 			text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-			this.document.MinPageWidth = Math.Min(text.DesiredSize.Width, MainWindow.Instance.ActualWidth);
+			this.document.MinPageWidth = Math.Min(text.DesiredSize.Width, MainWindow.Instance.Bounds.Width);
 			block.Inlines.AddRange(richText.CreateRuns(document));
 			block.FontFamily = GetCodeFont();
 			block.TextAlignment = TextAlignment.Left;

@@ -135,7 +135,7 @@ namespace ICSharpCode.ILSpy.Analyzers
 
 			if (entity.MetadataToken.IsNil)
 			{
-				MainWindow.Instance.ShowMessageBox(Properties.Resources.CannotAnalyzeMissingRef, "ILSpy");
+				MessageBox.Show(MainWindow.Instance, Properties.Resources.CannotAnalyzeMissingRef, "ILSpy");
 				return;
 			}
 

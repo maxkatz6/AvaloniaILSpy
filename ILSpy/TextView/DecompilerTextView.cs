@@ -489,7 +489,7 @@ namespace ICSharpCode.ILSpy.TextView
 				double fontSize = MainWindow.Instance.CurrentDisplaySettings.SelectedFontSize;
 				viewer = new FlowDocumentScrollViewer() {
 					Width = document.MinPageWidth + fontSize * 5,
-					MaxWidth = MainWindow.Instance.ActualWidth
+					MaxWidth = MainWindow.Instance.Bounds.Width
 				};
 				viewer.Document = document;
 				Border border = new Border {

@@ -20,25 +20,22 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 
 namespace ICSharpCode.ILSpy.Controls
 {
 	public class ZoomButtons : RangeBase
 	{
-		static ZoomButtons()
-		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(ZoomButtons),
-													 new FrameworkPropertyMetadata(typeof(ZoomButtons)));
-		}
+		protected override Type StyleKeyOverride => typeof(ZoomButtons);
 
-		public override void OnApplyTemplate()
+		protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
 		{
-			base.OnApplyTemplate();
+			base.OnApplyTemplate(e);
 
-			var uxPlus = (ButtonBase)Template.FindName("uxPlus", this);
-			var uxMinus = (ButtonBase)Template.FindName("uxMinus", this);
-			var uxReset = (ButtonBase)Template.FindName("uxReset", this);
+			var uxPlus = e.NameScope.Find<Button>("uxPlus");
+			var uxMinus = e.NameScope.Find<Button>("uxMinus");
+			var uxReset = e.NameScope.Find<Button>("uxReset");
 
 			if (uxPlus != null)
 				uxPlus.Click += OnZoomInClick;

@@ -223,7 +223,7 @@ namespace ICSharpCode.ILSpy.Docking
 			CloseAllTabs();
 			sessionSettings.DockLayout.Reset();
 			InitializeLayout(MainWindow.Instance.DockManager);
-			MainWindow.Instance.Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)MainWindow.Instance.RefreshDecompiledView);
+			Dispatcher.UIThread.InvokeAsync(MainWindow.Instance.RefreshDecompiledView, DispatcherPriority.Background);
 		}
 
 		static readonly PropertyInfo previousContainerProperty = typeof(LayoutContent).GetProperty("PreviousContainer", BindingFlags.NonPublic | BindingFlags.Instance);

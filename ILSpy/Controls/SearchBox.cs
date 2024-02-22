@@ -18,6 +18,7 @@
 
 using System;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -27,26 +28,21 @@ using Avalonia.Threading;
 
 namespace ICSharpCode.ILSpy.Controls
 {
+	// TODO Avalonia: replace with AutoCompleteBox
 	public class SearchBox : TextBox
 	{
-		static SearchBox()
-		{
-			DefaultStyleKeyProperty.OverrideMetadata(
-				typeof(SearchBox),
-				new FrameworkPropertyMetadata(typeof(SearchBox)));
-		}
+		protected override Type StyleKeyOverride => typeof(SearchBox);
 
 		#region Dependency properties
 
-		public static DependencyProperty WatermarkTextProperty = DependencyProperty.Register("WatermarkText", typeof(string), typeof(SearchBox));
+		public static readonly StyledProperty<string> WatermarkTextProperty = AvaloniaProperty.Register<SearchBox, string>(nameof(WatermarkText));
 
-		public static DependencyProperty WatermarkColorProperty = DependencyProperty.Register("WatermarkColor", typeof(Brush), typeof(SearchBox));
+		public static readonly StyledProperty<Brush> WatermarkColorProperty = AvaloniaProperty.Register<SearchBox, Brush>(nameof(WatermarkColor));
 
-		public static DependencyProperty HasTextProperty = DependencyProperty.Register("HasText", typeof(bool), typeof(SearchBox));
+		public static readonly StyledProperty<bool> HasTextProperty = AvaloniaProperty.Register<SearchBox, bool>(nameof(HasText));
 
-		public static readonly DependencyProperty UpdateDelayProperty =
-			DependencyProperty.Register("UpdateDelay", typeof(TimeSpan), typeof(SearchBox),
-										new FrameworkPropertyMetadata(TimeSpan.FromMilliseconds(200)));
+		public static readonly StyledProperty<TimeSpan> UpdateDelayProperty =
+			AvaloniaProperty.Register<SearchBox, TimeSpan>(nameof(UpdateDelay), TimeSpan.FromMilliseconds(200));
 
 		#endregion
 
@@ -88,50 +84,51 @@ namespace ICSharpCode.ILSpy.Controls
 
 		DispatcherTimer timer;
 
-		protected override void OnTextChanged(TextChangedEventArgs e)
-		{
-			base.OnTextChanged(e);
-
-			HasText = this.Text.Length > 0;
-			if (timer == null)
-			{
-				timer = new DispatcherTimer();
-				timer.Tick += timer_Tick;
-			}
-			timer.Stop();
-			timer.Interval = this.UpdateDelay;
-			timer.Start();
-
-			UpdateWatermarkLabel();
-		}
-
-		private void UpdateWatermarkLabel()
-		{
-			Label wl = (Label)GetTemplateChild("WatermarkLabel");
-			if (wl != null)
-				wl.Visibility = HasText ? Visibility.Hidden : Visibility.Visible;
-		}
+		// protected override void OnTextChanged(TextChangedEventArgs e)
+		// {
+		// 	base.OnTextChanged(e);
+		//
+		// 	HasText = this.Text.Length > 0;
+		// 	if (timer == null)
+		// 	{
+		// 		timer = new DispatcherTimer();
+		// 		timer.Tick += timer_Tick;
+		// 	}
+		// 	timer.Stop();
+		// 	timer.Interval = this.UpdateDelay;
+		// 	timer.Start();
+		//
+		// 	UpdateWatermarkLabel();
+		// }
+		//
+		// private void UpdateWatermarkLabel()
+		// {
+		// 	Label wl = (Label)GetTemplateChild("WatermarkLabel");
+		// 	if (wl != null)
+		// 		wl.Visibility = HasText ? Visibility.Hidden : Visibility.Visible;
+		// }
 
 		void timer_Tick(object sender, EventArgs e)
 		{
 			timer.Stop();
 			timer = null;
-			var textBinding = GetBindingExpression(TextProperty);
-			if (textBinding != null)
-			{
-				textBinding.UpdateSource();
-			}
+			// TODO Avalonia 11.1 (if needed)
+			// var textBinding = GetBindingExpression(TextProperty);
+			// if (textBinding != null)
+			// {
+			// 	textBinding.UpdateSource();
+			// }
 		}
 
 		protected override void OnLostFocus(RoutedEventArgs e)
 		{
-			UpdateWatermarkLabel();
+			//UpdateWatermarkLabel();
 			base.OnLostFocus(e);
 		}
 
 		protected override void OnGotFocus(GotFocusEventArgs e)
 		{
-			UpdateWatermarkLabel();
+			//UpdateWatermarkLabel();
 			base.OnGotFocus(e);
 		}
 

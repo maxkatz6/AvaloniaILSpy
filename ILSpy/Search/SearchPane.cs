@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -53,15 +54,15 @@ namespace ICSharpCode.ILSpy.Search
 		IComparer<SearchResult> resultsComparer;
 		FilterSettings filterSettings;
 
-		public static readonly DependencyProperty ResultsProperty =
-			DependencyProperty.Register("Results", typeof(ObservableCollection<SearchResult>), typeof(SearchPane),
-				new PropertyMetadata(new ObservableCollection<SearchResult>()));
+		public static readonly StyledProperty<ObservableCollection<SearchResult>> ResultsProperty = AvaloniaProperty.Register<SearchPane, ObservableCollection<SearchResult>>(nameof(Results));
 		public ObservableCollection<SearchResult> Results {
 			get { return (ObservableCollection<SearchResult>)GetValue(ResultsProperty); }
 		}
 
 		public SearchPane()
 		{
+			SetValue(ResultsProperty, new ObservableCollection<SearchResult>());
+
 			InitializeComponent();
 			searchModeComboBox.Items.Add(new { Image = Images.Library, Name = "Types and Members" });
 			searchModeComboBox.Items.Add(new { Image = Images.Class, Name = "Type" });
@@ -124,27 +125,21 @@ namespace ICSharpCode.ILSpy.Search
 					StartSearch(this.SearchTerm);
 				}
 			}
-			Dispatcher.BeginInvoke(
-				DispatcherPriority.Background,
-				new Action(
+			Dispatcher.UIThread.InvokeAsync(
+				(
 					delegate {
 						searchBox.Focus();
 						searchBox.SelectAll();
-					}));
+					}),
+				DispatcherPriority.Background);
 		}
 
-		public static readonly DependencyProperty SearchTermProperty =
-			DependencyProperty.Register("SearchTerm", typeof(string), typeof(SearchPane),
-				new FrameworkPropertyMetadata(string.Empty, OnSearchTermChanged));
+		public static readonly StyledProperty<string> SearchTermProperty =
+			AvaloniaProperty.Register<SearchPane, string>(nameof(SearchTerm), string.Empty);
 
 		public string SearchTerm {
 			get { return (string)GetValue(SearchTermProperty); }
 			set { SetValue(SearchTermProperty, value); }
-		}
-
-		static void OnSearchTermChanged(AvaloniaObject o, DependencyPropertyChangedEventArgs e)
-		{
-			((SearchPane)o).StartSearch((string)e.NewValue);
 		}
 
 		void SearchModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -171,6 +166,16 @@ namespace ICSharpCode.ILSpy.Search
 				e.Handled = true;
 				listBox.SelectedIndex = -1;
 				searchBox.Focus();
+			}
+		}
+
+		protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+		{
+			base.OnPropertyChanged(change);
+
+			if (change.Property == SearchTermProperty)
+			{
+				StartSearch(change.GetNewValue<string>());
 			}
 		}
 

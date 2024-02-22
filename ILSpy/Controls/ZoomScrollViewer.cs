@@ -21,116 +21,118 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
+using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
+using Avalonia.Input;
 
 namespace ICSharpCode.ILSpy.Controls
 {
 	public class ZoomScrollViewer : ScrollViewer
 	{
-		static ZoomScrollViewer()
-		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(ZoomScrollViewer),
-													 new FrameworkPropertyMetadata(typeof(ZoomScrollViewer)));
-		}
+		private bool _computedZoomButtonCollapsed = true;
+		private ScrollContentPresenter _contentPresenter;
 
-		public static readonly DependencyProperty CurrentZoomProperty =
-			DependencyProperty.Register("CurrentZoom", typeof(double), typeof(ZoomScrollViewer),
-										new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, CalculateZoomButtonCollapsed, CoerceZoom));
+		protected override Type StyleKeyOverride => typeof(ZoomScrollViewer);
+
+		public static readonly StyledProperty<double> CurrentZoomProperty =
+			AvaloniaProperty.Register<ZoomScrollViewer, double>(nameof(CurrentZoom), 1.0, false, BindingMode.TwoWay, coerce: CoerceZoom);
 
 		public double CurrentZoom {
 			get { return (double)GetValue(CurrentZoomProperty); }
 			set { SetValue(CurrentZoomProperty, value); }
 		}
 
-		static object CoerceZoom(AvaloniaObject d, object baseValue)
+		static double CoerceZoom(AvaloniaObject d, double baseValue)
 		{
 			var zoom = (double)baseValue;
 			ZoomScrollViewer sv = (ZoomScrollViewer)d;
 			return Math.Max(sv.MinimumZoom, Math.Min(sv.MaximumZoom, zoom));
 		}
 
-		public static readonly DependencyProperty MinimumZoomProperty =
-			DependencyProperty.Register("MinimumZoom", typeof(double), typeof(ZoomScrollViewer),
-										new FrameworkPropertyMetadata(0.2));
+		public static readonly StyledProperty<double> MinimumZoomProperty = AvaloniaProperty.Register<ZoomScrollViewer, double>(nameof(MinimumZoom), 0.2);
 
 		public double MinimumZoom {
 			get { return (double)GetValue(MinimumZoomProperty); }
 			set { SetValue(MinimumZoomProperty, value); }
 		}
 
-		public static readonly DependencyProperty MaximumZoomProperty =
-			DependencyProperty.Register("MaximumZoom", typeof(double), typeof(ZoomScrollViewer),
-										new FrameworkPropertyMetadata(5.0));
+		public static readonly StyledProperty<double> MaximumZoomProperty = AvaloniaProperty.Register<ZoomScrollViewer, double>(nameof(MaximumZoom), 5.0);
 
 		public double MaximumZoom {
 			get { return (double)GetValue(MaximumZoomProperty); }
 			set { SetValue(MaximumZoomProperty, value); }
 		}
 
-		public static readonly DependencyProperty MouseWheelZoomProperty =
-			DependencyProperty.Register("MouseWheelZoom", typeof(bool), typeof(ZoomScrollViewer),
-										new FrameworkPropertyMetadata(true));
+		public static readonly StyledProperty<bool> MouseWheelZoomProperty = AvaloniaProperty.Register<ZoomScrollViewer, bool>(nameof(MouseWheelZoom),true);
 
 		public bool MouseWheelZoom {
 			get { return (bool)GetValue(MouseWheelZoomProperty); }
 			set { SetValue(MouseWheelZoomProperty, value); }
 		}
 
-		public static readonly DependencyProperty AlwaysShowZoomButtonsProperty =
-			DependencyProperty.Register("AlwaysShowZoomButtons", typeof(bool), typeof(ZoomScrollViewer),
-										new FrameworkPropertyMetadata(false, CalculateZoomButtonCollapsed));
+		public static readonly StyledProperty<bool> AlwaysShowZoomButtonsProperty = AvaloniaProperty.Register<ZoomScrollViewer, bool>(nameof(AlwaysShowZoomButtons));
 
 		public bool AlwaysShowZoomButtons {
 			get { return (bool)GetValue(AlwaysShowZoomButtonsProperty); }
 			set { SetValue(AlwaysShowZoomButtonsProperty, value); }
 		}
 
-		static readonly DependencyPropertyKey ComputedZoomButtonCollapsedPropertyKey =
-			DependencyProperty.RegisterReadOnly("ComputedZoomButtonCollapsed", typeof(bool), typeof(ZoomScrollViewer),
-												new FrameworkPropertyMetadata(true));
-
-		public static readonly DependencyProperty ComputedZoomButtonCollapsedProperty = ComputedZoomButtonCollapsedPropertyKey.DependencyProperty;
+		public static readonly DirectProperty<ZoomScrollViewer, bool> ComputedZoomButtonCollapsedProperty =
+			AvaloniaProperty.RegisterDirect<ZoomScrollViewer, bool>(nameof(ComputedZoomButtonCollapsed),
+				c => c.ComputedZoomButtonCollapsed);
 
 		public bool ComputedZoomButtonCollapsed {
-			get { return (bool)GetValue(ComputedZoomButtonCollapsedProperty); }
-			private set { SetValue(ComputedZoomButtonCollapsedPropertyKey, value); }
+			get => _computedZoomButtonCollapsed;
+			private set => SetAndRaise(ComputedZoomButtonCollapsedProperty, ref _computedZoomButtonCollapsed, value);
 		}
 
-		static void CalculateZoomButtonCollapsed(AvaloniaObject d, DependencyPropertyChangedEventArgs e)
+		protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
 		{
-			ZoomScrollViewer z = d as ZoomScrollViewer;
-			if (z != null)
-				z.ComputedZoomButtonCollapsed = (z.AlwaysShowZoomButtons == false) && (z.CurrentZoom == 1.0);
+			base.OnPropertyChanged(change);
+
+			if (change.Property == CurrentZoomProperty || change.Property == AlwaysShowZoomButtonsProperty)
+			{
+				ComputedZoomButtonCollapsed = (AlwaysShowZoomButtons == false) && (Math.Abs(CurrentZoom - 1.0) < 0.001);
+			}
 		}
 
-		protected override void OnMouseWheel(MouseWheelEventArgs e)
+		protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
 		{
-			if (!e.Handled && Keyboard.Modifiers == ModifierKeys.Control && MouseWheelZoom)
+			base.OnApplyTemplate(e);
+
+			_contentPresenter = e.NameScope.Get<ScrollContentPresenter>("PART_ContentPresenter");
+		}
+
+		protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
+		{
+			if (!e.Handled && (e.KeyModifiers & KeyModifiers.Control) != 0 && MouseWheelZoom)
 			{
 				double oldZoom = CurrentZoom;
-				double newZoom = RoundToOneIfClose(CurrentZoom * Math.Pow(1.001, e.Delta));
+				double newZoom = RoundToOneIfClose(CurrentZoom * Math.Pow(1.001, e.Delta.X));
 				newZoom = Math.Max(this.MinimumZoom, Math.Min(this.MaximumZoom, newZoom));
 
 				// adjust scroll position so that mouse stays over the same virtual coordinate
-				ContentPresenter presenter = Template.FindName("PART_Presenter", this) as ContentPresenter;
+				ContentPresenter presenter = _contentPresenter;
 				Vector relMousePos;
 				if (presenter != null)
 				{
 					Point mousePos = e.GetPosition(presenter);
-					relMousePos = new Vector(mousePos.X / presenter.ActualWidth, mousePos.Y / presenter.ActualHeight);
+					relMousePos = new Vector(mousePos.X / presenter.Bounds.Width, mousePos.Y / presenter.Bounds.Height);
 				}
 				else
 				{
 					relMousePos = new Vector(0.5, 0.5);
 				}
 
-				Point scrollOffset = new Point(this.HorizontalOffset, this.VerticalOffset);
-				Vector oldHalfViewport = new Vector(this.ViewportWidth / 2, this.ViewportHeight / 2);
+				Point scrollOffset = new Point(this.Offset.X, this.Offset.Y);
+				Vector oldHalfViewport = new Vector(this.Viewport.Width / 2, this.Viewport.Height / 2);
 				Vector newHalfViewport = oldHalfViewport / newZoom * oldZoom;
 				Point oldCenter = scrollOffset + oldHalfViewport;
-				Point virtualMousePos = scrollOffset + new Vector(relMousePos.X * this.ViewportWidth, relMousePos.Y * this.ViewportHeight);
+				Point virtualMousePos = scrollOffset + new Vector(relMousePos.X * this.Viewport.Width, relMousePos.Y * this.Viewport.Height);
 
 				// As newCenter, we want to choose a point between oldCenter and virtualMousePos. The more we zoom in, the closer
 				// to virtualMousePos. We'll create the line x = oldCenter + lambda * (virtualMousePos-oldCenter).
@@ -157,12 +159,11 @@ namespace ICSharpCode.ILSpy.Controls
 
 				SetCurrentValue(CurrentZoomProperty, newZoom);
 
-				this.ScrollToHorizontalOffset(scrollOffset.X);
-				this.ScrollToVerticalOffset(scrollOffset.Y);
+				Offset = scrollOffset;
 
 				e.Handled = true;
 			}
-			base.OnMouseWheel(e);
+			base.OnPointerWheelChanged(e);
 		}
 
 		internal static double RoundToOneIfClose(double val)

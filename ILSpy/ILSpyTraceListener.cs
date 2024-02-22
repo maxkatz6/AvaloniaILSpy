@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+
+using Avalonia.Controls;
 
 using ICSharpCode.ILSpy.Controls;
 
@@ -72,15 +75,16 @@ namespace ICSharpCode.ILSpy
 					return;
 				dialogIsOpen = true;
 			}
+			// TODO Avalonia : note below is not possible in Avalonia...and in cross-platform in general.
 			// We might be unable to display a dialog here, e.g. because
 			// we're on the UI thread but dispatcher processing is disabled.
 			// In any case, we don't want to pump messages while the dialog is displaying,
 			// so we create a separate UI thread for the dialog:
-			int result = 0;
-			var thread = new Thread(() => result = ShowAssertionDialog(message, detailMessage, stackTrace));
-			thread.SetApartmentState(ApartmentState.STA);
-			thread.Start();
-			thread.Join();
+			int result = ShowAssertionDialog(message, detailMessage, stackTrace);
+			// var thread = new Thread(() => result = ShowAssertionDialog(message, detailMessage, stackTrace));
+			// thread.SetApartmentState(ApartmentState.STA);
+			// thread.Start();
+			// thread.Join();
 			if (result == 0)
 			{ // throw
 				throw new AssertionFailedException(message);
@@ -106,17 +110,15 @@ namespace ICSharpCode.ILSpy
 			message = message + Environment.NewLine + detailMessage + Environment.NewLine + stackTrace;
 			string[] buttonTexts = { "Throw", "Debug", "Ignore", "Ignore All" };
 			CustomDialog inputBox = new CustomDialog("Assertion Failed", message.TakeStartEllipsis(750), -1, 2, buttonTexts);
-			inputBox.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+			inputBox.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 			inputBox.ShowInTaskbar = true; // make this window more visible, because it effectively interrupts the decompilation process.
 			try
 			{
-				inputBox.ShowDialog();
-				return inputBox.Result;
+				return inputBox.ShowDialog<int>(MainWindow.Instance).WaitOnDispatcherFrame();
 			}
 			finally
 			{
 				dialogIsOpen = false;
-				inputBox.Dispose();
 			}
 		}
 	}

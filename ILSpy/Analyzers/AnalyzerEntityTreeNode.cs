@@ -39,7 +39,7 @@ namespace ICSharpCode.ILSpy.Analyzers
 			e.Handled = true;
 			if (this.Member.MetadataToken.IsNil)
 			{
-				MainWindow.Instance.ShowMessageBox(Properties.Resources.CannotAnalyzeMissingRef, "ILSpy");
+				MessageBox.Show(MainWindow.Instance, Properties.Resources.CannotAnalyzeMissingRef, "ILSpy");
 				return;
 			}
 			MainWindow.Instance.JumpToReference(new EntityReference(this.Member.ParentModule.PEFile, this.Member.MetadataToken));

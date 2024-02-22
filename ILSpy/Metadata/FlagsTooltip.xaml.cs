@@ -64,8 +64,7 @@ namespace ICSharpCode.ILSpy.Metadata
 			set { SetValue(ValueProperty, value); }
 		}
 
-		public static readonly DependencyProperty ValueProperty =
-			DependencyProperty.Register("Value", typeof(int), typeof(FlagActiveConverter), new PropertyMetadata(0));
+		public static readonly StyledProperty<int> ValueProperty = AvaloniaProperty.Register<FlagActiveConverter, int>(nameof(Value), , new PropertyMetadata(0));
 
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{

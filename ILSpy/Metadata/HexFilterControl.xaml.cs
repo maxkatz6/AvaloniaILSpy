@@ -43,8 +43,7 @@ namespace ICSharpCode.ILSpy.Metadata
 		/// <summary>
 		/// Identifies the Filter dependency property
 		/// </summary>
-		public static readonly DependencyProperty FilterProperty =
-			DependencyProperty.Register("Filter", typeof(IContentFilter), typeof(HexFilterControl),
+		public static readonly StyledProperty<IContentFilter> FilterProperty = AvaloniaProperty.Register<HexFilterControl, IContentFilter>(nameof(Filter), ,
 				new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, (o, args) => ((HexFilterControl)o).Filter_Changed(args.NewValue)));
 
 		void Filter_Changed(object newValue)

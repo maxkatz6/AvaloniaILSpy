@@ -32,8 +32,7 @@ namespace ICSharpCode.ILSpy.Metadata
 		/// <summary>
 		/// Identifies the Filter dependency property
 		/// </summary>
-		public static readonly DependencyProperty FilterProperty =
-			DependencyProperty.Register("Filter", typeof(FlagsContentFilter), typeof(FlagsFilterControl),
+		public static readonly StyledProperty<FlagsContentFilter> FilterProperty = AvaloniaProperty.Register<FlagsFilterControl, FlagsContentFilter>(nameof(Filter), ,
 				new FrameworkPropertyMetadata(new FlagsContentFilter(-1), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, (sender, e) => ((FlagsFilterControl)sender).Filter_Changed()));
 
 		/// <summary>When overridden in a derived class, is invoked whenever application code or internal processes call <see cref="M:System.Windows.FrameworkElement.ApplyTemplate" />.</summary>
