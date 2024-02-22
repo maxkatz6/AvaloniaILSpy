@@ -86,9 +86,9 @@ namespace ICSharpCode.ILSpy.Options
 			Close(true);
 		}
 
-		private async void DefaultsButton_Click(object sender, RoutedEventArgs e)
+		private void DefaultsButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (await MessageBox.Show(this, Properties.Resources.ResetToDefaultsConfirmationMessage, "ILSpy", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			if (MessageBox.Show(this, Properties.Resources.ResetToDefaultsConfirmationMessage, "ILSpy", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 			{
 				var page = tabControl.SelectedValue as IOptionPage;
 				if (page != null)

@@ -118,7 +118,7 @@ namespace ICSharpCode.ILSpy.TextView
 			}
 			catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is System.Security.SecurityException)
 			{
-				await MessageBox.Show(
+				MessageBox.Show(
 					topLevel,
 					"The directory cannot be accessed. Please ensure it exists and you have sufficient rights to access it.",
 					"Solution directory not accessible",
@@ -128,7 +128,7 @@ namespace ICSharpCode.ILSpy.TextView
 
 			if (directoryNotEmpty)
 			{
-				var result = await MessageBox.Show(
+				var result = MessageBox.Show(
 					topLevel,
 					Resources.AssemblySaveCodeDirectoryNotEmpty,
 					Resources.AssemblySaveCodeDirectoryNotEmptyTitle,

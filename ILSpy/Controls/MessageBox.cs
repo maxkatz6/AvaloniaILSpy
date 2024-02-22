@@ -36,32 +36,38 @@ namespace ICSharpCode.ILSpy
 		};
 
 
-		public static Task<MessageBoxResult> Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button, MessageBoxImage icon, MessageBoxResult defaultResult)
+		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button, MessageBoxImage icon, MessageBoxResult defaultResult)
 		{
 			return Show(null, messageBoxText, caption, button, icon, defaultResult, MessageBoxOptions.None);
 		}
 
-		public static Task<MessageBoxResult> Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button, MessageBoxImage icon)
+		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button, MessageBoxImage icon)
 		{
 			return Show(null, messageBoxText, caption, button, icon, MessageBoxResult.None, MessageBoxOptions.None);
 		}
 
-		public static Task<MessageBoxResult> Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button)
+		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button)
 		{
 			return Show(null, messageBoxText, caption, button, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
 		}
 
-		public static Task<MessageBoxResult> Show(TopLevel owner, string messageBoxText, string caption)
+		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption)
 		{
 			return Show(null, messageBoxText, caption, MessageBoxButton.OK, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
 		}
 
-		public static Task<MessageBoxResult> Show(TopLevel owner, string messageBoxText)
+		public static MessageBoxResult Show(TopLevel owner, string messageBoxText)
 		{
 			return Show(null, messageBoxText, "Message", MessageBoxButton.OK, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
 		}
 
-		public static async Task<MessageBoxResult> Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button, MessageBoxImage icon, MessageBoxResult defaultResult, MessageBoxOptions options)
+		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption,
+			MessageBoxButton button, MessageBoxImage icon, MessageBoxResult defaultResult, MessageBoxOptions options)
+		{
+			return ShowAsync(owner, messageBoxText, caption, button, icon, defaultResult, options).WaitOnDispatcherFrame();
+		}
+		
+		public static async Task<MessageBoxResult> ShowAsync(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button, MessageBoxImage icon, MessageBoxResult defaultResult, MessageBoxOptions options)
 		{
 			if (caption == null)
 				throw new ArgumentNullException(nameof(caption));
