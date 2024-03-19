@@ -24,8 +24,7 @@ using System.Text;
 
 using Avalonia.Collections;
 using Avalonia.Controls;
-
-using AvaloniaEdit;
+using Avalonia.Labs.Input;
 
 namespace ICSharpCode.ILSpy.Controls
 {

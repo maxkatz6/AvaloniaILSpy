@@ -144,15 +144,15 @@ namespace ICSharpCode.ILSpy.AvalonEdit
 					element => {
 						if (foregroundBrush != null)
 						{
-							element.TextRunProperties.SetForegroundBrush(foregroundBrush);
+							element.TextRunProperties.ForegroundBrush = foregroundBrush;
 						}
 						Typeface tf = element.TextRunProperties.Typeface;
-						element.TextRunProperties.SetTypeface(new Typeface(
+						element.TextRunProperties.Typeface = new Typeface(
 							tf.FontFamily,
 							marker.FontStyle ?? tf.Style,
 							marker.FontWeight ?? tf.Weight,
 							tf.Stretch
-						));
+						);
 					}
 				);
 			}

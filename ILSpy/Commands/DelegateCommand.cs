@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using Avalonia.Labs.Input;
+
 namespace ICSharpCode.ILSpy.Commands
 {
 	public class DelegateCommand : ICommand

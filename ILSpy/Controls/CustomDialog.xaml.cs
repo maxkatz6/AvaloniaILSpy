@@ -23,15 +23,12 @@ using Avalonia.Controls.Presenters;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using AvaloniaEdit;
 using ICSharpCode.ILSpy.Controls;
 
 namespace ICSharpCode.ILSpy.Controls
 {
 	public sealed partial class CustomDialog : Window
 	{
-        TextBlock label;
-        ItemsControl buttons;
 		int acceptButton;
 		int cancelButton;
 
@@ -51,16 +48,7 @@ namespace ICSharpCode.ILSpy.Controls
 			this.Width = buttonLabels.Length * (100+ 10);
 
 			buttons.ItemsSource = buttonLabels;
-
-			
-			label.Text = message;
-		}
-
-		void InitializeComponent()
-		{
-			AvaloniaXamlLoader.Load(this);
-			this.buttons = this.FindControl<ItemsControl>("buttons");
-			this.label = this.FindControl<TextBlock>("content");
+			content.Text = message;
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)

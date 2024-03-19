@@ -2,7 +2,7 @@
 using System.Windows.Input;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using AvaloniaEdit;
+using Avalonia.Labs.Input;
 
 namespace ICSharpCode.ILSpy
 {

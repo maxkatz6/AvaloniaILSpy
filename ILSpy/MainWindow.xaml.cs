@@ -35,11 +35,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Labs.Input;
 using Avalonia.Markup.Xaml.Templates;
 using Avalonia.Media;
 using Avalonia.Threading;
-
-using AvaloniaEdit;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Documentation;

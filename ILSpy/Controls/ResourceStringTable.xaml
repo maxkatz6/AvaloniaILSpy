@@ -1,16 +1,17 @@
 ﻿<UserControl x:Class="ICSharpCode.ILSpy.Controls.ResourceStringTable"
 			 xmlns="https://github.com/avaloniaui"
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 xmlns:local="clr-namespace:ICSharpCode.ILSpy.Controls"
-			 xmlns:properties="clr-namespace:ICSharpCode.ILSpy.Properties"
+			 xmlns:local="using:ICSharpCode.ILSpy.Controls"
+			 xmlns:properties="using:ICSharpCode.ILSpy.Properties"
+			 xmlns:input="using:Avalonia.Labs.Input"
+			 xmlns:ilSpy="using:ICSharpCode.ILSpy"
 			 Cursor="Arrow">
 	<!-- TODO Avalonia styling was removed, revisit if necessary -->
-	<!-- TODO Avalonia https://github.com/AvaloniaUI/Avalonia.Labs/pull/21 -->
-	<!-- <UserControl.CommandBindings> -->
-	<!-- 	<CommandBinding Command="ApplicationCommands.Copy" -->
-	<!-- 					Executed="ExecuteCopy" -->
-	<!-- 					CanExecute="CanExecuteCopy" /> -->
-	<!-- </UserControl.CommandBindings> -->
+	<input:CommandManager.CommandBindings>
+		<input:CommandBinding Command="{x:Static ilSpy:ApplicationCommands.Copy}"
+		                      Executed="ExecuteCopy"
+		                      CanExecute="CanExecuteCopy" />
+	</input:CommandManager.CommandBindings>
 	<Grid Margin="5,0,0,0" RowDefinitions="Auto, Auto, *">
 		<Label Content="{x:Static properties:Resources.StringTable}"
 			   FontFamily="Segoe UI"
@@ -27,10 +28,9 @@
 		          CanUserResizeColumns="True">
 			<DataGrid.ContextFlyout>
 				<MenuFlyout>
-					<!-- TODO Avalonia https://github.com/AvaloniaUI/Avalonia.Labs/pull/21 -->
-					<!-- <MenuItem Header="_Copy" Command="ApplicationCommands.Copy" /> -->
-					<!-- <MenuItem Header="Copy _name" Command="ApplicationCommands.Copy" CommandParameter="Key" InputGestureText=" " /> -->
-					<!-- <MenuItem Header="Copy _value" Command="ApplicationCommands.Copy" CommandParameter="Value" InputGestureText=" " /> -->
+					<MenuItem Header="_Copy" Command="{x:Static ilSpy:ApplicationCommands.Copy}" />
+					<MenuItem Header="Copy _name" Command="{x:Static ilSpy:ApplicationCommands.Copy}" CommandParameter="Key" />
+					<MenuItem Header="Copy _value" Command="{x:Static ilSpy:ApplicationCommands.Copy}" CommandParameter="Value" />
 				</MenuFlyout>
 			</DataGrid.ContextFlyout>
 			<DataGrid.Columns>

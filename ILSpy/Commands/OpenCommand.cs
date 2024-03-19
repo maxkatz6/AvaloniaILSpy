@@ -17,8 +17,6 @@
 // DEALINGS IN THE SOFTWARE.
 
 
-using AvaloniaEdit;
-
 using ICSharpCode.ILSpy.Properties;
 
 namespace ICSharpCode.ILSpy

@@ -20,6 +20,7 @@
 	xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
 	xmlns:themes="clr-namespace:ICSharpCode.ILSpy.Themes"
 	xmlns:toms="urn:TomsToolbox"
+	xmlns:input="clr-namespace:Avalonia.Labs.Input;assembly=Avalonia.Labs.CommandManager"
 	d:DataContext="{d:DesignInstance local:MainWindowViewModel}"
 >
 	<Window.Resources>
@@ -95,44 +96,45 @@
 
 	</Window.Resources>
 
-	<Window.CommandBindings>
-		<CommandBinding
-			Command="Open"
+	<input:CommandManager.CommandBindings>
+		<input:CommandBinding
+			Command="{x:Static local:ApplicationCommands.Open}"
 			Executed="OpenCommandExecuted" />
-		<CommandBinding
-			Command="Refresh"
+		<input:CommandBinding
+			Command="{x:Static local:NavigationCommands.Refresh}"
 			Executed="RefreshCommandExecuted" />
-		<CommandBinding
-			Command="Save"
+		<input:CommandBinding
+			Command="{x:Static local:ApplicationCommands.Save}"
 			CanExecute="SaveCommandCanExecute"
 			Executed="SaveCommandExecuted" />
-		<CommandBinding
-			Command="BrowseBack"
+		<input:CommandBinding
+			Command="{x:Static local:NavigationCommands.BrowseBack}"
 			CanExecute="BackCommandCanExecute"
 			Executed="BackCommandExecuted" />
-		<CommandBinding
-			Command="BrowseForward"
+		<input:CommandBinding
+			Command="{x:Static local:NavigationCommands.BrowseForward}"
 			CanExecute="ForwardCommandCanExecute"
 			Executed="ForwardCommandExecuted" />
-		<CommandBinding
-			Command="Search"
+		<input:CommandBinding
+			Command="{x:Static local:NavigationCommands.Search}"
 			Executed="SearchCommandExecuted" />
-	</Window.CommandBindings>
-	<Window.InputBindings>
-		<KeyBinding Key="R" Modifiers="Control" Command="{x:Static local:ILSpyCommands.Analyze}" />
-	</Window.InputBindings>
-	<Window.TaskbarItemInfo>
-		<TaskbarItemInfo />
-	</Window.TaskbarItemInfo>
+	</input:CommandManager.CommandBindings>
+	<!-- -->
+	<!-- <Window.InputBindings> -->
+	<!-- 	<KeyBinding Key="R" Modifiers="Control" Command="{x:Static local:ILSpyCommands.Analyze}" /> -->
+	<!-- </Window.InputBindings> -->
+	<!-- <Window.TaskbarItemInfo> -->
+	<!-- 	<TaskbarItemInfo /> -->
+	<!-- </Window.TaskbarItemInfo> -->
 	<DockPanel>
 		<!-- Main menu -->
 		<Menu DockPanel.Dock="Top" Name="mainMenu" Height="23" KeyboardNavigation.TabNavigation="None">
 			<MenuItem Header="{x:Static properties:Resources._File}" Tag="_File" />
 			<!-- contents of file menu are added using MEF -->
 			<MenuItem Header="{x:Static properties:Resources._View}" Tag="_View">
-				<MenuItem Header="{x:Static properties:Resources.Show_publiconlyTypesMembers}" IsCheckable="True" IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisPublicOnly}" />
-				<MenuItem Header="{x:Static properties:Resources.Show_internalTypesMembers}" IsCheckable="True" IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisPublicAndInternal}" />
-				<MenuItem Header="{x:Static properties:Resources.Show_allTypesAndMembers}" IsCheckable="True" IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisAll}" />
+				<MenuItem Header="{x:Static properties:Resources.Show_publiconlyTypesMembers}" ToggleType="CheckBox" IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisPublicOnly}" />
+				<MenuItem Header="{x:Static properties:Resources.Show_internalTypesMembers}" ToggleType="CheckBox" IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisPublicAndInternal}" />
+				<MenuItem Header="{x:Static properties:Resources.Show_allTypesAndMembers}" ToggleType="CheckBox" IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisAll}" />
 				<Separator/>
 				<MenuItem Header="{x:Static properties:Resources.Theme}" ItemsSource="{x:Static themes:ThemeManager.AllThemes}">
 					<MenuItem.ItemContainerStyle>
@@ -152,9 +154,9 @@
 					</MenuItem.ItemContainerStyle>
 				</MenuItem>
 				<MenuItem Header="{x:Static properties:Resources.UILanguage}">
-					<MenuItem Header="{x:Static properties:Resources.UILanguage_System}" IsCheckable="True" IsChecked="{Binding SessionSettings.CurrentCulture, Converter={StaticResource cultureSelectionConverter}, ConverterParameter={x:Null}}" />
-					<MenuItem Header="English" IsCheckable="True" IsChecked="{Binding SessionSettings.CurrentCulture, Converter={StaticResource cultureSelectionConverter}, ConverterParameter=en-US}" />
-					<MenuItem Header="中文" IsCheckable="True" IsChecked="{Binding SessionSettings.CurrentCulture, Converter={StaticResource cultureSelectionConverter}, ConverterParameter=zh-Hans}" />
+					<MenuItem Header="{x:Static properties:Resources.UILanguage_System}" ToggleType="CheckBox" IsChecked="{Binding SessionSettings.CurrentCulture, Converter={StaticResource cultureSelectionConverter}, ConverterParameter={x:Null}}" />
+					<MenuItem Header="English" ToggleType="CheckBox" IsChecked="{Binding SessionSettings.CurrentCulture, Converter={StaticResource cultureSelectionConverter}, ConverterParameter=en-US}" />
+					<MenuItem Header="中文" ToggleType="CheckBox" IsChecked="{Binding SessionSettings.CurrentCulture, Converter={StaticResource cultureSelectionConverter}, ConverterParameter=zh-Hans}" />
 				</MenuItem>
 			</MenuItem>
 			<MenuItem Header="{x:Static properties:Resources._Window}" Tag="_Window" />

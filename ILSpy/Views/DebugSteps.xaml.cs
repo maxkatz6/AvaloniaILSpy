@@ -67,7 +67,7 @@ namespace ICSharpCode.ILSpy
 
 		private void SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			Dispatcher.Invoke(() => {
+			Dispatcher.UIThread.Invoke(() => {
 				tree.ItemsSource = null;
 				lastSelectedStep = int.MaxValue;
 			});
@@ -97,7 +97,7 @@ namespace ICSharpCode.ILSpy
 #if DEBUG
 			if (language == null)
 				return;
-			Dispatcher.Invoke(() => {
+			Dispatcher.UIThread.Invoke(() => {
 				tree.ItemsSource = language.Stepper.Steps;
 				lastSelectedStep = int.MaxValue;
 			});
@@ -147,7 +147,7 @@ namespace ICSharpCode.ILSpy
 		{
 			if (e.Key == Key.Enter || e.Key == Key.Return)
 			{
-				if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
+				if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
 					ShowStateBefore_Click(sender, e);
 				else
 					ShowStateAfter_Click(sender, e);

@@ -23,8 +23,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Avalonia.Input;
-
-using AvaloniaEdit;
+using Avalonia.Labs.Input;
 
 using ICSharpCode.ILSpy.Analyzers;
 using ICSharpCode.ILSpy.Commands;
@@ -48,6 +47,7 @@ namespace ICSharpCode.ILSpy
 
 	public static class ApplicationCommands
 	{
+		public static RoutedCommand Copy { get; } = new RoutedCommand(nameof(Copy), new KeyGesture(Key.C, KeyModifiers.Control));
 		public static RoutedCommand Open { get; } = new RoutedCommand(nameof(Open), new KeyGesture(Key.O, KeyModifiers.Control));
 		public static RoutedCommand Save { get; } = new RoutedCommand(nameof(Save), new KeyGesture(Key.S, KeyModifiers.Control));
 		public static RoutedCommand Refresh { get; } = new RoutedCommand(nameof(Refresh), new KeyGesture(Key.R, KeyModifiers.Control));

@@ -37,8 +37,6 @@ using ICSharpCode.ILSpyX.Settings;
 
 using Microsoft.VisualStudio.Composition;
 
-using TomsToolbox.Wpf.Styles;
-
 namespace ICSharpCode.ILSpy
 {
 	/// <summary>
@@ -80,7 +78,7 @@ namespace ICSharpCode.ILSpy
 			{
 				AppDomain.CurrentDomain.UnhandledException += ShowErrorBox;
 				// https://github.com/AvaloniaUI/Avalonia/issues/8418
-				// Dispatcher.CurrentDispatcher.UnhandledException += Dispatcher_UnhandledException;
+				Dispatcher.UIThread.UnhandledException += Dispatcher_UnhandledException;
 			}
 			TaskScheduler.UnobservedTaskException += DotNet40_UnobservedTaskException;
 			InitializeMef().GetAwaiter().GetResult();

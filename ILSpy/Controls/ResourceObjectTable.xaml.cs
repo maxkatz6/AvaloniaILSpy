@@ -25,8 +25,7 @@ using System.Text;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
-
-using AvaloniaEdit;
+using Avalonia.Labs.Input;
 
 namespace ICSharpCode.ILSpy.Controls
 {

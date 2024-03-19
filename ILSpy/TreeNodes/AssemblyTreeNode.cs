@@ -454,8 +454,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 									topLevel,
 									Resources.AssemblySaveCodeDirectoryNotEmpty,
 									Resources.AssemblySaveCodeDirectoryNotEmptyTitle,
-									MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No)
-									.WaitOnDispatcherFrame();
+									MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
 								if (result == MessageBoxResult.No)
 									return true; // don't save, but mark the Save operation as handled
 								break;

@@ -30,16 +30,16 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Labs.Input;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using AvaloniaEdit;
 
 using Point = Avalonia.Point;
 
 namespace ICSharpCode.TreeView
 {
-	public class SharpTreeView : ListBox, IRoutedCommandBindable
+	public class SharpTreeView : ListBox
 	{
 		static SharpTreeView()
 		{
@@ -373,9 +373,10 @@ namespace ICSharpCode.TreeView
 
 			foreach (var commandBinding in CommandBindings)
 			{
-				if (commandBinding.Command.Gesture?.Matches(e) == true)
+				if (commandBinding.Command is RoutedCommand routedCommand
+				    && routedCommand.Gestures.Any(g => g.Matches(e)))
 				{
-					commandBinding.Command.Execute(null, this);
+					routedCommand.Execute(null, this);
 					e.Handled = true;
 					break;
 				}
@@ -751,14 +752,14 @@ namespace ICSharpCode.TreeView
 
 		#region Cut / Copy / Paste / Delete Commands
 
-		public IList<RoutedCommandBinding> CommandBindings { get; } = new List<RoutedCommandBinding>();
+		public IList<CommandBinding> CommandBindings => CommandManager.GetCommandBindings(this);
 
 		void RegisterCommands()
 		{
-			CommandBindings.Add(new RoutedCommandBinding(ApplicationCommands.Cut, HandleExecuted_Cut, HandleCanExecute_Cut));
-			CommandBindings.Add(new RoutedCommandBinding(ApplicationCommands.Copy, HandleExecuted_Copy, HandleCanExecute_Copy));
-			CommandBindings.Add(new RoutedCommandBinding(ApplicationCommands.Paste, HandleExecuted_Paste, HandleCanExecute_Paste));
-			CommandBindings.Add(new RoutedCommandBinding(ApplicationCommands.Delete, HandleExecuted_Delete, HandleCanExecute_Delete));
+			CommandBindings.Add(new CommandBinding(ApplicationCommands.Cut, HandleExecuted_Cut, HandleCanExecute_Cut));
+			CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, HandleExecuted_Copy, HandleCanExecute_Copy));
+			CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, HandleExecuted_Paste, HandleCanExecute_Paste));
+			CommandBindings.Add(new CommandBinding(ApplicationCommands.Delete, HandleExecuted_Delete, HandleCanExecute_Delete));
 		}
 
 		static void HandleExecuted_Cut(object sender, ExecutedRoutedEventArgs e)

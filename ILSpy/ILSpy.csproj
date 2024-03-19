@@ -18,6 +18,7 @@
     <PackageReference Include="AvaloniaEdit" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Controls.DataGrid" />
+    <PackageReference Include="Avalonia.Labs.CommandManager" />
     <PackageReference Include="Microsoft.VisualStudio.Composition" />
     <PackageReference Include="Avalonia.Xaml.Behaviors" />
   </ItemGroup>

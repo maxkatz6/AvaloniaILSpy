@@ -102,28 +102,28 @@ namespace ICSharpCode.ILSpy
 			}
 
 			bool success = false;
-			CommandLineHelpers.EnumWindows(
-				(hWnd, lParam) => {
-					string windowTitle = CommandLineHelpers.GetWindowText(hWnd, 100);
-					if (windowTitle.StartsWith("ILSpy", StringComparison.Ordinal))
-					{
-						string processName = CommandLineHelpers.GetProcessNameFromWindow(hWnd);
-						Debug.WriteLine("Found {0:x4}: '{1}' in '{2}'", hWnd, windowTitle, processName);
-						if (string.Equals(processName, ownProcessName, StringComparison.OrdinalIgnoreCase))
-						{
-							IntPtr result = Send(hWnd, message);
-							Debug.WriteLine("WM_COPYDATA result: {0:x8}", result);
-							if (result == (IntPtr)1)
-							{
-								if (activate)
-									CommandLineHelpers.SetForegroundWindow(hWnd);
-								success = true;
-								return false; // stop enumeration
-							}
-						}
-					}
-					return true; // continue enumeration
-				}, IntPtr.Zero);
+			// CommandLineHelpers.EnumWindows(
+			// 	(hWnd, lParam) => {
+			// 		string windowTitle = CommandLineHelpers.GetWindowText(hWnd, 100);
+			// 		if (windowTitle.StartsWith("ILSpy", StringComparison.Ordinal))
+			// 		{
+			// 			string processName = CommandLineHelpers.GetProcessNameFromWindow(hWnd);
+			// 			Debug.WriteLine("Found {0:x4}: '{1}' in '{2}'", hWnd, windowTitle, processName);
+			// 			if (string.Equals(processName, ownProcessName, StringComparison.OrdinalIgnoreCase))
+			// 			{
+			// 				IntPtr result = Send(hWnd, message);
+			// 				Debug.WriteLine("WM_COPYDATA result: {0:x8}", result);
+			// 				if (result == (IntPtr)1)
+			// 				{
+			// 					if (activate)
+			// 						CommandLineHelpers.SetForegroundWindow(hWnd);
+			// 					success = true;
+			// 					return false; // stop enumeration
+			// 				}
+			// 			}
+			// 		}
+			// 		return true; // continue enumeration
+			// 	}, IntPtr.Zero);
 			return success;
 		}
 
@@ -131,25 +131,26 @@ namespace ICSharpCode.ILSpy
 		{
 			const uint SMTO_NORMAL = 0;
 
-			CopyDataStruct lParam;
-			lParam.Padding = IntPtr.Zero;
-			lParam.Size = message.Length * 2;
-			fixed (char* buffer = message)
-			{
-				lParam.Buffer = (IntPtr)buffer;
-				IntPtr result;
-				// SendMessage with 3s timeout (e.g. when the target process is stopped in the debugger)
-				if (CommandLineHelpers.SendMessageTimeout(
-					hWnd, CommandLineHelpers.WM_COPYDATA, IntPtr.Zero, ref lParam,
-					SMTO_NORMAL, 3000, out result) != IntPtr.Zero)
-				{
-					return result;
-				}
-				else
-				{
-					return IntPtr.Zero;
-				}
-			}
+			// CopyDataStruct lParam;
+			// lParam.Padding = IntPtr.Zero;
+			// lParam.Size = message.Length * 2;
+			// fixed (char* buffer = message)
+			// {
+			// 	lParam.Buffer = (IntPtr)buffer;
+			// 	IntPtr result;
+			// 	// SendMessage with 3s timeout (e.g. when the target process is stopped in the debugger)
+			// 	if (CommandLineHelpers.SendMessageTimeout(
+			// 		hWnd, CommandLineHelpers.WM_COPYDATA, IntPtr.Zero, ref lParam,
+			// 		SMTO_NORMAL, 3000, out result) != IntPtr.Zero)
+			// 	{
+			// 		return result;
+			// 	}
+			// 	else
+			// 	{
+			// 		return IntPtr.Zero;
+			// 	}
+			// }
+			return IntPtr.Zero;
 		}
 		#endregion
 	}

@@ -19,6 +19,8 @@
 using System;
 using System.Windows.Input;
 
+using Avalonia.Labs.Input;
+
 namespace ICSharpCode.ILSpy
 {
 	public abstract class SimpleCommand : ICommand
