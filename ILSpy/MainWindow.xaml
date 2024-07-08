@@ -20,7 +20,8 @@
 	xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
 	xmlns:themes="clr-namespace:ICSharpCode.ILSpy.Themes"
 	xmlns:toms="urn:TomsToolbox"
-	xmlns:input="clr-namespace:Avalonia.Labs.Input;assembly=Avalonia.Labs.CommandManager"
+	xmlns:input="using:Avalonia.Labs.Input"
+	xmlns:shared="using:ICSharpCode"
 	d:DataContext="{d:DesignInstance local:MainWindowViewModel}"
 >
 	<Window.Resources>
@@ -98,13 +99,13 @@
 
 	<input:CommandManager.CommandBindings>
 		<input:CommandBinding
-			Command="{x:Static local:ApplicationCommands.Open}"
+			Command="{x:Static shared:ApplicationCommands.Open}"
 			Executed="OpenCommandExecuted" />
 		<input:CommandBinding
 			Command="{x:Static local:NavigationCommands.Refresh}"
 			Executed="RefreshCommandExecuted" />
 		<input:CommandBinding
-			Command="{x:Static local:ApplicationCommands.Save}"
+			Command="{x:Static shared:ApplicationCommands.Save}"
 			CanExecute="SaveCommandCanExecute"
 			Executed="SaveCommandExecuted" />
 		<input:CommandBinding

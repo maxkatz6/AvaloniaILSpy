@@ -36,7 +36,7 @@ namespace ICSharpCode.ILSpy
 		public static readonly ManageAssemblyListsCommand ManageAssemblyListsCommand = new ManageAssemblyListsCommand();
 		public static readonly SetThemeCommand SetTheme = new SetThemeCommand();
 	}
-	
+
 	public static class NavigationCommands
 	{
 		public static RoutedCommand BrowseBack { get; } = new NavigationCommand(nameof(BrowseBack), new KeyGesture(Key.BrowserBack, KeyModifiers.Control));
@@ -44,13 +44,4 @@ namespace ICSharpCode.ILSpy
 		public static RoutedCommand Search { get; } = new RoutedCommand(nameof(Search), new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Shift));
 		public static RoutedCommand Refresh { get; } = new RoutedCommand(nameof(Refresh), new KeyGesture(Key.F5));
 	}
-
-	public static class ApplicationCommands
-	{
-		public static RoutedCommand Copy { get; } = new RoutedCommand(nameof(Copy), new KeyGesture(Key.C, KeyModifiers.Control));
-		public static RoutedCommand Open { get; } = new RoutedCommand(nameof(Open), new KeyGesture(Key.O, KeyModifiers.Control));
-		public static RoutedCommand Save { get; } = new RoutedCommand(nameof(Save), new KeyGesture(Key.S, KeyModifiers.Control));
-		public static RoutedCommand Refresh { get; } = new RoutedCommand(nameof(Refresh), new KeyGesture(Key.R, KeyModifiers.Control));
-	}
-
 }

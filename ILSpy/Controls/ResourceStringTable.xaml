@@ -4,11 +4,11 @@
 			 xmlns:local="using:ICSharpCode.ILSpy.Controls"
 			 xmlns:properties="using:ICSharpCode.ILSpy.Properties"
 			 xmlns:input="using:Avalonia.Labs.Input"
-			 xmlns:ilSpy="using:ICSharpCode.ILSpy"
+			 xmlns:shared="using:ICSharpCode"
 			 Cursor="Arrow">
 	<!-- TODO Avalonia styling was removed, revisit if necessary -->
 	<input:CommandManager.CommandBindings>
-		<input:CommandBinding Command="{x:Static ilSpy:ApplicationCommands.Copy}"
+		<input:CommandBinding Command="{x:Static shared:ApplicationCommands.Copy}"
 		                      Executed="ExecuteCopy"
 		                      CanExecute="CanExecuteCopy" />
 	</input:CommandManager.CommandBindings>
@@ -28,9 +28,9 @@
 		          CanUserResizeColumns="True">
 			<DataGrid.ContextFlyout>
 				<MenuFlyout>
-					<MenuItem Header="_Copy" Command="{x:Static ilSpy:ApplicationCommands.Copy}" />
-					<MenuItem Header="Copy _name" Command="{x:Static ilSpy:ApplicationCommands.Copy}" CommandParameter="Key" />
-					<MenuItem Header="Copy _value" Command="{x:Static ilSpy:ApplicationCommands.Copy}" CommandParameter="Value" />
+					<MenuItem Header="_Copy" Command="{x:Static shared:ApplicationCommands.Copy}" />
+					<MenuItem Header="Copy _name" Command="{x:Static shared:ApplicationCommands.Copy}" CommandParameter="Key" />
+					<MenuItem Header="Copy _value" Command="{x:Static shared:ApplicationCommands.Copy}" CommandParameter="Value" />
 				</MenuFlyout>
 			</DataGrid.ContextFlyout>
 			<DataGrid.Columns>
