@@ -94,7 +94,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 					s.Position = 0;
 					AvalonEditTextOutput output = new AvalonEditTextOutput();
 					output.Title = Resource.Name;
-					output.Write(FileReader.OpenStream(s, Encoding.UTF8).ReadToEnd());
+					output.Write(new StreamReader(s, Encoding.UTF8).ReadToEnd());
 					string ext;
 					if (type == FileType.Xml)
 						ext = ".xml";

@@ -41,6 +41,7 @@ namespace ICSharpCode.ILSpy
 	{
 		public static RoutedCommand BrowseBack { get; } = new NavigationCommand(nameof(BrowseBack), new KeyGesture(Key.BrowserBack, KeyModifiers.Control));
 		public static RoutedCommand BrowseForward { get; } = new NavigationCommand(nameof(BrowseForward), new KeyGesture(Key.BrowserForward, KeyModifiers.Control));
+		// TODO Avalonia: handle platform specific way.
 		public static RoutedCommand Search { get; } = new RoutedCommand(nameof(Search), new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Shift));
 		public static RoutedCommand Refresh { get; } = new RoutedCommand(nameof(Refresh), new KeyGesture(Key.F5));
 	}

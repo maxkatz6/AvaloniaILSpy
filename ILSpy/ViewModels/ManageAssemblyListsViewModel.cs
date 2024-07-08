@@ -125,21 +125,17 @@ namespace ICSharpCode.ILSpy.ViewModels
 		private void ExecuteNew()
 		{
 			CreateListDialog dlg = new CreateListDialog(Resources.NewList);
-			dlg.Owner = parent;
-			dlg.Closing += (s, args) => {
-				if (dlg.DialogResult == true)
-				{
-					if (manager.AssemblyLists.Contains(dlg.ListName))
-					{
-						args.Cancel = true;
-						MessageBox.Show(Resources.ListExistsAlready, null, MessageBoxButton.OK);
-					}
-				}
-			};
-			if (dlg.ShowDialog() == true)
+			if (dlg.ShowDialog<bool>(parent).WaitOnDispatcherFrame())
 			{
-				var list = manager.CreateList(dlg.ListName);
-				manager.AddListIfNotExists(list);
+				if (manager.AssemblyLists.Contains(dlg.ListName))
+				{
+					MessageBox.Show(parent, Resources.ListExistsAlready, null, MessageBoxButton.OK);
+				}
+				else
+				{
+					var list = manager.CreateList(dlg.ListName);
+					manager.AddListIfNotExists(list);
+				}
 			}
 		}
 
@@ -151,20 +147,16 @@ namespace ICSharpCode.ILSpy.ViewModels
 		private void ExecuteClone()
 		{
 			CreateListDialog dlg = new CreateListDialog(Resources.NewList);
-			dlg.Owner = parent;
-			dlg.Closing += (s, args) => {
-				if (dlg.DialogResult == true)
-				{
-					if (manager.AssemblyLists.Contains(dlg.ListName))
-					{
-						args.Cancel = true;
-						MessageBox.Show(Resources.ListExistsAlready, null, MessageBoxButton.OK);
-					}
-				}
-			};
-			if (dlg.ShowDialog() == true)
+			if (dlg.ShowDialog<bool>(parent).WaitOnDispatcherFrame())
 			{
-				manager.CloneList(SelectedAssemblyList, dlg.ListName);
+				if (manager.AssemblyLists.Contains(dlg.ListName))
+				{
+					MessageBox.Show(parent, Resources.ListExistsAlready, null, MessageBoxButton.OK);
+				}
+				else
+				{
+					manager.CloneList(SelectedAssemblyList, dlg.ListName);
+				}
 			}
 		}
 
@@ -210,32 +202,28 @@ namespace ICSharpCode.ILSpy.ViewModels
 		private void ExecuteRename()
 		{
 			CreateListDialog dlg = new CreateListDialog(Resources.RenameList);
-			dlg.Owner = parent;
 			dlg.ListName = selectedAssemblyList;
 			dlg.ListNameBox.SelectAll();
-			dlg.Closing += (s, args) => {
-				if (dlg.DialogResult == true)
-				{
-					if (dlg.ListName == selectedAssemblyList)
-					{
-						args.Cancel = true;
-						return;
-					}
-					if (manager.AssemblyLists.Contains(dlg.ListName))
-					{
-						args.Cancel = true;
-						MessageBox.Show(Resources.ListExistsAlready, null, MessageBoxButton.OK);
-					}
-				}
-			};
-			if (dlg.ShowDialog() == true)
+			if (dlg.ShowDialog<bool>(parent).WaitOnDispatcherFrame())
 			{
-				string assemblyList = SelectedAssemblyList;
-				SelectedAssemblyList = dlg.ListName;
-				manager.RenameList(assemblyList, dlg.ListName);
-				if (MainWindow.Instance.SessionSettings.ActiveAssemblyList == assemblyList)
+				if (dlg.ListName == selectedAssemblyList)
 				{
-					MainWindow.Instance.SessionSettings.ActiveAssemblyList = manager.AssemblyLists[manager.AssemblyLists.Count - 1];
+					return;
+				}
+				if (manager.AssemblyLists.Contains(dlg.ListName))
+				{
+					MessageBox.Show(parent, Resources.ListExistsAlready, null, MessageBoxButton.OK);
+				}
+				else
+				{
+					string assemblyList = SelectedAssemblyList;
+					SelectedAssemblyList = dlg.ListName;
+					manager.RenameList(assemblyList, dlg.ListName);
+					if (MainWindow.Instance.SessionSettings.ActiveAssemblyList == assemblyList)
+					{
+						MainWindow.Instance.SessionSettings.ActiveAssemblyList =
+							manager.AssemblyLists[manager.AssemblyLists.Count - 1];
+					}
 				}
 			}
 		}
@@ -243,25 +231,21 @@ namespace ICSharpCode.ILSpy.ViewModels
 		private void ExecuteCreatePreconfiguredAssemblyList(PreconfiguredAssemblyList config)
 		{
 			CreateListDialog dlg = new CreateListDialog(Resources.AddPreconfiguredList);
-			dlg.Owner = parent;
 			dlg.ListName = config.Name;
 			dlg.ListNameBox.SelectAll();
-			dlg.Closing += (s, args) => {
-				if (dlg.DialogResult == true)
-				{
-					if (manager.AssemblyLists.Contains(dlg.ListName))
-					{
-						args.Cancel = true;
-						MessageBox.Show(Resources.ListExistsAlready, null, MessageBoxButton.OK);
-					}
-				}
-			};
-			if (dlg.ShowDialog() == true)
+			if (dlg.ShowDialog<bool>(parent).WaitOnDispatcherFrame())
 			{
-				var list = manager.CreateDefaultList(config.Name, config.Path, dlg.ListName);
-				if (list.Count > 0)
+				if (manager.AssemblyLists.Contains(dlg.ListName))
 				{
-					manager.AddListIfNotExists(list);
+					MessageBox.Show(parent, Resources.ListExistsAlready, null, MessageBoxButton.OK);
+				}
+				else
+				{
+					var list = manager.CreateDefaultList(config.Name, config.Path, dlg.ListName);
+					if (list.Count > 0)
+					{
+						manager.AddListIfNotExists(list);
+					}
 				}
 			}
 		}

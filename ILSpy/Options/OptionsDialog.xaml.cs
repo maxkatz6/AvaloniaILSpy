@@ -17,10 +17,12 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Xml.Linq;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -60,16 +62,18 @@ namespace ICSharpCode.ILSpy.Options
 			var ep = App.ExportProviderFactory.CreateExportProvider();
 			this.optionPages = ep.GetExports<Control, IOptionsMetadata>("OptionPages").ToArray();
 			ILSpySettings settings = ILSpySettings.Load();
+			var itemsSource = new List<TabItemViewModel>();
 			foreach (var optionPage in optionPages.OrderBy(p => p.Metadata.Order))
 			{
 				var tabItem = new TabItemViewModel(MainWindow.GetResourceString(optionPage.Metadata.Title), optionPage.Value);
 
-				tabControl.Items.Add(tabItem);
+				itemsSource.Add(tabItem);
 
 				IOptionPage page = optionPage.Value as IOptionPage;
 				if (page != null)
 					page.Load(settings);
 			}
+			tabControl.ItemsSource = itemsSource;
 		}
 
 		void OKButton_Click(object sender, RoutedEventArgs e)
@@ -114,7 +118,7 @@ namespace ICSharpCode.ILSpy.Options
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 	public class ExportOptionPageAttribute : ExportAttribute
 	{
-		public ExportOptionPageAttribute() : base("OptionPages", typeof(UIElement))
+		public ExportOptionPageAttribute() : base("OptionPages", typeof(Visual))
 		{ }
 
 		public string Title { get; set; }
@@ -128,8 +132,7 @@ namespace ICSharpCode.ILSpy.Options
 		public override void Execute(object parameter)
 		{
 			OptionsDialog dlg = new OptionsDialog();
-			dlg.Owner = MainWindow.Instance;
-			if (dlg.ShowDialog() == true)
+			if (dlg.ShowDialog<bool>(MainWindow.Instance).WaitOnDispatcherFrame())
 			{
 				new RefreshCommand().Execute(parameter);
 			}

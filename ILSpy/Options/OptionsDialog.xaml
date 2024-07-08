@@ -14,7 +14,7 @@
 			<RowDefinition
 				Height="Auto" />
 		</Grid.RowDefinitions>
-		<TabControl Name="tabControl" SelectedValuePath="Content">
+		<TabControl Name="tabControl">
 			<TabControl.ItemTemplate>
 				<DataTemplate DataType="options:TabItemViewModel">
 					<TextBlock Text="{Binding Header}" />

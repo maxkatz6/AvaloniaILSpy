@@ -40,7 +40,7 @@ namespace ICSharpCode.ILSpy
 			var menu = (ContextMenu)Resources["PreconfiguredAssemblyListsMenu"];
 			menu.PlacementTarget = (Button)sender;
 			menu.Placement = PlacementMode.Bottom;
-			menu.IsOpen = true;
+			menu.Open();
 		}
 	}
 }

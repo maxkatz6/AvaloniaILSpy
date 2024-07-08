@@ -37,17 +37,18 @@
 		</Grid.ColumnDefinitions>
 		<ListBox Name="listView" Margin="0 8" Grid.ColumnSpan="4" SelectedItem="{Binding SelectedAssemblyList}"
 				 SelectionMode="Single" ItemsSource="{Binding AssemblyLists}">
-			<b:Interaction.Triggers>
-				<b:EventTrigger EventName="MouseDoubleClick">
-					<b:InvokeCommandAction Command="{Binding SelectAssemblyListCommand}" />
-				</b:EventTrigger>
-				<b:KeyTrigger Key="Return" FiredOn="KeyDown">
-					<b:InvokeCommandAction Command="{Binding SelectAssemblyListCommand}" />
-				</b:KeyTrigger>
-				<b:KeyTrigger Key="Delete" FiredOn="KeyDown">
-					<b:InvokeCommandAction Command="{Binding DeleteCommand}" CommandParameter="{Binding ., RelativeSource={RelativeSource AncestorType=Window}}" />
-				</b:KeyTrigger>
-			</b:Interaction.Triggers>
+			<!-- TODO Avalonia: it's possible, just need to wake up -->
+			<!-- <b:Interaction.Triggers> -->
+			<!-- 	<b:EventTrigger EventName="MouseDoubleClick"> -->
+			<!-- 		<b:InvokeCommandAction Command="{Binding SelectAssemblyListCommand}" /> -->
+			<!-- 	</b:EventTrigger> -->
+			<!-- 	<b:KeyTrigger Key="Return" FiredOn="KeyDown"> -->
+			<!-- 		<b:InvokeCommandAction Command="{Binding SelectAssemblyListCommand}" /> -->
+			<!-- 	</b:KeyTrigger> -->
+			<!-- 	<b:KeyTrigger Key="Delete" FiredOn="KeyDown"> -->
+			<!-- 		<b:InvokeCommandAction Command="{Binding DeleteCommand}" CommandParameter="{Binding ., RelativeSource={RelativeSource AncestorType=Window}}" /> -->
+			<!-- 	</b:KeyTrigger> -->
+			<!-- </b:Interaction.Triggers> -->
 		</ListBox>
 
 		<StackPanel Grid.Column="5" Grid.RowSpan="2" Margin="4, 8">

@@ -22,7 +22,6 @@
 							UseLayoutRounding="True">
 						<ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
 										  Content="{TemplateBinding Content}"
-										  ContentStringFormat="{TemplateBinding ContentStringFormat}"
 										  Margin="{TemplateBinding Padding}"
 										  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
 										  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />

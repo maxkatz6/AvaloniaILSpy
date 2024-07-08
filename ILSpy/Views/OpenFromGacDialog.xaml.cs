@@ -48,13 +48,11 @@ namespace ICSharpCode.ILSpy
 		{
 			InitializeComponent();
 			listView.ItemsSource = filteredEntries;
-			SortableGridViewColumn.SetCurrentSortColumn(listView, nameColumn);
-			SortableGridViewColumn.SetSortDirection(listView, ColumnSortDirection.Ascending);
 
 			new Thread(new ThreadStart(FetchGacContents)).Start();
 		}
 
-		protected override void OnClosing(CancelEventArgs e)
+		protected override void OnClosing(WindowClosingEventArgs e)
 		{
 			base.OnClosing(e);
 			cancelFetchThread = true;
@@ -123,7 +121,7 @@ namespace ICSharpCode.ILSpy
 		void FetchGacContents()
 		{
 			HashSet<string> fullNames = new HashSet<string>();
-			UpdateProgressBar(pg => { pg.Visibility = Visibility.Visible; pg.IsIndeterminate = true; });
+			UpdateProgressBar(pg => { pg.IsVisible = true; pg.IsIndeterminate = true; });
 			var list = UniversalAssemblyResolver.EnumerateGac().TakeWhile(_ => !cancelFetchThread).ToList();
 			UpdateProgressBar(pg => { pg.IsIndeterminate = false; pg.Maximum = list.Count; });
 			foreach (var r in list)
@@ -140,12 +138,12 @@ namespace ICSharpCode.ILSpy
 					}
 				}
 			}
-			UpdateProgressBar(pg => { pg.Visibility = Visibility.Hidden; });
+			UpdateProgressBar(pg => { pg.IsVisible = false; });
 		}
 
 		void UpdateProgressBar(Action<ProgressBar> updateAction)
 		{
-			Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => updateAction(gacReadingProgressBar)));
+			Dispatcher.UIThread.InvokeAsync((Action)(() => updateAction(gacReadingProgressBar)), DispatcherPriority.Normal);
 		}
 
 		void AddNewEntry(GacEntry entry)
@@ -183,8 +181,7 @@ namespace ICSharpCode.ILSpy
 
 		void OKButton_Click(object sender, RoutedEventArgs e)
 		{
-			this.DialogResult = true;
-			Close();
+			Close(true);
 		}
 
 		public string[] SelectedFileNames {

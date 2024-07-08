@@ -14,7 +14,6 @@ namespace ICSharpCode.ILSpy.Commands
 		private readonly Action action;
 		private readonly Func<bool> canExecute;
 
-		// TODO Avalonia: https://github.com/AvaloniaUI/Avalonia.Labs/pull/21
 		public event EventHandler CanExecuteChanged {
 			add { CommandManager.RequerySuggested += value; }
 			remove { CommandManager.RequerySuggested -= value; }

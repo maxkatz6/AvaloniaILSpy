@@ -121,7 +121,8 @@ namespace ICSharpCode.ILSpy.Metadata
 			entries.Add(new Entry(headers.PEHeaderStartOffset + reader.Offset, reader.ReadInt32(), 4, "Number of Data Directories", ""));
 
 			dataGrid.ItemsSource = entries;
-			dataGrid.SetDetailsVisibilityForItem(characteristics, Visibility.Visible);
+			// TODO Avalonia: missing API
+			// dataGrid.SetDetailsVisibilityForItem(characteristics, Visibility.Visible);
 
 			tabPage.Content = dataGrid;
 			return true;

@@ -1551,7 +1551,7 @@ namespace ICSharpCode.ILSpy
 
 		public bool SupportsLanguageSwitching => DockWorkspace.Instance.ActiveTabPage.SupportsLanguageSwitching;
 
-		public event SelectionChangedEventHandler SelectionChanged;
+		public event EventHandler<SelectionChangedEventArgs> SelectionChanged;
 
 		public IEnumerable<ILSpyTreeNode> SelectedNodes {
 			get {

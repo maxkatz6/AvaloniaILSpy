@@ -31,7 +31,9 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 using ICSharpCode.ILSpy.Docking;
 using ICSharpCode.ILSpy.Options;
@@ -80,8 +82,17 @@ namespace ICSharpCode.ILSpy.Search
 			ContextMenuProvider.Add(listBox);
 			MainWindow.Instance.CurrentAssemblyListChanged += MainWindow_Instance_CurrentAssemblyListChanged;
 			filterSettings = MainWindow.Instance.SessionSettings.FilterSettings;
-			CompositionTarget.Rendering += UpdateResults;
+			
+			// TODO Avalonia: there is must be a better way, even in WPF this code is questionable.
+			MainWindow.Instance.RequestAnimationFrame(OnFrameTick);
+			void OnFrameTick(TimeSpan _)
+			{
+				UpdateResults(this, EventArgs.Empty);
+				MainWindow.Instance.RequestAnimationFrame(OnFrameTick);
+			}
 
+			searchBox.AddHandler(KeyDownEvent, SearchBox_PreviewKeyDown, RoutingStrategies.Tunnel);
+			
 			// This starts empty search right away, so do at the end (we're still in ctor)
 			searchModeComboBox.SelectedIndex = (int)MainWindow.Instance.SessionSettings.SelectedSearchMode;
 		}
@@ -148,7 +159,7 @@ namespace ICSharpCode.ILSpy.Search
 			StartSearch(this.SearchTerm);
 		}
 
-		void ListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+		void ListBox_OnDoubleTapped(object sender, TappedEventArgs e)
 		{
 			JumpToSelectedItem();
 			e.Handled = true;
@@ -182,17 +193,17 @@ namespace ICSharpCode.ILSpy.Search
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
 			base.OnKeyDown(e);
-			if (e.Key == Key.T && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+			if (e.Key == Key.T && e.KeyModifiers.HasFlag(KeyModifiers.Control))
 			{
 				searchModeComboBox.SelectedIndex = (int)SearchMode.Type;
 				e.Handled = true;
 			}
-			else if (e.Key == Key.M && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+			else if (e.Key == Key.M && e.KeyModifiers.HasFlag(KeyModifiers.Control))
 			{
 				searchModeComboBox.SelectedIndex = (int)SearchMode.Member;
 				e.Handled = true;
 			}
-			else if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+			else if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control))
 			{
 				searchModeComboBox.SelectedIndex = (int)SearchMode.Literal;
 				e.Handled = true;
@@ -201,10 +212,10 @@ namespace ICSharpCode.ILSpy.Search
 
 		void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
 		{
-			if (e.Key == Key.Down && listBox.HasItems)
+			if (e.Key == Key.Down && listBox.ItemsSource.OfType<object>().Any())
 			{
 				e.Handled = true;
-				listBox.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+				listBox.FindDescendantOfType<DataGridRow>()?.Focus();
 				listBox.SelectedIndex = 0;
 			}
 		}
@@ -534,9 +545,10 @@ namespace ICSharpCode.ILSpy.Search
 		public ShowSearchCommand()
 			: base(NavigationCommands.Search)
 		{
-			NavigationCommands.Search.InputGestures.Clear();
-			NavigationCommands.Search.InputGestures.Add(new KeyGesture(Key.F, ModifierKeys.Control | ModifierKeys.Shift));
-			NavigationCommands.Search.InputGestures.Add(new KeyGesture(Key.E, ModifierKeys.Control));
+			// TODO Avalonia: handle platform specific way.
+			NavigationCommands.Search.Gestures.Clear();
+			NavigationCommands.Search.Gestures.Add(new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Shift));
+			NavigationCommands.Search.Gestures.Add(new KeyGesture(Key.E, KeyModifiers.Control));
 		}
 	}
 }
