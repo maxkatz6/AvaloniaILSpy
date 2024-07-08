@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
 using ICSharpCode.ILSpy.Properties;
@@ -36,16 +37,25 @@ namespace ICSharpCode.ILSpy
 			var assembly = (context.SelectedTreeNodes?.FirstOrDefault() as AssemblyTreeNode)?.LoadedAssembly;
 			if (assembly == null)
 				return;
-			OpenFileDialog dlg = new OpenFileDialog();
-			dlg.FileName = WholeProjectDecompiler.CleanUpFileName(assembly.ShortName) + ".pdb";
-			dlg.Filter = Resources.PortablePDBPdbAllFiles;
-			dlg.InitialDirectory = Path.GetDirectoryName(assembly.FileName);
-			if (dlg.ShowDialog() != true)
+			
+			var files = await context.TopLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+			{
+				SuggestedFileName = WholeProjectDecompiler.CleanUpFileName(assembly.ShortName) + ".pdb",
+				SuggestedStartLocation = context.TopLevel.StorageProvider.TryGetFolderFromPathAsync(Path.GetDirectoryName(assembly.FileName)).WaitOnDispatcherFrame(),
+				// TODO Avalonia: map to FileTypeChoices 
+				// FileTypeChoices = Resources.PortablePDBPdbAllFiles; 
+			});
+			var file = files.FirstOrDefault();
+
+			if (file is null)
 				return;
 
-			using (context.TreeView.LockUpdates())
+			if (file.TryGetLocalPath() is { } fileName)
 			{
-				await assembly.LoadDebugInfo(dlg.FileName);
+				using (context.TreeView.LockUpdates())
+				{
+					await assembly.LoadDebugInfo(fileName);
+				}
 			}
 
 			MainWindow.Instance.SelectNode(MainWindow.Instance.FindNodeByPath(new[] { assembly.FileName }, true));

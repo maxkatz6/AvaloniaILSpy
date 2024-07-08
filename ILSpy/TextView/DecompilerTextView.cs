@@ -39,6 +39,7 @@ using Avalonia.Data.Core;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
 using AvaloniaEdit;
@@ -153,12 +154,10 @@ namespace ICSharpCode.ILSpy.TextView
 			textEditor.TextArea.TextView.SetResourceReference(AvaloniaEdit.Rendering.TextView.CurrentLineBackgroundProperty, ResourceKeys.CurrentLineBackgroundBrush);
 			textEditor.TextArea.TextView.SetResourceReference(AvaloniaEdit.Rendering.TextView.CurrentLineBorderProperty, ResourceKeys.CurrentLineBorderPen);
 
-			DataObject.AddSettingDataHandler(textEditor.TextArea, OnSettingData);
-
 			this.DataContextChanged += DecompilerTextView_DataContextChanged;
 		}
 
-		private void DecompilerTextView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+		private void DecompilerTextView_DataContextChanged(object sender, EventArgs e)
 		{
 			if (this.DataContext is PaneModel model)
 			{
@@ -220,7 +219,7 @@ namespace ICSharpCode.ILSpy.TextView
 			{
 				return;
 			}
-			TextViewPosition? position = GetPositionFromMousePosition();
+			TextViewPosition? position = GetPositionFromMousePosition(e);
 			if (position == null)
 				return;
 			int offset = textEditor.Document.GetOffset(position.Value.Location);
@@ -816,7 +815,7 @@ namespace ICSharpCode.ILSpy.TextView
 			var task = this.nextDecompilationRun.TaskCompletionSource.Task;
 			if (!isDecompilationScheduled)
 			{
-				Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(
+				Dispatcher.UIThread.InvokeAsync(
 					delegate {
 						var context = this.nextDecompilationRun;
 						this.nextDecompilationRun = null;
@@ -824,7 +823,7 @@ namespace ICSharpCode.ILSpy.TextView
 							DoDecompile(context, DefaultOutputLengthLimit)
 								.ContinueWith(t => context.TaskCompletionSource.SetFromTask(t)).HandleExceptions();
 					}
-				));
+					, DispatcherPriority.Background);
 			}
 			return task;
 		}
@@ -995,10 +994,10 @@ namespace ICSharpCode.ILSpy.TextView
 					textEditor.TextArea.Focus();
 					textEditor.Select(pos, 0);
 					textEditor.ScrollTo(textEditor.TextArea.Caret.Line, textEditor.TextArea.Caret.Column);
-					Dispatcher.Invoke(DispatcherPriority.Background, new Action(
+					Dispatcher.UIThread.Invoke(new Action(
 						delegate {
 							CaretHighlightAdorner.DisplayCaretHighlightAnimation(textEditor.TextArea);
-						}));
+						}), DispatcherPriority.Background);
 					return;
 				}
 			}
@@ -1066,31 +1065,34 @@ namespace ICSharpCode.ILSpy.TextView
 			if (!treeNodes.Any())
 				return;
 
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.DefaultExt = language.FileExtension;
-			dlg.Filter = language.Name + "|*" + language.FileExtension + Properties.Resources.AllFiles;
-			dlg.FileName = WholeProjectDecompiler.CleanUpFileName(treeNodes.First().ToString()) + language.FileExtension;
-			if (dlg.ShowDialog() == true)
+			var result = TopLevel.GetTopLevel(this)!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
 			{
-				SaveToDisk(new DecompilationContext(language, treeNodes.ToArray(), options), dlg.FileName);
+				DefaultExtension = language.FileExtension,
+				// FileTypeChoices = language.Name + "|*" + language.FileExtension + Properties.Resources.AllFiles,
+				SuggestedFileName = WholeProjectDecompiler.CleanUpFileName(treeNodes.First().ToString()) + language.FileExtension
+			}).WaitOnDispatcherFrame();
+
+			if (result is not null)
+			{
+				SaveToDisk(new DecompilationContext(language, treeNodes.ToArray(), options), result);
 			}
 		}
 
-		public void SaveToDisk(ILSpy.Language language, IEnumerable<ILSpyTreeNode> treeNodes, DecompilationOptions options, Stream stream)
+		public void SaveToDisk(ILSpy.Language language, IEnumerable<ILSpyTreeNode> treeNodes, DecompilationOptions options, IStorageFile file)
 		{
-			SaveToDisk(new DecompilationContext(language, treeNodes.ToArray(), options), stream);
+			SaveToDisk(new DecompilationContext(language, treeNodes.ToArray(), options), file);
 		}
 
 		/// <summary>
 		/// Starts the decompilation of the given nodes.
 		/// The result will be saved to the given file name.
 		/// </summary>
-		void SaveToDisk(DecompilationContext context, Stream stream)
+		void SaveToDisk(DecompilationContext context, IStorageFile file)
 		{
 			RunWithCancellation(
 				delegate (CancellationToken ct) {
 					context.Options.CancellationToken = ct;
-					return SaveToDiskAsync(context, stream);
+					return SaveToDiskAsync(context, file);
 				})
 				.Then(output => ShowOutput(output))
 				.Catch((Exception ex) => {
@@ -1104,7 +1106,7 @@ namespace ICSharpCode.ILSpy.TextView
 				}).HandleExceptions();
 		}
 
-		Task<AvalonEditTextOutput> SaveToDiskAsync(DecompilationContext context, Stream stream)
+		Task<AvalonEditTextOutput> SaveToDiskAsync(DecompilationContext context, IStorageFile file)
 		{
 			TaskCompletionSource<AvalonEditTextOutput> tcs = new TaskCompletionSource<AvalonEditTextOutput>();
 			Thread thread = new Thread(new ThreadStart(
@@ -1122,7 +1124,8 @@ namespace ICSharpCode.ILSpy.TextView
 						stopwatch.Start();
 						try
 						{
-							using (stream)
+							using (file)
+							using (var stream = file.OpenReadAsync().WaitOnDispatcherFrame())
 							using (StreamWriter w = new(stream))
 							{
 								try
@@ -1170,7 +1173,7 @@ namespace ICSharpCode.ILSpy.TextView
 							}
 						}
 						output.WriteLine();
-						output.AddButton(null, Properties.Resources.OpenExplorer, delegate { Process.Start("explorer", "/select,\"" + fileName + "\""); });
+						output.AddButton(null, Properties.Resources.OpenExplorer, delegate { TopLevel.GetTopLevel(this)!.Launcher.LaunchFileAsync(file); });
 						output.WriteLine();
 						tcs.SetResult(output);
 					}
@@ -1191,6 +1194,7 @@ namespace ICSharpCode.ILSpy.TextView
 		#region Clipboard
 		private void OnSettingData(object sender, DataObjectSettingDataEventArgs e)
 		{
+			// TODO Avalonia
 			if (e.Format == DataFormats.Html && e.DataObject is DataObject dataObject)
 			{
 				e.CancelCommand();
@@ -1240,20 +1244,23 @@ namespace ICSharpCode.ILSpy.TextView
 		}
 		#endregion
 
-		internal ReferenceSegment? GetReferenceSegmentAtMousePosition()
+		internal ReferenceSegment? GetReferenceSegmentAtMousePosition(Func<Control, Point?> getPosition)
 		{
 			if (referenceElementGenerator.References == null)
 				return null;
-			TextViewPosition? position = GetPositionFromMousePosition();
+			TextViewPosition? position = GetPositionFromMousePosition(getPosition);
 			if (position == null)
 				return null;
 			int offset = textEditor.Document.GetOffset(position.Value.Location);
 			return referenceElementGenerator.References.FindSegmentsContaining(offset).FirstOrDefault();
 		}
 
-		internal TextViewPosition? GetPositionFromMousePosition()
+		internal TextViewPosition? GetPositionFromMousePosition(Func<Control, Point?> getPosition)
 		{
-			var position = textEditor.TextArea.TextView.GetPosition(Mouse.GetPosition(textEditor.TextArea.TextView) + textEditor.TextArea.TextView.ScrollOffset);
+			if (getPosition(textEditor.TextArea.TextView) is not { } relativePosition)
+				return null;
+
+			var position = textEditor.TextArea.TextView.GetPosition(relativePosition + textEditor.TextArea.TextView.ScrollOffset);
 			if (position == null)
 				return null;
 			var lineLength = textEditor.Document.GetLineByNumber(position.Value.Line).Length + 1;

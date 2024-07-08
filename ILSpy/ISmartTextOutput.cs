@@ -78,6 +78,7 @@ namespace ICSharpCode.ILSpy
 					{
 						button.Content = text;
 					}
+					// TODO Avalonia: pass TopLevel or use RoutedEventArgs inside.
 					button.Click += click;
 					return button;
 				});

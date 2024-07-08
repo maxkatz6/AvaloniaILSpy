@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
@@ -65,19 +66,25 @@ namespace ICSharpCode.ILSpy
 				MessageBox.Show(topLevel, string.Format(Resources.CannotCreatePDBFile, Path.GetFileName(assembly.FileName)));
 				return;
 			}
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = WholeProjectDecompiler.CleanUpFileName(assembly.ShortName) + ".pdb";
-			dlg.Filter = Resources.PortablePDBPdbAllFiles;
-			dlg.InitialDirectory = Path.GetDirectoryName(assembly.FileName);
-			if (dlg.ShowDialog() != true)
+			
+			var result = topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			{
+				// FileTypeChoices = Resources.PortablePDBPdbAllFiles,
+				SuggestedFileName = WholeProjectDecompiler.CleanUpFileName(assembly.ShortName) + ".pdb",
+				SuggestedStartLocation = topLevel.StorageProvider
+					.TryGetFolderFromPathAsync(Path.GetDirectoryName(assembly.FileName)!)
+					.WaitOnDispatcherFrame()
+			}).WaitOnDispatcherFrame();
+
+			if (result is null)
 				return;
+
 			DecompilationOptions options = MainWindow.Instance.CreateDecompilationOptions();
-			string fileName = dlg.FileName;
 			Docking.DockWorkspace.Instance.RunWithCancellation(ct => Task<AvalonEditTextOutput>.Factory.StartNew(() => {
 				AvalonEditTextOutput output = new AvalonEditTextOutput();
 				Stopwatch stopwatch = Stopwatch.StartNew();
 				options.CancellationToken = ct;
-				using (FileStream stream = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write))
+				using (var stream = result.OpenReadAsync().WaitOnDispatcherFrame())
 				{
 					try
 					{
@@ -95,7 +102,7 @@ namespace ICSharpCode.ILSpy
 				stopwatch.Stop();
 				output.WriteLine(Resources.GenerationCompleteInSeconds, stopwatch.Elapsed.TotalSeconds.ToString("F1"));
 				output.WriteLine();
-				output.AddButton(null, Resources.OpenExplorer, delegate { Process.Start("explorer", "/select,\"" + fileName + "\""); });
+				output.AddButton(null, Resources.OpenExplorer, delegate { topLevel.Launcher.LaunchFileAsync(result); });
 				output.WriteLine();
 				return output;
 			}, ct)).Then(output => Docking.DockWorkspace.Instance.ShowText(output)).HandleExceptions();

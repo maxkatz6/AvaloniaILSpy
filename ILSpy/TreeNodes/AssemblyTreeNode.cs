@@ -462,8 +462,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 						}
 					}
 				}
-				tabPage.ShowTextView(textView => textView.SaveToDisk(language, new[] { this }, options,
-					file.OpenWriteAsync().WaitOnDispatcherFrame()));
+				tabPage.ShowTextView(textView => textView.SaveToDisk(language, new[] { this }, options, file));
 			}
 			return true;
 		}
@@ -655,7 +654,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 				var path = node.LoadedAssembly.FileName;
 				if (File.Exists(path))
 				{
-					MainWindow.ExecuteCommand("explorer.exe", $"/select,\"{path}\"");
+					_ = context.TopLevel.Launcher.LaunchFileInfoAsync(new FileInfo(path));
 				}
 			}
 		}

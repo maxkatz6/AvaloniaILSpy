@@ -96,7 +96,7 @@ namespace ICSharpCode.ILSpy
 		{
 			ReferenceSegment reference;
 			if (textView != null)
-				reference = textView.GetReferenceSegmentAtMousePosition();
+				reference = textView.GetReferenceSegmentAtMousePosition(c => args.TryGetPosition(c, out var res) ? res : null);
 			else if (listBox?.SelectedItem is SearchResult result)
 				reference = new ReferenceSegment { Reference = result.Reference };
 			else if (listBox?.SelectedItem is TreeNodes.IMemberTreeNode provider)
@@ -109,7 +109,7 @@ namespace ICSharpCode.ILSpy
 				reference = new ReferenceSegment { Reference = dataGrid.SelectedItem };
 			else
 				reference = null;
-			var position = textView != null ? textView.GetPositionFromMousePosition() : null;
+			var position = textView != null ? textView.GetPositionFromMousePosition(c => args.TryGetPosition(c, out var res) ? res : null) : null;
 			var selectedTreeNodes = treeView != null ? treeView.GetTopLevelSelection().ToArray() : null;
 			var topLevel = treeView != null ? TopLevel.GetTopLevel(treeView) : null;
 			return new TextViewContext {

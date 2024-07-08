@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
@@ -49,18 +50,18 @@ namespace ICSharpCode.ILSpy
 			if (bundleNode == null)
 				return;
 			var assembly = selectedNodes[0].PackageEntry;
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(assembly.Name));
-			dlg.Filter = ".NET assemblies|*.dll;*.exe;*.winmd" + Resources.AllFiles;
-			dlg.InitialDirectory = Path.GetDirectoryName(bundleNode.LoadedAssembly.FileName);
-			if (dlg.ShowDialog() != true)
+			
+			var file = context.TopLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			{
+				SuggestedFileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(assembly.Name)),
+				SuggestedStartLocation = context.TopLevel.StorageProvider.TryGetFolderFromPathAsync(Path.GetDirectoryName(bundleNode.LoadedAssembly.FileName)!).WaitOnDispatcherFrame()
+				// TODO Avalonia: map to FileTypeChoices 
+				// FileTypeChoices = ".NET assemblies|*.dll;*.exe;*.winmd" + Resources.AllFiles; 
+			}).WaitOnDispatcherFrame();
+
+			if (file is null)
 				return;
-
-			string fileName = dlg.FileName;
-			string outputFolderOrFileName = fileName;
-			if (selectedNodes.Length > 1)
-				outputFolderOrFileName = Path.GetDirectoryName(outputFolderOrFileName);
-
+			
 			Docking.DockWorkspace.Instance.RunWithCancellation(ct => Task<AvalonEditTextOutput>.Factory.StartNew(() => {
 				AvalonEditTextOutput output = new AvalonEditTextOutput();
 				Stopwatch stopwatch = Stopwatch.StartNew();
@@ -68,25 +69,27 @@ namespace ICSharpCode.ILSpy
 
 				if (selectedNodes.Length == 1)
 				{
-					SaveEntry(output, selectedNodes[0].PackageEntry, outputFolderOrFileName);
+					SaveEntry(output, selectedNodes[0].PackageEntry, file);
 				}
 				else
 				{
+					using var parent = file.GetParentAsync().WaitOnDispatcherFrame();
 					foreach (var node in selectedNodes)
 					{
 						var fileName = Path.GetFileName(WholeProjectDecompiler.SanitizeFileName(node.PackageEntry.Name));
-						SaveEntry(output, node.PackageEntry, Path.Combine(outputFolderOrFileName, fileName));
+						using var newFile = parent.CreateFileAsync(fileName!).WaitOnDispatcherFrame();
+						SaveEntry(output, node.PackageEntry, newFile);
 					}
 				}
 				output.WriteLine(Resources.GenerationCompleteInSeconds, stopwatch.Elapsed.TotalSeconds.ToString("F1"));
 				output.WriteLine();
-				output.AddButton(null, Resources.OpenExplorer, delegate { Process.Start("explorer", "/select,\"" + fileName + "\""); });
+				output.AddButton(null, Resources.OpenExplorer, delegate { context.TopLevel.Launcher.LaunchFileAsync(file); });
 				output.WriteLine();
 				return output;
 			}, ct)).Then(output => Docking.DockWorkspace.Instance.ShowText(output)).HandleExceptions();
 		}
 
-		void SaveEntry(ITextOutput output, PackageEntry entry, string targetFileName)
+		void SaveEntry(ITextOutput output, PackageEntry entry, IStorageFile file)
 		{
 			output.Write(entry.Name + ": ");
 			using Stream stream = entry.TryOpenStream();
@@ -97,9 +100,9 @@ namespace ICSharpCode.ILSpy
 			}
 
 			stream.Position = 0;
-			using FileStream fileStream = new FileStream(targetFileName, FileMode.OpenOrCreate);
+			using Stream fileStream = file.OpenWriteAsync().WaitOnDispatcherFrame();
 			stream.CopyTo(fileStream);
-			output.WriteLine("Written to " + targetFileName);
+			output.WriteLine("Written to " + file.Name);
 		}
 
 		public bool IsEnabled(TextViewContext context) => true;

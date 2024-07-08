@@ -23,7 +23,9 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
+using ICSharpCode.Decompiler.CSharp.ProjectDecompiler;
 using ICSharpCode.Decompiler.IL;
 using ICSharpCode.ILSpy.Options;
 using ICSharpCode.ILSpy.Properties;
@@ -101,29 +103,23 @@ namespace ICSharpCode.ILSpy.TextView
 		/// <returns>The full path of the selected target file, or <c>null</c> if the user canceled.</returns>
 		static async Task<string> SelectSolutionFile(TopLevel topLevel)
 		{
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = "Solution.sln";
-			dlg.Filter = Resources.VisualStudioSolutionFileSlnAllFiles;
+			var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+			{
+				SuggestedFileName = "Solution.sln",
+				// TODO Avalonia: map to FileTypeChoices 
+				// FileTypeChoices = Resources.VisualStudioSolutionFileSlnAllFiles; 
+			});
 
-			if (dlg.ShowDialog() != true)
-			{
+			if (file is null)
 				return null;
-			}
 
-			string selectedPath = Path.GetDirectoryName(dlg.FileName);
-			bool directoryNotEmpty;
-			try
+			var directory = await file.GetParentAsync();
+			bool directoryNotEmpty = false;
+			await foreach (var item in directory!.GetItemsAsync())
 			{
-				directoryNotEmpty = Directory.EnumerateFileSystemEntries(selectedPath).Any();
-			}
-			catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is System.Security.SecurityException)
-			{
-				MessageBox.Show(
-					topLevel,
-					"The directory cannot be accessed. Please ensure it exists and you have sufficient rights to access it.",
-					"Solution directory not accessible",
-					MessageBoxButton.OK, MessageBoxImage.Error);
-				return null;
+				directoryNotEmpty = item.Name != file.Name;
+				if (directoryNotEmpty)
+					break;
 			}
 
 			if (directoryNotEmpty)
@@ -137,7 +133,7 @@ namespace ICSharpCode.ILSpy.TextView
 					return null; // -> abort
 			}
 
-			return dlg.FileName;
+			return file.TryGetLocalPath();
 		}
 	}
 }
