@@ -99,7 +99,8 @@ namespace ICSharpCode.ILSpy.Metadata
 			}));
 
 			dataGrid.ItemsSource = entries;
-			dataGrid.SetDetailsVisibilityForItem(characteristics, Visibility.Visible);
+			// TODO Avalonia: missing API
+			// dataGrid.SetDetailsVisibilityForItem(characteristics, Visibility.Visible);
 			tabPage.Content = dataGrid;
 			return true;
 		}

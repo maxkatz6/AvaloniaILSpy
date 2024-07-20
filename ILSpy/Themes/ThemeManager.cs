@@ -23,7 +23,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Styling;
 
 using AvaloniaEdit.Highlighting;
@@ -62,18 +64,27 @@ namespace ICSharpCode.ILSpy.Themes
 		public Button CreateButton()
 		{
 			return new Button {
-				Style = CreateButtonStyle()
+				Theme = CreateButtonStyle()
 			};
 		}
 
-		public Style CreateButtonStyle()
+		public ControlTheme CreateButtonStyle()
 		{
-			return new Style(typeof(Button), (Style)Application.Current.FindResource(typeof(Button)));
+			return new ControlTheme
+			{
+				TargetType = typeof(Button),
+				BasedOn = (ControlTheme)Application.Current.FindResource(typeof(Button))
+			};
 		}
 
-		public Style CreateToolBarButtonStyle()
+		public ControlTheme CreateToolBarButtonStyle()
 		{
-			return new Style(typeof(Button), (Style)Application.Current.FindResource(ToolBar.ButtonStyleKey));
+			return new ControlTheme
+			{
+				TargetType = typeof(Button),
+				// TODO Avalonia: ToolBar.ButtonStyleKey ???
+				BasedOn = (ControlTheme)Application.Current.FindResource(typeof(Button))
+			};
 		}
 
 		public void ApplyHighlightingColors(IHighlightingDefinition highlightingDefinition)
@@ -107,7 +118,8 @@ namespace ICSharpCode.ILSpy.Themes
 			_syntaxColors.Clear();
 
 			// Load SyntaxColor info from theme XAML
-			var resourceDictionary = new ResourceDictionary { Source = new Uri($"/themes/Theme.{themeFileName}.xaml", UriKind.Relative) };
+			var resourceDictionary = new ResourceInclude(new Uri("avares://ILSpy/"))
+				{ Source = new Uri($"/themes/Theme.{themeFileName}.xaml", UriKind.Relative) }.Loaded;
 			_themeDictionaryContainer.MergedDictionaries.Add(resourceDictionary);
 
 			// Iterate over keys first, because we don't want to instantiate all values eagerly, if we don't need them.

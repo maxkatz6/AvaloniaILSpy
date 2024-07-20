@@ -14,14 +14,12 @@
 					<ToggleButton.Template>
 						<ControlTemplate>
 							<Border Background="#01010101">
-								<Control x:Name="FilterSymbol" Style="{DynamicResource {x:Static dgx:DataGridFilter.IconStyleKey}}" />
+								<Control x:Name="FilterSymbol" Theme="{DynamicResource {x:Static dgx:DataGridFilter.IconStyleKey}}" />
 							</Border>
 						</ControlTemplate>
 					</ToggleButton.Template>
 				</ToggleButton>
-				<Popup d:DataContext="{d:DesignInstance dgx:DataGridFilterColumnControl}"
-					x:Name="Popup" IsOpen="{Binding Path=IsChecked, ElementName=ToggleButton, Mode=TwoWay}"
-					AllowsTransparency="True" StaysOpen="False">
+				<Popup x:Name="Popup" IsOpen="{Binding Path=IsChecked, ElementName=ToggleButton, Mode=TwoWay}">
 					<ListBox x:Name="ListBox" SelectionMode="Extended" SelectionChanged="ListBox_SelectionChanged">
 						<ListBox.ItemTemplate>
 							<DataTemplate>

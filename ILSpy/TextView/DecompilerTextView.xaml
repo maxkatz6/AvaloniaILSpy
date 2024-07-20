@@ -11,7 +11,7 @@
 			 xmlns:themes="clr-namespace:ICSharpCode.ILSpy.Themes">
 	<UserControl.Resources>
 		<SolidColorBrush x:Key="waitAdornerBackgoundBrush" Color="{DynamicResource SystemColorsWindowColor}" Opacity=".75"/>
-		<Style TargetType="{x:Type editing:TextArea}">
+		<ControlTheme TargetType="{x:Type editing:TextArea}">
 			<Setter Property="FocusVisualStyle" Value="{x:Null}" />
 			<Setter Property="SelectionForeground" Value="{x:Null}" />
 			<Setter Property="SelectionCornerRadius" Value="0.0" />
@@ -25,7 +25,7 @@
 					<Pen Brush="{DynamicResource SystemColorsHighlightBrush}" Thickness="0" />
 				</Setter.Value>
 			</Setter>
-		</Style>
+		</ControlTheme>
 	</UserControl.Resources>
 	<Grid>
 		<Border BorderThickness="1,1,0,1" BorderBrush="{DynamicResource SystemColorsControlLightBrush}">
@@ -69,7 +69,6 @@
 								Focusable="False"
 								x:Name="PART_ScrollViewer"
 								MouseWheelZoom="True"
-								CanContentScroll="True"
 								VerticalScrollBarVisibility="Visible"
 								HorizontalScrollBarVisibility="Visible"
 								Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TextArea}"
@@ -78,15 +77,16 @@
 								Background="{TemplateBinding Background}"
 								Padding="{TemplateBinding Padding}"
 								BorderBrush="{TemplateBinding BorderBrush}"
-								BorderThickness="{TemplateBinding BorderThickness}" />
-							<ControlTemplate.Triggers>
-								<Trigger Property="WordWrap"
-									Value="True">
-									<Setter TargetName="PART_ScrollViewer"
-										Property="HorizontalScrollBarVisibility"
-										Value="Disabled" />
-								</Trigger>
-							</ControlTemplate.Triggers>
+								BorderThickness="{TemplateBinding BorderThickness}"/>
+							<!-- TODO Avalonia: implement -->
+							<!-- <ControlTemplate.Triggers> -->
+							<!-- 	<Trigger Property="WordWrap" -->
+							<!-- 		Value="True"> -->
+							<!-- 		<Setter TargetName="PART_ScrollViewer" -->
+							<!-- 			Property="HorizontalScrollBarVisibility" -->
+							<!-- 			Value="Disabled" /> -->
+							<!-- 	</Trigger> -->
+							<!-- </ControlTemplate.Triggers> -->
 						</ControlTemplate>
 					</ae:TextEditor.Template>
 				</ae:TextEditor>

@@ -38,27 +38,27 @@ namespace ICSharpCode.ILSpy
 
 		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button, MessageBoxImage icon, MessageBoxResult defaultResult)
 		{
-			return Show(null, messageBoxText, caption, button, icon, defaultResult, MessageBoxOptions.None);
+			return Show(owner, messageBoxText, caption, button, icon, defaultResult, MessageBoxOptions.None);
 		}
 
 		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button, MessageBoxImage icon)
 		{
-			return Show(null, messageBoxText, caption, button, icon, MessageBoxResult.None, MessageBoxOptions.None);
+			return Show(owner, messageBoxText, caption, button, icon, MessageBoxResult.None, MessageBoxOptions.None);
 		}
 
 		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption, MessageBoxButton button)
 		{
-			return Show(null, messageBoxText, caption, button, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
+			return Show(owner, messageBoxText, caption, button, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
 		}
 
 		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption)
 		{
-			return Show(null, messageBoxText, caption, MessageBoxButton.OK, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
+			return Show(owner, messageBoxText, caption, MessageBoxButton.OK, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
 		}
 
 		public static MessageBoxResult Show(TopLevel owner, string messageBoxText)
 		{
-			return Show(null, messageBoxText, "Message", MessageBoxButton.OK, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
+			return Show(owner, messageBoxText, "Message", MessageBoxButton.OK, MessageBoxImage.None, MessageBoxResult.None, MessageBoxOptions.None);
 		}
 
 		public static MessageBoxResult Show(TopLevel owner, string messageBoxText, string caption,

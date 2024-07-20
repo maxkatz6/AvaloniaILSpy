@@ -339,17 +339,17 @@ namespace ICSharpCode.ILSpy.TextView
 
 		Inline ConvertReference(IEntity referencedEntity)
 		{
-			var h = new Hyperlink(new Run(ambience.ConvertSymbol(referencedEntity)));
+			var h = new HyperlinkButton() { Content = ambience.ConvertSymbol(referencedEntity) };
 			h.Click += (sender, e) => {
 				MainWindow.Instance.JumpToReference(referencedEntity);
 			};
-			return h;
+			return new InlineUIContainer(h);
 		}
 
 		void AddParam(string name, IEnumerable<XmlDocumentationElement> children)
 		{
 			Span span = new Span();
-			span.Inlines.Add(new Run(name ?? string.Empty) { FontStyle = FontStyles.Italic });
+			span.Inlines.Add(new Run(name ?? string.Empty) { FontStyle = FontStyle.Italic });
 			span.Inlines.Add(": ");
 			AddSection(span, children);
 		}
@@ -358,7 +358,7 @@ namespace ICSharpCode.ILSpy.TextView
 		{
 			if (name != null)
 			{
-				AddInline(new Run(name) { FontStyle = FontStyles.Italic });
+				AddInline(new Run(name) { FontStyle = FontStyle.Italic });
 			}
 		}
 
@@ -382,7 +382,7 @@ namespace ICSharpCode.ILSpy.TextView
 			{
 				if (element.Children.Any())
 				{
-					Hyperlink link = new Hyperlink();
+					var link = new HyperlinkButton();
 					link.Click += (sender, e) => {
 						MainWindow.Instance.JumpToReference(referencedEntity);
 					};

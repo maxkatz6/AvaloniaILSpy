@@ -42,7 +42,7 @@ namespace ICSharpCode.ILSpy
 			return image;
 		}
 
-		public static readonly IImage ILSpyIcon = new Bitmap(AssetLoader.Open(new Uri("avares://ILSpy/Images/ILSpy.ico")));
+		public static readonly Bitmap ILSpyIcon = new Bitmap(AssetLoader.Open(new Uri("avares://ILSpy/Images/ILSpy.ico")));
 
 		public static readonly IImage ViewCode = Load("ViewCode");
 		public static readonly IImage Save = Load("Save");

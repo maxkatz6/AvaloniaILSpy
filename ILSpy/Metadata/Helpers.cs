@@ -56,28 +56,23 @@ namespace ICSharpCode.ILSpy.Metadata
 				view = new MetaDataGrid() {
 					Name = "MetadataView",
 					GridLinesVisibility = DataGridGridLinesVisibility.None,
-					CanUserAddRows = false,
-					CanUserDeleteRows = false,
 					CanUserReorderColumns = false,
 					HeadersVisibility = DataGridHeadersVisibility.Column,
-					EnableColumnVirtualization = true,
-					EnableRowVirtualization = true,
 					RowHeight = 20,
 					IsReadOnly = true,
 					SelectionMode = DataGridSelectionMode.Single,
-					SelectionUnit = DataGridSelectionUnit.FullRow,
 					SelectedTreeNode = selectedNode,
-					CellStyle = (Style)MetadataTableViews.Instance["DataGridCellStyle"],
+					CellTheme = (ControlTheme)MetadataTableViews.Instance["DataGridCellStyle"],
 				};
 				ContextMenuProvider.Add(view);
-				DataGridFilter.SetIsAutoFilterEnabled(view, true);
-				DataGridFilter.SetContentFilterFactory(view, new RegexContentFilterFactory());
+				// TODO Avalonia missing API
+				//DataGridFilter.SetIsAutoFilterEnabled(view, true);
+				//DataGridFilter.SetContentFilterFactory(view, new RegexContentFilterFactory());
 			}
-			DataGridFilter.GetFilter(view).Clear();
+			// TODO Avalonia missing API
+			// DataGridFilter.GetFilter(view).Clear();
 			view.RowDetailsTemplate = null;
 			view.RowDetailsVisibilityMode = DataGridRowDetailsVisibilityMode.Collapsed;
-			view.EnableColumnVirtualization = true;
-			view.EnableRowVirtualization = true;
 			((MetaDataGrid)view).SelectedTreeNode = selectedNode;
 			if (!view.AutoGenerateColumns)
 				view.Columns.Clear();

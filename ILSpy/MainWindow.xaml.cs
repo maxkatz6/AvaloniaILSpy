@@ -29,8 +29,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-using AvalonDock.Layout.Serialization;
-
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -38,6 +36,7 @@ using Avalonia.Interactivity;
 using Avalonia.Labs.Input;
 using Avalonia.Markup.Xaml.Templates;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
 using ICSharpCode.Decompiler;
@@ -58,8 +57,6 @@ using ICSharpCode.ILSpy.ViewModels;
 using ICSharpCode.ILSpyX;
 using ICSharpCode.ILSpyX.Settings;
 using ICSharpCode.TreeView;
-
-using Microsoft.Win32;
 
 namespace ICSharpCode.ILSpy
 {
@@ -90,19 +87,19 @@ namespace ICSharpCode.ILSpy
 
 		public SharpTreeView AssemblyTreeView {
 			get {
-				return FindResource("AssemblyTreeView") as SharpTreeView;
+				return this.FindResource("AssemblyTreeView") as SharpTreeView;
 			}
 		}
 
 		public AnalyzerTreeView AnalyzerTreeView {
 			get {
-				return !IsLoaded ? null : FindResource("AnalyzerTreeView") as AnalyzerTreeView;
+				return !IsLoaded ? null : this.FindResource("AnalyzerTreeView") as AnalyzerTreeView;
 			}
 		}
 
 		public SearchPane SearchPane {
 			get {
-				return FindResource("SearchPane") as SearchPane;
+				return this.FindResource("SearchPane") as SearchPane;
 			}
 		}
 
@@ -130,7 +127,7 @@ namespace ICSharpCode.ILSpy
 			};
 
 			// Make sure Images are initialized on the UI thread.
-			this.Icon = Images.ILSpyIcon;
+			this.Icon = new WindowIcon(Images.ILSpyIcon);
 
 			this.DataContext = new MainWindowViewModel {
 				Workspace = new DockWorkspace(this),
@@ -172,7 +169,7 @@ namespace ICSharpCode.ILSpy
 					var windowMenuItem = mainMenu.Items.OfType<MenuItem>().First(m => (string)m.Tag == nameof(Properties.Resources._Window));
 					foreach (MenuItem menuItem in windowMenuItem.Items.OfType<MenuItem>())
 					{
-						if (menuItem.IsCheckable && menuItem.Tag is TabPageModel)
+						if (menuItem.ToggleType == MenuItemToggleType.CheckBox && menuItem.Tag is TabPageModel)
 						{
 							menuItem.IsChecked = menuItem.Tag == dock.ActiveTabPage;
 						}
@@ -194,15 +191,15 @@ namespace ICSharpCode.ILSpy
 					DecompileSelectedNodes(DockWorkspace.Instance.ActiveTabPage.GetState() as DecompilerTextViewState);
 					break;
 				case nameof(SessionSettings.CurrentCulture):
-					this.ShowMessageBox(Properties.Resources.SettingsChangeRestartRequired, "ILSpy");
+					MessageBox.Show(this, Properties.Resources.SettingsChangeRestartRequired, "ILSpy");
 					break;
 			}
 		}
 
 		void SetWindowBounds(Rect bounds)
 		{
-			this.Left = bounds.Left;
-			this.Top = bounds.Top;
+			// TODO Avalonia: validate
+			Position = PixelPoint.FromPoint(bounds.Position, DesktopScaling);
 			this.Width = bounds.Width;
 			this.Height = bounds.Height;
 		}
@@ -246,9 +243,9 @@ namespace ICSharpCode.ILSpy
 		Button MakeToolbarItem(Lazy<ICommand, IToolbarCommandMetadata> command)
 		{
 			return new Button {
-				Style = ThemeManager.Current.CreateToolBarButtonStyle(),
+				Theme = ThemeManager.Current.CreateToolBarButtonStyle(),
 				Command = CommandWrapper.Unwrap(command.Value),
-				ToolTip = Properties.Resources.ResourceManager.GetString(command.Metadata.ToolTip),
+				[ToolTip.TipProperty] = Properties.Resources.ResourceManager.GetString(command.Metadata.ToolTip),
 				Tag = command.Metadata.Tag,
 				Content = new Image {
 					Width = 16,
@@ -302,7 +299,7 @@ namespace ICSharpCode.ILSpy
 							}
 
 							menuItem.IsEnabled = entry.Metadata.IsEnabled;
-							menuItem.InputGestureText = entry.Metadata.InputGestureText;
+							menuItem.InputGesture = KeyGesture.Parse(entry.Metadata.InputGestureText);
 							parentMenuItem.Items.Add(menuItem);
 						}
 					}
@@ -361,11 +358,11 @@ namespace ICSharpCode.ILSpy
 			var templateSelector = new PaneTemplateSelector();
 			templateSelector.Mappings.Add(new TemplateMapping {
 				Type = typeof(TabPageModel),
-				Template = (DataTemplate)FindResource("DefaultContentTemplate")
+				Template = (DataTemplate)this.FindResource("DefaultContentTemplate")
 			});
 			templateSelector.Mappings.Add(new TemplateMapping {
 				Type = typeof(LegacyToolPaneModel),
-				Template = (DataTemplate)FindResource("DefaultContentTemplate")
+				Template = (DataTemplate)this.FindResource("DefaultContentTemplate")
 			});
 			foreach (var toolPane in toolPanes)
 			{
@@ -532,7 +529,7 @@ namespace ICSharpCode.ILSpy
 					menuItem.Command = new TabPageCommand(pane);
 					menuItem.Header = pane.Title.Length > 20 ? pane.Title.Substring(20) + "..." : pane.Title;
 					menuItem.Tag = pane;
-					menuItem.IsCheckable = true;
+					menuItem.ToggleType = MenuItemToggleType.CheckBox;
 
 					return menuItem;
 				}
@@ -543,7 +540,7 @@ namespace ICSharpCode.ILSpy
 				var windowMenuItem = Instance.mainMenu.Items.OfType<MenuItem>().First(m => (string)m.Tag == nameof(Properties.Resources._Window));
 				foreach (MenuItem menuItem in windowMenuItem.Items.OfType<MenuItem>())
 				{
-					if (menuItem.IsCheckable && menuItem.Tag == sender)
+					if (menuItem.ToggleType == MenuItemToggleType.CheckBox && menuItem.Tag == sender)
 					{
 						string title = ((TabPageModel)sender).Title;
 						menuItem.Header = title.Length > 20 ? title.Substring(0, 20) + "..." : title;
@@ -576,81 +573,82 @@ namespace ICSharpCode.ILSpy
 		#endregion
 
 		#region Message Hook
-		protected override void OnSourceInitialized(EventArgs e)
-		{
-			base.OnSourceInitialized(e);
-			PresentationSource source = PresentationSource.FromVisual(this);
-			HwndSource hwndSource = source as HwndSource;
-			if (hwndSource != null)
-			{
-				hwndSource.AddHook(WndProc);
-			}
-			SingleInstanceHandling.ReleaseSingleInstanceMutex();
-			// Validate and Set Window Bounds
-			Rect bounds = Rect.Transform(sessionSettings.WindowBounds, source.CompositionTarget.TransformToDevice);
-			var boundsRect = new System.Drawing.Rectangle((int)bounds.Left, (int)bounds.Top, (int)bounds.Width, (int)bounds.Height);
-			bool boundsOK = false;
-			foreach (var screen in System.Windows.Forms.Screen.AllScreens)
-			{
-				var intersection = System.Drawing.Rectangle.Intersect(boundsRect, screen.WorkingArea);
-				if (intersection.Width > 10 && intersection.Height > 10)
-					boundsOK = true;
-			}
-			if (boundsOK)
-				SetWindowBounds(sessionSettings.WindowBounds);
-			else
-				SetWindowBounds(SessionSettings.DefaultWindowBounds);
-
-			this.WindowState = sessionSettings.WindowState;
-		}
-
-		unsafe IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-		{
-			if (msg == CommandLineHelpers.WM_COPYDATA)
-			{
-				CopyDataStruct* copyData = (CopyDataStruct*)lParam;
-				string data = new string((char*)copyData->Buffer, 0, copyData->Size / sizeof(char));
-				if (data.StartsWith("ILSpy:\r\n", StringComparison.Ordinal))
-				{
-					data = data.Substring(8);
-					List<string> lines = new List<string>();
-					using (StringReader r = new StringReader(data))
-					{
-						string line;
-						while ((line = r.ReadLine()) != null)
-							lines.Add(line);
-					}
-					var args = new CommandLineArguments(lines);
-					if (HandleCommandLineArguments(args))
-					{
-						if (!args.NoActivate && WindowState == WindowState.Minimized)
-							WindowState = WindowState.Normal;
-						HandleCommandLineArgumentsAfterShowList(args);
-						handled = true;
-						return (IntPtr)1;
-					}
-				}
-			}
-			return IntPtr.Zero;
-		}
+		// TODO Avalonia: what even this is.
+		// protected override void OnSourceInitialized(EventArgs e)
+		// {
+		// 	base.OnSourceInitialized(e);
+		// 	PresentationSource source = PresentationSource.FromVisual(this);
+		// 	HwndSource hwndSource = source as HwndSource;
+		// 	if (hwndSource != null)
+		// 	{
+		// 		hwndSource.AddHook(WndProc);
+		// 	}
+		// 	SingleInstanceHandling.ReleaseSingleInstanceMutex();
+		// 	// Validate and Set Window Bounds
+		// 	Rect bounds = Rect.Transform(sessionSettings.WindowBounds, source.CompositionTarget.TransformToDevice);
+		// 	var boundsRect = new System.Drawing.Rectangle((int)bounds.Left, (int)bounds.Top, (int)bounds.Width, (int)bounds.Height);
+		// 	bool boundsOK = false;
+		// 	foreach (var screen in System.Windows.Forms.Screen.AllScreens)
+		// 	{
+		// 		var intersection = System.Drawing.Rectangle.Intersect(boundsRect, screen.WorkingArea);
+		// 		if (intersection.Width > 10 && intersection.Height > 10)
+		// 			boundsOK = true;
+		// 	}
+		// 	if (boundsOK)
+		// 		SetWindowBounds(sessionSettings.WindowBounds);
+		// 	else
+		// 		SetWindowBounds(SessionSettings.DefaultWindowBounds);
+		//
+		// 	this.WindowState = sessionSettings.WindowState;
+		// }
+		//
+		// unsafe IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+		// {
+		// 	if (msg == CommandLineHelpers.WM_COPYDATA)
+		// 	{
+		// 		CopyDataStruct* copyData = (CopyDataStruct*)lParam;
+		// 		string data = new string((char*)copyData->Buffer, 0, copyData->Size / sizeof(char));
+		// 		if (data.StartsWith("ILSpy:\r\n", StringComparison.Ordinal))
+		// 		{
+		// 			data = data.Substring(8);
+		// 			List<string> lines = new List<string>();
+		// 			using (StringReader r = new StringReader(data))
+		// 			{
+		// 				string line;
+		// 				while ((line = r.ReadLine()) != null)
+		// 					lines.Add(line);
+		// 			}
+		// 			var args = new CommandLineArguments(lines);
+		// 			if (HandleCommandLineArguments(args))
+		// 			{
+		// 				if (!args.NoActivate && WindowState == WindowState.Minimized)
+		// 					WindowState = WindowState.Normal;
+		// 				HandleCommandLineArgumentsAfterShowList(args);
+		// 				handled = true;
+		// 				return (IntPtr)1;
+		// 			}
+		// 		}
+		// 	}
+		// 	return IntPtr.Zero;
+		// }
 		#endregion
 
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
 			base.OnKeyDown(e);
-			if (!e.Handled && (e.KeyModifiers & KeyModifiers.Alt) != 0 && e.Key == Key.System)
+			if (!e.Handled && (e.KeyModifiers & KeyModifiers.Alt) != 0)
 			{
-				switch (e.SystemKey)
+				switch (e.PhysicalKey)
 				{
-					case Key.A:
+					case PhysicalKey.A:
 						assemblyListComboBox.Focus();
 						e.Handled = true;
 						break;
-					case Key.L:
+					case PhysicalKey.L:
 						languageComboBox.Focus();
 						e.Handled = true;
 						break;
-					case Key.E: // Alt+V was already taken by _View menu
+					case PhysicalKey.E: // Alt+V was already taken by _View menu
 						languageVersionComboBox.Focus();
 						e.Handled = true;
 						break;
@@ -731,7 +729,7 @@ namespace ICSharpCode.ILSpy
 					IEntity mr = await Task.Run(() => FindEntityInRelevantAssemblies(navigateTo, relevantAssemblies));
 					// Make sure we wait for assemblies being loaded...
 					// BeginInvoke in LoadedAssembly.LookupReferencedAssemblyInternal
-					await Dispatcher.InvokeAsync(delegate { }, DispatcherPriority.Normal);
+					await Dispatcher.UIThread.InvokeAsync(delegate { }, DispatcherPriority.Normal);
 					if (mr != null && mr.ParentModule.PEFile != null)
 					{
 						found = true;
@@ -971,7 +969,7 @@ namespace ICSharpCode.ILSpy
 
 		void updatePanelCloseButtonClick(object sender, RoutedEventArgs e)
 		{
-			updatePanel.Visibility = Visibility.Collapsed;
+			updatePanel.IsVisible = false;
 		}
 
 		async void downloadOrCheckUpdateButtonClick(object sender, RoutedEventArgs e)
@@ -982,7 +980,7 @@ namespace ICSharpCode.ILSpy
 			}
 			else
 			{
-				updatePanel.Visibility = Visibility.Collapsed;
+				updatePanel.IsVisible = false;
 				string downloadUrl = await NotifyOfUpdatesStrategy.CheckForUpdatesAsync(ILSpySettings.Load());
 				AdjustUpdateUIAfterCheck(downloadUrl, true);
 			}
@@ -991,7 +989,7 @@ namespace ICSharpCode.ILSpy
 		void AdjustUpdateUIAfterCheck(string downloadUrl, bool displayMessage)
 		{
 			updateAvailableDownloadUrl = downloadUrl;
-			updatePanel.Visibility = displayMessage ? Visibility.Visible : Visibility.Collapsed;
+			updatePanel.IsVisible = displayMessage;
 			if (downloadUrl != null)
 			{
 				updatePanelMessage.Text = Properties.Resources.ILSpyVersionAvailable;
@@ -1070,11 +1068,7 @@ namespace ICSharpCode.ILSpy
 				typeof(object).Assembly,
 				typeof(Uri).Assembly,
 				typeof(System.Linq.Enumerable).Assembly,
-				typeof(System.Xml.XmlDocument).Assembly,
-				typeof(System.Windows.Markup.MarkupExtension).Assembly,
-				typeof(System.Windows.Rect).Assembly,
-				typeof(System.Windows.UIElement).Assembly,
-				typeof(System.Windows.FrameworkElement).Assembly
+				typeof(System.Xml.XmlDocument).Assembly
 			};
 			foreach (System.Reflection.Assembly asm in initialAssemblies)
 				assemblyList.OpenAssembly(asm.Location);
@@ -1145,7 +1139,7 @@ namespace ICSharpCode.ILSpy
 				}
 				else
 				{
-					MessageBox.Show(Properties.Resources.NavigationFailed, "ILSpy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+					MessageBox.Show(this, Properties.Resources.NavigationFailed, "ILSpy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
 				}
 			}
 		}
@@ -1377,16 +1371,17 @@ namespace ICSharpCode.ILSpy
 		#endregion
 
 		#region Open/Refresh
-		void OpenCommandExecuted(object sender, ExecutedRoutedEventArgs e)
+		async void OpenCommandExecuted(object sender, ExecutedRoutedEventArgs e)
 		{
 			e.Handled = true;
-			OpenFileDialog dlg = new OpenFileDialog();
-			dlg.Filter = ".NET assemblies|*.dll;*.exe;*.winmd|Nuget Packages (*.nupkg)|*.nupkg|All files|*.*";
-			dlg.Multiselect = true;
-			dlg.RestoreDirectory = true;
-			if (dlg.ShowDialog() == true)
+			var items = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
+				AllowMultiple = true,
+				// FileTypeFilter = ".NET assemblies|*.dll;*.exe;*.winmd|Nuget Packages (*.nupkg)|*.nupkg|All files|*.*"; 
+			});
+			var fileNames = items.Select(f => f.TryGetLocalPath()).Where(p => p is not null).ToArray();
+			if (fileNames.Length != 0)
 			{
-				OpenFiles(dlg.FileNames);
+				OpenFiles(fileNames);
 			}
 		}
 
@@ -1654,6 +1649,8 @@ namespace ICSharpCode.ILSpy
 				return true;
 			}
 
+			return false;
+
 			void RecordHistory()
 			{
 				if (!recordHistory)
@@ -1669,17 +1666,20 @@ namespace ICSharpCode.ILSpy
 			}
 		}
 
-		protected override void OnStateChanged(EventArgs e)
+		protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
 		{
-			base.OnStateChanged(e);
-			// store window state in settings only if it's not minimized
-			if (this.WindowState != System.Windows.WindowState.Minimized)
-				sessionSettings.WindowState = this.WindowState;
-		}
+			base.OnPropertyChanged(change);
 
-		protected override void OnClosing(CancelEventArgs e)
+			if (change.Property == WindowStateProperty)
+			{
+				// store window state in settings only if it's not minimized
+				if (this.WindowState != WindowState.Minimized)
+					sessionSettings.WindowState = this.WindowState;
+			}
+		}
+		
+		private void OnClosing(object sender, WindowClosingEventArgs e)
 		{
-			base.OnClosing(e);
 			sessionSettings.ActiveAssemblyList = assemblyList.ListName;
 			sessionSettings.ActiveTreeViewPath = GetPathForNode(AssemblyTreeView.SelectedItem as SharpTreeNode);
 			sessionSettings.ActiveAutoLoadedAssembly = GetAutoLoadedAssemblyNode(AssemblyTreeView.SelectedItem as SharpTreeNode);
@@ -1713,8 +1713,7 @@ namespace ICSharpCode.ILSpy
 
 		public void SetStatus(string status, Brush foreground)
 		{
-			if (this.statusBar.Visibility == Visibility.Collapsed)
-				this.statusBar.Visibility = Visibility.Visible;
+			this.statusBar.IsVisible = !string.IsNullOrEmpty(status);
 			this.StatusLabel.Foreground = foreground;
 			this.StatusLabel.Text = status;
 		}

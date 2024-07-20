@@ -111,13 +111,13 @@ namespace ICSharpCode.ILSpy.TextView
 			this.bracketHighlightRenderer = new BracketHighlightRenderer(textEditor.TextArea.TextView);
 			textEditor.TextArea.TextView.ElementGenerators.Add(uiElementGenerator);
 			textEditor.Options.RequireControlModifierForHyperlinkClick = false;
-			textEditor.TextArea.TextView.MouseHover += TextViewMouseHover;
-			textEditor.TextArea.TextView.MouseHoverStopped += TextViewMouseHoverStopped;
-			textEditor.TextArea.PreviewMouseDown += TextAreaMouseDown;
-			textEditor.TextArea.PreviewMouseUp += TextAreaMouseUp;
+			textEditor.TextArea.TextView.PointerHover += TextViewMouseHover;
+			textEditor.TextArea.TextView.PointerHoverStopped += TextViewMouseHoverStopped;
+			textEditor.TextArea.AddHandler(PointerPressedEvent, TextAreaMouseDown, RoutingStrategies.Tunnel);
+			textEditor.TextArea.AddHandler(PointerReleasedEvent, TextAreaMouseUp, RoutingStrategies.Tunnel);
 			textEditor.TextArea.Caret.PositionChanged += HighlightBrackets;
-			textEditor.MouseMove += TextEditorMouseMove;
-			textEditor.MouseLeave += TextEditorMouseLeave;
+			textEditor.PointerMoved += TextEditorMouseMove;
+			textEditor.PointerExited += TextEditorMouseLeave;
 			textEditor.SetBinding(Control.FontFamilyProperty, new Binding { Source = MainWindow.Instance.CurrentDisplaySettings, Path = new PropertyPath("SelectedFont") });
 			textEditor.SetBinding(Control.FontSizeProperty, new Binding { Source = MainWindow.Instance.CurrentDisplaySettings, Path = new PropertyPath("SelectedFontSize") });
 			textEditor.SetBinding(TextEditor.WordWrapProperty, new Binding { Source = MainWindow.Instance.CurrentDisplaySettings, Path = new PropertyPath("EnableWordWrap") });
@@ -213,13 +213,13 @@ namespace ICSharpCode.ILSpy.TextView
 		ToolTip? toolTip;
 		Popup? popupToolTip;
 
-		void TextViewMouseHover(object sender, MouseEventArgs e)
+		void TextViewMouseHover(object sender, PointerEventArgs e)
 		{
 			if (!TryCloseExistingPopup(false))
 			{
 				return;
 			}
-			TextViewPosition? position = GetPositionFromMousePosition(e);
+			TextViewPosition? position = GetPositionFromMousePosition(c => e.GetPosition(c));
 			if (position == null)
 				return;
 			int offset = textEditor.Document.GetOffset(position.Value.Location);
@@ -288,7 +288,7 @@ namespace ICSharpCode.ILSpy.TextView
 		}
 
 		/// <summary> Returns Popup position based on mouse position, in device independent units </summary>
-		Point GetPopupPosition(MouseEventArgs mouseArgs)
+		Point GetPopupPosition(PointerEventArgs mouseArgs)
 		{
 			Point mousePos = mouseArgs.GetPosition(this);
 			// align Popup with line bottom
@@ -306,7 +306,7 @@ namespace ICSharpCode.ILSpy.TextView
 			}
 		}
 
-		void TextViewMouseHoverStopped(object sender, MouseEventArgs e)
+		void TextViewMouseHoverStopped(object sender, PointerEventArgs e)
 		{
 			// Non-popup tooltips get closed as soon as the mouse starts moving again
 			if (toolTip != null)
@@ -319,7 +319,7 @@ namespace ICSharpCode.ILSpy.TextView
 		double distanceToPopupLimit;
 		const double MaxMovementAwayFromPopup = 5;
 
-		void TextEditorMouseMove(object sender, MouseEventArgs e)
+		void TextEditorMouseMove(object sender, PointerEventArgs e)
 		{
 			if (popupToolTip != null)
 			{
@@ -337,9 +337,9 @@ namespace ICSharpCode.ILSpy.TextView
 			}
 		}
 
-		double GetDistanceToPopup(MouseEventArgs e)
+		double GetDistanceToPopup(PointerEventArgs e)
 		{
-			Point p = popupToolTip!.Child.PointFromScreen(PointToScreen(e.GetPosition(this)));
+			Point p = popupToolTip!.Child.PointToClient(this.PointToScreen(e.GetPosition(this)));
 			Size size = popupToolTip.Child.RenderSize;
 			double x = 0;
 			if (p.X < 0)
@@ -354,9 +354,9 @@ namespace ICSharpCode.ILSpy.TextView
 			return Math.Sqrt(x * x + y * y);
 		}
 
-		void TextEditorMouseLeave(object sender, MouseEventArgs e)
+		void TextEditorMouseLeave(object sender, PointerEventArgs e)
 		{
-			if (popupToolTip != null && !popupToolTip.IsMouseOver)
+			if (popupToolTip != null && !popupToolTip.IsPointerOver)
 			{
 				// do not close popup if mouse moved from editor to popup
 				TryCloseExistingPopup(false);
@@ -496,11 +496,11 @@ namespace ICSharpCode.ILSpy.TextView
 					MaxHeight = 400,
 					Child = viewer
 				};
-				border.SetResourceReference(Border.BackgroundProperty, SystemColors.ControlBrushKey);
-				border.SetResourceReference(Border.BorderBrushProperty, SystemColors.ControlDarkBrushKey);
+				border.SetResourceReference(Border.BackgroundProperty, themes:ResourceKeys.ControlBrushKey);
+				border.SetResourceReference(Border.BorderBrushProperty, themes:ResourceKeys.ControlDarkBrushKey);
 
 				this.Child = border;
-				viewer.SetResourceReference(ForegroundProperty, SystemColors.InfoTextBrushKey);
+				viewer.SetResourceReference(ForegroundProperty, themes:ResourceKeys.InfoTextBrushKey);
 				document.TextAlignment = TextAlignment.Left;
 				document.FontSize = fontSize;
 				document.FontFamily = SystemFonts.SmallCaptionFontFamily;

@@ -10,10 +10,10 @@
 	<TemplatedControl.Template>
 		<ControlTemplate>
 			<Grid>
-				<Control Style="{DynamicResource {x:Static dgx:DataGridFilter.IconStyleKey}}"/>
+				<Control Theme="{DynamicResource {x:Static dgx:DataGridFilter.IconStyleKey}}"/>
 				<StackPanel x:Name="inputPanel" Orientation="Horizontal" Margin="4,0,0,0">
 					<TextBlock Text="0x"/>
-					<TextBox x:Name="textBox" TextChanged="TextBox_TextChanged" MinWidth="20" Style="{DynamicResource {x:Static dgx:DataGridFilter.ColumnHeaderSearchTextBoxStyleKey}}" />
+					<TextBox x:Name="textBox" TextChanged="TextBox_TextChanged" MinWidth="20" Theme="{DynamicResource {x:Static dgx:DataGridFilter.ColumnHeaderSearchTextBoxStyleKey}}" />
 				</StackPanel>
 			</Grid>
 			<ControlTemplate.Triggers>

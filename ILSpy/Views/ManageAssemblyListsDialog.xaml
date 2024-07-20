@@ -4,6 +4,8 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
 	xmlns:properties="clr-namespace:ICSharpCode.ILSpy.Properties"
 	xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+	xmlns:ilSpy="clr-namespace:ICSharpCode.ILSpy"
+	xmlns:viewModels="clr-namespace:ICSharpCode.ILSpy.ViewModels"
 	Title="{x:Static properties:Resources.ManageAssemblyLists}"
 	Theme="{DynamicResource DialogWindow}"
 	WindowStartupLocation="CenterOwner"
@@ -12,15 +14,16 @@
 	MinHeight="250"
 	Height="350"
 	Width="480"
+	x:DataType="viewModels:ManageAssemblyListsViewModel"
 	FocusManager.FocusedElement="{Binding ElementName=listView}">
 	<Window.Resources>
-		<ContextMenu x:Key="PreconfiguredAssemblyListsMenu" ItemsSource="{Binding PreconfiguredAssemblyLists}" DisplayMemberPath="Name">
-			<ContextMenu.ItemContainerStyle>
-				<Style TargetType="MenuItem">
-					<Setter Property="Command" Value="{Binding DataContext.CreatePreconfiguredAssemblyListCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+		<ContextMenu x:Key="PreconfiguredAssemblyListsMenu" ItemsSource="{Binding PreconfiguredAssemblyLists}" DisplayMemberBinding="{Binding Name}">
+			<ContextMenu.ItemContainerTheme>
+				<ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+					<Setter Property="Command" Value="{Binding $parent[Window].((ilSpy:MainWindowViewModel)DataContext).CreatePreconfiguredAssemblyListCommand}" />
 					<Setter Property="CommandParameter" Value="{Binding}" />
-				</Style>
-			</ContextMenu.ItemContainerStyle>
+				</ControlTheme>
+			</ContextMenu.ItemContainerTheme>
 		</ContextMenu>
 	</Window.Resources>
 	<Grid Margin="12,8">

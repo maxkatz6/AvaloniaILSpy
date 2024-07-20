@@ -17,6 +17,7 @@
   <ItemGroup>
     <PackageReference Include="AvaloniaEdit" />
     <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Themes.Simple" />
     <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="Avalonia.Labs.CommandManager" />
     <PackageReference Include="Microsoft.VisualStudio.Composition" />

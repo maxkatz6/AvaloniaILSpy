@@ -48,24 +48,28 @@ namespace ICSharpCode.ILSpy.Commands
 
 		public bool IsVisible(TextViewContext context)
 		{
+			return false;
 			return context.DataGrid?.Name == "MetadataView" && GetSelectedToken(context.DataGrid, out _) != null;
 		}
 
 		private int? GetSelectedToken(DataGrid grid, out PEFile module)
 		{
+			// TODO Avalonia: DataGrid doesn't have single cell selection. TreeDataGrid does. Rewrite time?
 			module = null;
-			if (grid == null)
-				return null;
-			var cell = grid.CurrentCell;
-			if (!cell.IsValid)
-				return null;
-			Type type = cell.Item.GetType();
-			var property = type.GetProperty(cell.Column.Header.ToString());
-			var moduleField = type.GetField("module", BindingFlags.NonPublic | BindingFlags.Instance);
-			if (property == null || property.PropertyType != typeof(int) || !property.GetCustomAttributes(false).Any(a => a is ColumnInfoAttribute { Kind: ColumnKind.Token } c))
-				return null;
-			module = (PEFile)moduleField.GetValue(cell.Item);
-			return (int)property.GetValue(cell.Item);
+			return null;
+			// module = null;
+			// if (grid == null)
+			// 	return null;
+			// var cell = grid.CurrentCell;
+			// if (!cell.IsValid)
+			// 	return null;
+			// Type type = cell.Item.GetType();
+			// var property = type.GetProperty(cell.Column.Header.ToString());
+			// var moduleField = type.GetField("module", BindingFlags.NonPublic | BindingFlags.Instance);
+			// if (property == null || property.PropertyType != typeof(int) || !property.GetCustomAttributes(false).Any(a => a is ColumnInfoAttribute { Kind: ColumnKind.Token } c))
+			// 	return null;
+			// module = (PEFile)moduleField.GetValue(cell.Item);
+			// return (int)property.GetValue(cell.Item);
 		}
 	}
 
@@ -100,9 +104,11 @@ namespace ICSharpCode.ILSpy.Commands
 			var cell = hit.FindAncestorOfType<DataGridCell>();
 			if (cell == null)
 				return null;
-			return cell.DataContext.GetType()
-				.GetProperty(cell.Column.Header.ToString(), BindingFlags.Instance | BindingFlags.Public)
-				.GetValue(cell.DataContext).ToString();
+			// Avalonia TODO why?
+			// return cell.DataContext.GetType()
+			// 	.GetProperty(cell.Column.Header.ToString(), BindingFlags.Instance | BindingFlags.Public)
+			// 	.GetValue(cell.DataContext).ToString();
+			return cell.Content?.ToString();
 		}
 	}
 }

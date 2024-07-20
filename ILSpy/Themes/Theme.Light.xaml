@@ -2,11 +2,11 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:themes="clr-namespace:ICSharpCode.ILSpy.Themes">
 	<ResourceDictionary.MergedDictionaries>
-		<ResourceDictionary Source="Base.Light.xaml" />
+		<ResourceInclude Source="Base.Light.xaml" />
 	</ResourceDictionary.MergedDictionaries>
 
-	<SolidColorBrush x:Key="{x:Static themes:ResourceKeys.TextBackgroundBrush}" Color="{DynamicResource {x:Static SystemColors.InfoColorKey}}" />
-	<SolidColorBrush x:Key="{x:Static themes:ResourceKeys.TextForegroundBrush}" Color="{DynamicResource {x:Static SystemColors.InfoTextColorKey}}" />
+	<SolidColorBrush x:Key="{x:Static themes:ResourceKeys.TextBackgroundBrush}" Color="{DynamicResource {x:Static themes:ResourceKeys.InfoColorKey}}" />
+	<SolidColorBrush x:Key="{x:Static themes:ResourceKeys.TextForegroundBrush}" Color="{DynamicResource {x:Static themes:ResourceKeys.InfoTextColorKey}}" />
 	<SolidColorBrush x:Key="{x:Static themes:ResourceKeys.SearchResultBackgroundBrush}" Color="LightGreen" />
 	<SolidColorBrush x:Key="{x:Static themes:ResourceKeys.LineNumbersForegroundBrush}" Color="Gray" />
 	<SolidColorBrush x:Key="{x:Static themes:ResourceKeys.CurrentLineBackgroundBrush}" Color="#1614DCE0" />

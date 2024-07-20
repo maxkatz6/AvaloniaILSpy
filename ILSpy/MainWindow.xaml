@@ -14,6 +14,7 @@
 	MinWidth="250"
 	MinHeight="200"
 	UseLayoutRounding="True"
+	Closing="OnClosing"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d:DesignHeight="500" d:DesignWidth="500"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
 	xmlns:styles="urn:TomsToolbox.Wpf.Styles"
@@ -22,6 +23,8 @@
 	xmlns:toms="urn:TomsToolbox"
 	xmlns:input="using:Avalonia.Labs.Input"
 	xmlns:shared="using:ICSharpCode"
+	xmlns:system="clr-namespace:System;assembly=System.Runtime"
+	xmlns:treeNodes="clr-namespace:ICSharpCode.ILSpy.TreeNodes"
 	d:DataContext="{d:DesignInstance local:MainWindowViewModel}"
 >
 	<Window.Resources>
@@ -35,35 +38,36 @@
 				DragDrop.AllowDrop="True"
 				BorderThickness="0" IsVisible="True">
 			<tv:SharpTreeView.ItemContainerTheme>
-				<Style TargetType="tv:SharpTreeViewItem">
-
+				<ControlTheme TargetType="tv:SharpTreeViewItem">
 					<Setter Property="Template">
 						<Setter.Value>
-							<ControlTemplate TargetType="{x:Type tv:SharpTreeViewItem}">
-								<Border Background="Transparent">
+							<ControlTemplate TargetType="{x:Type tv:SharpTreeViewItem}"
+							                 x:DataType="treeNodes:AssemblyTreeNode">
+								<Border x:Name="NodeRootBorder"
+								        Background="Transparent"
+								        Classes.isAutoLoaded="{Binding IsAutoLoaded}"
+								        Classes.isPublicAPI="{Binding IsPublicAPI}">
 									<Border Background="{TemplateBinding Background}">
 										<tv:SharpTreeNodeView x:Name="nodeView" HorizontalAlignment="Left" />
 									</Border>
 								</Border>
-								<ControlTemplate.Triggers>
-									<DataTrigger Binding="{Binding IsAutoLoaded}" Value="True">
-										<Setter Property="Foreground" Value="SteelBlue" />
-									</DataTrigger>
-									<DataTrigger Binding="{Binding IsPublicAPI}" Value="False">
-										<Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-									</DataTrigger>
-									<Trigger Property="IsSelected" Value="True">
-										<Setter TargetName="nodeView" Property="TextBackground" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-										<Setter TargetName="nodeView" Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
-									</Trigger>
-									<Trigger Property="IsEnabled" Value="False">
-										<Setter TargetName="nodeView" Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-									</Trigger>
-								</ControlTemplate.Triggers>
 							</ControlTemplate>
 						</Setter.Value>
 					</Setter>
-				</Style>
+					<Style Selector="^ /template/ Border#NodeRootBorder.isAutoLoaded">
+						<Setter Property="Foreground" Value="SteelBlue" />
+					</Style>
+					<Style Selector="^ /template/ Border#NodeRootBorder.isPublicAPI">
+						<Setter Property="Foreground" Value="{DynamicResource {x:Static themes:ResourceKeys.GrayTextBrushKey}}" />
+					</Style>
+					<Style Selector="^[IsSelected=true] /template/ tv|SharpTreeNodeView#nodeView">
+						<Setter Property="TextBackground" Value="{DynamicResource {x:Static themes:ResourceKeys.HighlightBrushKey}}" />
+						<Setter Property="Foreground" Value="{DynamicResource {x:Static themes:ResourceKeys.HighlightTextBrushKey}}" />
+					</Style>
+					<Style Selector="^:disabled /template/ tv|SharpTreeNodeView#nodeView">
+						<Setter Property="Foreground" Value="{DynamicResource {x:Static themes:ResourceKeys.GrayTextBrushKey}}" />
+					</Style>
+				</ControlTheme>
 			</tv:SharpTreeView.ItemContainerTheme>
 		</tv:SharpTreeView>
 
@@ -138,21 +142,21 @@
 				<MenuItem Header="{x:Static properties:Resources.Show_allTypesAndMembers}" ToggleType="CheckBox" IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisAll}" />
 				<Separator/>
 				<MenuItem Header="{x:Static properties:Resources.Theme}" ItemsSource="{x:Static themes:ThemeManager.AllThemes}">
-					<MenuItem.ItemContainerStyle>
-						<Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+					<MenuItem.ItemContainerTheme>
+						<ControlTheme TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
 							<Setter Property="Command" Value="{x:Static local:ILSpyCommands.SetTheme}" />
-							<Setter Property="CommandParameter" Value="{Binding}" />
-							<Setter Property="IsCheckable" Value="True" /> <!-- Required by AvalonDock's MenuItem style to show the checkmark -->
+							<Setter Property="CommandParameter" Value="{Binding x:DataType=system:String}" />
+							<Setter Property="ToggleType" Value="CheckBox" /> <!-- Required by AvalonDock's MenuItem style to show the checkmark -->
 							<Setter Property="IsChecked">
 								<Setter.Value>
-									<MultiBinding Converter="{x:Static toms:BinaryOperationConverter.Equality}" Mode="OneWay">
-										<Binding />
-										<Binding RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}" Path="SessionSettings.Theme" />
+									<MultiBinding Converter="{x:Static controls:BinaryOperationConverter.Equality}" Mode="OneWay">
+										<Binding x:DataType="system:String" />
+										<Binding Path="$parent[local:MainWindow].SessionSettings.Theme" />
 									</MultiBinding>
 								</Setter.Value>
 							</Setter>
-						</Style>
-					</MenuItem.ItemContainerStyle>
+						</ControlTheme>
+					</MenuItem.ItemContainerTheme>
 				</MenuItem>
 				<MenuItem Header="{x:Static properties:Resources.UILanguage}">
 					<MenuItem Header="{x:Static properties:Resources.UILanguage_System}" ToggleType="CheckBox" IsChecked="{Binding SessionSettings.CurrentCulture, Converter={StaticResource cultureSelectionConverter}, ConverterParameter={x:Null}}" />
@@ -163,63 +167,54 @@
 			<MenuItem Header="{x:Static properties:Resources._Window}" Tag="_Window" />
 		</Menu>
 		<!-- ToolBar -->
-		<ToolBar
+		<ListBox
 			Name="toolBar"
-			DockPanel.Dock="Top" ToolBarTray.IsLocked="True" KeyboardNavigation.TabNavigation="None">
-			<ToolBar.Resources>
+			DockPanel.Dock="Top" KeyboardNavigation.TabNavigation="None">
+			<ListBox.ItemsPanel>
+				<ItemsPanelTemplate>
+					<StackPanel Orientation="Horizontal" Spacing="4" />
+				</ItemsPanelTemplate>
+			</ListBox.ItemsPanel>
+			<ListBox.Resources>
 				<!-- Make images transparent if menu command is disabled -->
-				<Style TargetType="{x:Type Image}">
-					<Style.Triggers>
-						<DataTrigger
-							Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ButtonBase}, AncestorLevel=1}, Path=IsEnabled}"
-							Value="False">
-							<Setter Property="Opacity" Value="0.30" />
-						</DataTrigger>
-					</Style.Triggers>
+				<Style Selector="Button:disabled > Image">
+					<!-- TODO Avalonia: effects? should be easier to do the same without them, but later -->
+					<!-- <Setter Property="Effect" Value="{DynamicResource {x:Static themes:ResourceKeys.ThemeAwareButtonEffect}}" /> -->
+					<Setter Property="Opacity" Value="0.30" />
 				</Style>
-				<Style TargetType="{x:Type Image}" x:Key="DarkModeAwareImageStyle">
-					<Setter Property="Effect" Value="{DynamicResource {x:Static themes:ResourceKeys.ThemeAwareButtonEffect}}" />
-					<Style.Triggers>
-						<DataTrigger
-							Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ButtonBase}, AncestorLevel=1}, Path=IsEnabled}"
-							Value="False">
-							<Setter Property="Opacity" Value="0.30" />
-						</DataTrigger>
-					</Style.Triggers>
-				</Style>
-			</ToolBar.Resources>
+			</ListBox.Resources>
 			<!-- 'Navigation' toolbar category is inserted here -->
 			<Separator />
 			<!-- 'Open' toolbar category is inserted here -->
 			<Separator />
 			<ComboBox Name="assemblyListComboBox" Width="100" MaxDropDownHeight="Auto"
-			          ItemsSource="{Binding AssemblyListManager.AssemblyLists}" ToolTip="{x:Static properties:Resources.SelectAssemblyListDropdownTooltip}"
+			          ItemsSource="{Binding AssemblyListManager.AssemblyLists}" ToolTip.Tip="{x:Static properties:Resources.SelectAssemblyListDropdownTooltip}"
 			          SelectedItem="{Binding SessionSettings.ActiveAssemblyList}"/>
-			<Button Command="{x:Static local:ILSpyCommands.ManageAssemblyListsCommand}" ToolTip="{x:Static properties:Resources.ManageAssemblyLists}">
-				<Image Width="16" Height="16" Source="{controls:XamlResource Images/AssemblyList}" Style="{StaticResource DarkModeAwareImageStyle}"/>
+			<Button Command="{x:Static local:ILSpyCommands.ManageAssemblyListsCommand}" ToolTip.Tip="{x:Static properties:Resources.ManageAssemblyLists}">
+				<Image Width="16" Height="16" Source="{controls:XamlResource Images/AssemblyList}" />
 			</Button>
 			<Separator />
-			<CheckBox IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisPublicOnly}" ToolTip="{x:Static properties:Resources.ShowPublicOnlyTypesMembers}">
-				<Image Width="16" Height="16" Source="{controls:XamlResource Images/ShowPublicOnly}" Style="{StaticResource DarkModeAwareImageStyle}"/>
+			<CheckBox IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisPublicOnly}" ToolTip.Tip="{x:Static properties:Resources.ShowPublicOnlyTypesMembers}">
+				<Image Width="16" Height="16" Source="{controls:XamlResource Images/ShowPublicOnly}" />
 			</CheckBox>
-			<CheckBox IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisPublicAndInternal}" ToolTip="{x:Static properties:Resources.ShowInternalTypesMembers}">
-				<Image Width="16" Height="16" Source="{controls:XamlResource Images/ShowPrivateInternal}" Style="{StaticResource DarkModeAwareImageStyle}"/>
+			<CheckBox IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisPublicAndInternal}" ToolTip.Tip="{x:Static properties:Resources.ShowInternalTypesMembers}">
+				<Image Width="16" Height="16" Source="{controls:XamlResource Images/ShowPrivateInternal}" />
 			</CheckBox>
-			<CheckBox IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisAll}" ToolTip="{x:Static properties:Resources.ShowAllTypesAndMembers}">
-				<Image Width="16" Height="16" Source="{controls:XamlResource Images/ShowAll}" Style="{StaticResource DarkModeAwareImageStyle}"/>
+			<CheckBox IsChecked="{Binding Workspace.ActiveTabPage.FilterSettings.ApiVisAll}" ToolTip.Tip="{x:Static properties:Resources.ShowAllTypesAndMembers}">
+				<Image Width="16" Height="16" Source="{controls:XamlResource Images/ShowAll}" />
 			</CheckBox>
 			<Separator />
-			<ComboBox Name="languageComboBox" DisplayMemberPath="Name" Width="100" MaxDropDownHeight="Auto"
+			<ComboBox Name="languageComboBox" DisplayMemberBinding="{Binding Name}" Width="100" MaxDropDownHeight="Auto"
 					  IsEnabled="{Binding Workspace.ActiveTabPage.SupportsLanguageSwitching}"
-			          ItemsSource="{x:Static local:Languages.AllLanguages}" ToolTip="{x:Static properties:Resources.SelectLanguageDropdownTooltip}"
+			          ItemsSource="{x:Static local:Languages.AllLanguages}" ToolTip.Tip="{x:Static properties:Resources.SelectLanguageDropdownTooltip}"
 			          SelectedItem="{Binding Workspace.ActiveTabPage.FilterSettings.Language}"/>
-			<ComboBox Name="languageVersionComboBox" DisplayMemberPath="DisplayName" Width="120" MaxDropDownHeight="Auto" ToolTip.Tip="{x:Static properties:Resources.SelectVersionDropdownTooltip}"
+			<ComboBox Name="languageVersionComboBox" DisplayMemberBinding="{Binding DisplayName}" Width="120" MaxDropDownHeight="Auto" ToolTip.Tip="{x:Static properties:Resources.SelectVersionDropdownTooltip}"
 			          IsVisible="{Binding SelectedItem.HasLanguageVersions, ElementName=languageComboBox}"
 					  IsEnabled="{Binding Workspace.ActiveTabPage.SupportsLanguageSwitching}"
 			          ItemsSource="{Binding SelectedItem.LanguageVersions, ElementName=languageComboBox, UpdateSourceTrigger=PropertyChanged}"
 			          SelectedItem="{Binding Workspace.ActiveTabPage.FilterSettings.LanguageVersion, UpdateSourceTrigger=PropertyChanged}"/>
-		</ToolBar>
-		<Border DockPanel.Dock="Top" BorderBrush="Black" BorderThickness="1" Name="updatePanel" Visibility="Collapsed">
+		</ListBox>
+		<Border DockPanel.Dock="Top" BorderBrush="Black" BorderThickness="1" Name="updatePanel" IsVisible="False">
 			<DockPanel KeyboardNavigation.TabNavigation="Contained">
 				<Button DockPanel.Dock="Right" Click="updatePanelCloseButtonClick" MinWidth="0">X</Button>
 				<StackPanel Orientation="Horizontal">
@@ -229,15 +224,13 @@
 			</DockPanel>
 		</Border>
 		<!-- Status bar -->
-		<StatusBar x:Name="statusBar" DockPanel.Dock="Bottom" Height="26" Visibility="Collapsed">
-			<StatusBarItem DockPanel.Dock="Right">
-				<TextBlock VerticalAlignment="Center"
-				           HorizontalAlignment="Right"
-				           x:Name="StatusLabel"
-				           ToolTip="{x:Static properties:Resources.Status}"
-				           Text="{x:Static properties:Resources.StandBy}"/>
-			</StatusBarItem>
-		</StatusBar>
+		<Border x:Name="statusBar" DockPanel.Dock="Bottom" Height="26" IsVisible="False">
+			<TextBlock VerticalAlignment="Center"
+			           HorizontalAlignment="Right"
+			           x:Name="StatusLabel"
+			           ToolTip.Tip="{x:Static properties:Resources.Status}"
+			           Text="{x:Static properties:Resources.StandBy}"/>
+		</Border>
 
 		<avalondock:DockingManager x:Name="DockManager"
 									DataContext="{Binding Workspace}"

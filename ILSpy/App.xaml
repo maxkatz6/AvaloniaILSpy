@@ -5,11 +5,14 @@
              xmlns:toms="urn:TomsToolbox"
              xmlns:ilSpy="clr-namespace:ICSharpCode.ILSpy"
              xmlns:themes="clr-namespace:ICSharpCode.ILSpy.Themes"
-             StartupUri="MainWindow.xaml">
+             RequestedThemeVariant="Light">
 	<Application.Resources>
 		<ControlTheme x:Key="DialogWindow" TargetType="{x:Type Window}" BasedOn="{StaticResource {x:Type Window}}">
 			<Setter Property="ShowInTaskbar" Value="False"/>
 			<Setter Property="UseLayoutRounding" Value="True"/>
 		</ControlTheme>
 	</Application.Resources>
+	<Application.Styles>
+		<SimpleTheme />
+	</Application.Styles>
 </Application>

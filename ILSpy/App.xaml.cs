@@ -28,7 +28,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Avalonia;
+using Avalonia.Platform;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 
 using ICSharpCode.ILSpy.Options;
@@ -36,6 +39,8 @@ using ICSharpCode.ILSpy.Properties;
 using ICSharpCode.ILSpyX.Settings;
 
 using Microsoft.VisualStudio.Composition;
+
+using CompositionFailedException = Microsoft.VisualStudio.Composition.CompositionFailedException;
 
 namespace ICSharpCode.ILSpy
 {
@@ -56,7 +61,7 @@ namespace ICSharpCode.ILSpy
 			public string PluginName;
 		}
 
-		public App()
+		public override void Initialize()
 		{
 			ILSpySettings.SettingsFilePathProvider = new ILSpySettingsFilePathProvider();
 
@@ -70,9 +75,9 @@ namespace ICSharpCode.ILSpy
 				SingleInstanceHandling.ForceSingleInstance(cmdArgs);
 			}
 
-			InitializeComponent();
+			AvaloniaXamlLoader.Load(this);
 
-			Resources.RegisterDefaultStyles();
+			// Resources.RegisterDefaultStyles();
 
 			if (!System.Diagnostics.Debugger.IsAttached)
 			{
@@ -83,9 +88,10 @@ namespace ICSharpCode.ILSpy
 			TaskScheduler.UnobservedTaskException += DotNet40_UnobservedTaskException;
 			InitializeMef().GetAwaiter().GetResult();
 			Languages.Initialize(ExportProvider);
-			EventManager.RegisterClassHandler(typeof(Window),
-											  Hyperlink.RequestNavigateEvent,
-											  new RequestNavigateEventHandler(Window_RequestNavigate));
+			// TODO Avalonia: RequestNavigateEvent 
+			// EventManager.RegisterClassHandler(typeof(Window),
+			// 								  Hyperlink.RequestNavigateEvent,
+			// 								  (s, e) => ILSpy.MainWindow.Instance.NavigateTo(e));
 			ILSpyTraceListener.Install();
 		}
 
@@ -160,15 +166,32 @@ namespace ICSharpCode.ILSpy
 			}
 		}
 
-		protected override void OnStartup(StartupEventArgs e)
+		public override void OnFrameworkInitializationCompleted()
 		{
+			base.OnFrameworkInitializationCompleted();
+
+			if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+			{
+				desktop.MainWindow = new MainWindow();
+			}
+
+			if (this.TryGetFeature<IActivatableLifetime>() is { } activatable)
+			{
+				activatable.Activated += (sender, args) =>
+				{
+					if (args is FileActivatedEventArgs fileArgs)
+					{
+						// TODO Avalonia: handle
+					}
+				};
+			}
+			
 			var output = new StringBuilder();
 			if (ILSpy.MainWindow.FormatExceptions(StartupExceptions.ToArray(), output))
 			{
-				MessageBox.Show(output.ToString(), "Sorry we crashed!");
+				MessageBox.Show(null, output.ToString(), "Sorry we crashed!");
 				Environment.Exit(1);
 			}
-			base.OnStartup(e);
 		}
 
 		void DotNet40_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
@@ -218,7 +241,7 @@ namespace ICSharpCode.ILSpy
 			showingError = true;
 			try
 			{
-				MessageBox.Show(exception.ToString(), "Sorry, we crashed");
+				MessageBox.Show(null, exception.ToString(), "Sorry, we crashed");
 			}
 			finally
 			{
@@ -226,10 +249,5 @@ namespace ICSharpCode.ILSpy
 			}
 		}
 		#endregion
-
-		void Window_RequestNavigate(object sender, RequestNavigateEventArgs e)
-		{
-			ILSpy.MainWindow.Instance.NavigateTo(e);
-		}
 	}
 }
